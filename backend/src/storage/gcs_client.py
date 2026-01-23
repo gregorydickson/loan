@@ -125,8 +125,8 @@ class GCSClient:
         try:
             blob = self.bucket.blob(path)
             return blob.download_as_bytes()
-        except NotFound:
-            raise GCSDownloadError(f"File not found: {path}")
+        except NotFound as e:
+            raise GCSDownloadError(f"File not found: {path}") from e
         except Exception as e:
             raise GCSDownloadError(f"Failed to download {path}: {e}") from e
 
@@ -144,8 +144,8 @@ class GCSClient:
             blob = self.bucket.blob(path)
             blob.download_to_file(file_obj)
             file_obj.seek(0)
-        except NotFound:
-            raise GCSDownloadError(f"File not found: {path}")
+        except NotFound as e:
+            raise GCSDownloadError(f"File not found: {path}") from e
         except Exception as e:
             raise GCSDownloadError(f"Failed to download {path}: {e}") from e
 
