@@ -48,12 +48,14 @@ Plans:
   3. Document files are stored in GCS with retrievable gs:// URI
   4. Duplicate uploads (same file hash) are detected and rejected
   5. Failed document processing gracefully records error status without crashing
-**Plans**: 3 plans
+**Plans**: 4 plans
+**Status**: Gap closure in progress
 
 Plans:
-- [ ] 02-01-PLAN.md - Database models and Alembic setup (SQLAlchemy models, migrations, DocumentRepository)
-- [ ] 02-02-PLAN.md - Docling processor and GCS client (document conversion, file storage)
-- [ ] 02-03-PLAN.md - Document service and upload API (orchestration, POST /api/documents endpoint)
+- [x] 02-01-PLAN.md - Database models and Alembic setup (SQLAlchemy models, migrations, DocumentRepository)
+- [x] 02-02-PLAN.md - Docling processor and GCS client (document conversion, file storage)
+- [x] 02-03-PLAN.md - Document service and upload API (orchestration, POST /api/documents endpoint)
+- [ ] 02-04-PLAN.md - Gap closure: Wire Docling processing into upload flow, add end-to-end tests
 
 ### Phase 3: LLM Extraction & Validation
 **Goal**: Extract structured borrower data from document text using Gemini 3.0 with complexity-based model selection and hybrid validation
@@ -151,7 +153,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
-| 2. Document Ingestion Pipeline | 0/3 | Ready to execute | - |
+| 2. Document Ingestion Pipeline | 3/4 | Gap closure pending | - |
 | 3. LLM Extraction & Validation | 0/4 | Not started | - |
 | 4. Data Storage & REST API | 0/3 | Not started | - |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
