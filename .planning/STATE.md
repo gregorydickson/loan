@@ -10,28 +10,29 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 2 of 7 (Document Ingestion Pipeline)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-01-23 - Phase 1 verified complete (5/5 criteria)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-23 - Completed 02-01-PLAN.md (Database Layer)
 
-Progress: [███░░░░░░░] 14%
+Progress: [████░░░░░░] 19%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 5.7 min
-- Total execution time: 0.28 hours
+- Total plans completed: 4
+- Average duration: 5.8 min
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
+| 02-document-ingestion-pipeline | 1 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 8 min, 5 min, 4 min
-- Trend: Improving
+- Last 5 plans: 8 min, 5 min, 4 min, 6 min
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -65,6 +66,12 @@ Recent decisions affecting current work:
 - field_validator for period normalization to lowercase
 - Literal types for status/file_type enums
 
+**Phase 02-01 Decisions:**
+- datetime.UTC alias instead of deprecated timezone.utc
+- expire_on_commit=False for async sessions (prevents lazy loading issues)
+- Repository uses flush() not commit() - caller controls transaction
+- SQLite in-memory with aiosqlite for fast unit tests
+
 ### Pending Todos
 
 None yet.
@@ -75,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-23 21:38 UTC
-Stopped at: Completed 01-03-PLAN.md (Phase 1 complete)
+Last session: 2026-01-23 22:31 UTC
+Stopped at: Completed 02-01-PLAN.md (Database Layer)
 Resume file: None
