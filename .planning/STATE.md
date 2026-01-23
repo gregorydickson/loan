@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 1 of 7 (Foundation & Data Models)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-23 - Completed 01-01-PLAN.md (Backend project structure)
+Last activity: 2026-01-23 - Completed 01-02-PLAN.md (Frontend Next.js project)
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [██░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 8 min
-- Total execution time: 0.13 hours
+- Total plans completed: 2
+- Average duration: 6.6 min
+- Total execution time: 0.22 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 1 | 8 min | 8 min |
+| 01-foundation | 2 | 13 min | 6.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 8 min
-- Trend: First plan completed
+- Last 5 plans: 8 min, 5 min
+- Trend: Improving
 
 *Updated after each plan completion*
 
@@ -54,6 +54,11 @@ Recent decisions affecting current work:
 - All Phase 2+ dependencies in pyproject.toml to prevent conflicts
 - PostgreSQL 16-alpine and Redis 7-alpine for local dev
 
+**Phase 01-02 Decisions:**
+- Next.js 16 + Tailwind v4 (latest from create-next-app, shadcn compatible)
+- shadcn/ui new-york style with CSS variables
+- Inter font for typography
+
 ### Pending Todos
 
 None yet.
@@ -64,6 +69,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-23
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-01-23 21:32 UTC
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
