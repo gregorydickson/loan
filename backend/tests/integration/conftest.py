@@ -1,20 +1,21 @@
 """Fixtures for integration tests."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from unittest.mock import MagicMock
 
-from src.main import app
-from src.storage.models import Base
-from src.storage.database import get_db_session
-from src.api.dependencies import get_gcs_client, get_docling_processor
+from src.api.dependencies import get_docling_processor, get_gcs_client
 from src.ingestion.docling_processor import (
     DoclingProcessor,
     DocumentContent,
     DocumentProcessingError,
     PageContent,
 )
+from src.main import app
+from src.storage.database import get_db_session
+from src.storage.models import Base
 
 
 @pytest.fixture

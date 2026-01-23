@@ -7,7 +7,7 @@ borrower information from loan documents:
 - BorrowerRecord: Complete borrower extraction result (main output)
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -118,7 +118,7 @@ class BorrowerRecord(BaseModel):
         description="Overall extraction confidence (0.0 to 1.0)",
     )
     extracted_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp when extraction was performed",
     )
 

@@ -4,13 +4,13 @@ Uses mocking to test without actual GCS access.
 Integration tests will verify real GCS operations.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from src.storage.gcs_client import (
     GCSClient,
     GCSDownloadError,
-    GCSError,
     GCSUploadError,
 )
 

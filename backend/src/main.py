@@ -4,13 +4,13 @@ Provides the main application instance with lifespan management
 for database connections and other resources.
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
-from src.config import settings
 from src.api.documents import router as documents_router
+from src.config import settings
 
 
 @asynccontextmanager

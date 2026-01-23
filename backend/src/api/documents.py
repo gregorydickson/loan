@@ -1,8 +1,7 @@
 """Document API endpoints.
 
-NOTE: Document processing is ASYNCHRONOUS. Uploads return immediately with
-status=PENDING. Actual Docling processing happens via Cloud Tasks (Phase 3).
-Poll GET /api/documents/{id} to check processing status.
+Document upload includes synchronous Docling processing. Uploads return
+with status=COMPLETED or status=FAILED after processing completes.
 """
 
 from uuid import UUID
@@ -19,15 +18,16 @@ router = APIRouter(prefix="/api/documents", tags=["documents"])
 class DocumentUploadResponse(BaseModel):
     """Response for document upload.
 
-    NOTE: status will be 'pending' after upload. Processing is async.
-    Poll GET /api/documents/{id} to check when status becomes 'completed' or 'failed'.
+    Processing is synchronous - status will be 'completed' or 'failed' after upload.
     """
 
     id: UUID = Field(..., description="Document ID")
     filename: str = Field(..., description="Original filename")
     file_hash: str = Field(..., description="SHA-256 hash of file")
     file_size_bytes: int = Field(..., description="File size in bytes")
-    status: str = Field(..., description="Processing status (pending after upload)")
+    status: str = Field(..., description="Processing status (completed/failed)")
+    page_count: int | None = Field(None, description="Number of pages (if processing succeeded)")
+    error_message: str | None = Field(None, description="Error details (if processing failed)")
     message: str = Field(..., description="Status message")
 
 
@@ -61,9 +61,8 @@ class DocumentListResponse(BaseModel):
     summary="Upload a document",
     description="""Upload a document for processing. Supports PDF, DOCX, PNG, and JPG files.
 
-**IMPORTANT**: This endpoint returns immediately with status='pending'.
-Document processing (text extraction via Docling) happens asynchronously.
-Poll GET /api/documents/{id} to check when processing completes.""",
+Document processing (text extraction via Docling) is synchronous.
+Response will include status='completed' with page_count, or status='failed' with error_message.""",
 )
 async def upload_document(
     file: UploadFile,
@@ -76,24 +75,36 @@ async def upload_document(
         service: DocumentService (injected)
 
     Returns:
-        DocumentUploadResponse with document ID and status='pending'
+        DocumentUploadResponse with document ID and processing status
 
     Raises:
         400: Invalid file type or size
         409: Duplicate file (same hash exists)
         500: Upload failed
     """
+    from src.storage.models import DocumentStatus
+
     try:
         # Read file content
         content = await file.read()
 
-        # Upload document (creates DB record + uploads to GCS)
-        # NOTE: Does NOT process - that's async via Cloud Tasks
+        # Upload and process document (creates DB record + uploads to GCS + Docling)
         document = await service.upload(
             filename=file.filename or "unknown",
             content=content,
             content_type=file.content_type,
         )
+
+        # Generate processing-aware message
+        if document.status == DocumentStatus.COMPLETED:
+            message = f"Document processed successfully with {document.page_count} page(s)"
+        elif document.status == DocumentStatus.FAILED:
+            message = (
+                f"Document upload succeeded but processing failed: "
+                f"{document.error_message or 'Unknown error'}"
+            )
+        else:
+            message = "Document uploaded. Processing status: pending"
 
         return DocumentUploadResponse(
             id=document.id,
@@ -101,7 +112,9 @@ async def upload_document(
             file_hash=document.file_hash,
             file_size_bytes=document.file_size_bytes,
             status=document.status.value,
-            message="Document uploaded. Processing is asynchronous - poll GET /api/documents/{id} for status.",
+            page_count=document.page_count,
+            error_message=document.error_message,
+            message=message,
         )
 
     except ValueError as e:

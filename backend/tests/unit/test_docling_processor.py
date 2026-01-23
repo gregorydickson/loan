@@ -4,15 +4,16 @@ These tests use mock to avoid actual Docling processing in unit tests.
 Integration tests will test actual document processing.
 """
 
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from src.ingestion.docling_processor import (
     DoclingProcessor,
     DocumentContent,
-    PageContent,
     DocumentProcessingError,
+    PageContent,
 )
 
 

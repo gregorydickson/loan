@@ -7,8 +7,9 @@ These tests verify:
 Run with: pytest -m integration tests/integration/test_docling_integration.py
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from src.ingestion.docling_processor import (
     DoclingProcessor,

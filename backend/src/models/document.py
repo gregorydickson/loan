@@ -5,7 +5,7 @@ This module provides models for:
 - DocumentMetadata: Document tracking for ingestion pipeline
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -58,11 +58,11 @@ class DocumentMetadata(BaseModel):
         default=None, description="Error message if status is 'failed'"
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp when document was created",
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp when document was last updated",
     )
 

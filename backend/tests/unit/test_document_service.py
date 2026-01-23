@@ -1,8 +1,9 @@
 """Unit tests for DocumentService."""
 
-import pytest
-from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
+
+import pytest
 
 from src.ingestion.docling_processor import (
     DoclingProcessor,
@@ -12,8 +13,8 @@ from src.ingestion.docling_processor import (
 )
 from src.ingestion.document_service import (
     DocumentService,
-    DuplicateDocumentError,
     DocumentUploadError,
+    DuplicateDocumentError,
 )
 from src.storage.models import Document, DocumentStatus
 

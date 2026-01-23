@@ -4,9 +4,9 @@ Uses SQLite in-memory with aiosqlite for fast, isolated testing.
 Each test gets a fresh database with the schema created from ORM models.
 """
 
-import pytest
 from uuid import uuid4
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.storage.models import Base, Document, DocumentStatus
