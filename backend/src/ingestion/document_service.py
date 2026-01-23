@@ -4,15 +4,14 @@ Handles:
 - File validation (type, size)
 - File hash computation for duplicate detection
 - GCS upload
-- Database record creation with PENDING status
-
-NOTE: Actual Docling processing is ASYNC via Cloud Tasks (Phase 3).
-This service does NOT call DoclingProcessor - that happens in the task handler.
+- Database record creation
+- Docling document processing (synchronous)
 """
 
 import hashlib
 from uuid import UUID, uuid4
 
+from src.ingestion.docling_processor import DoclingProcessor, DocumentProcessingError
 from src.storage.gcs_client import GCSClient
 from src.storage.models import Document, DocumentStatus
 from src.storage.repositories import DocumentRepository
@@ -34,7 +33,7 @@ class DocumentUploadError(Exception):
 
 
 class DocumentService:
-    """Orchestrates document upload (not processing - that's async in Phase 3).
+    """Orchestrates document upload and processing.
 
     Upload workflow:
     1. Validate file (type, size)
@@ -42,12 +41,9 @@ class DocumentService:
     3. Check for duplicate (reject if exists)
     4. Create database record (PENDING status)
     5. Upload to GCS
-    6. Return document (still PENDING - processing is async)
-
-    Processing workflow (Phase 3 via Cloud Tasks):
-    - Cloud Tasks handler receives document_id
-    - Handler downloads from GCS, calls DoclingProcessor
-    - Updates status to COMPLETED/FAILED
+    6. Process document with Docling
+    7. Update status to COMPLETED/FAILED
+    8. Return document with final status
     """
 
     # Mapping of MIME types to file type strings
@@ -68,15 +64,18 @@ class DocumentService:
         self,
         repository: DocumentRepository,
         gcs_client: GCSClient,
+        docling_processor: DoclingProcessor,
     ) -> None:
         """Initialize DocumentService.
 
         Args:
             repository: DocumentRepository for database operations
             gcs_client: GCSClient for file storage
+            docling_processor: DoclingProcessor for document processing
         """
         self.repository = repository
         self.gcs_client = gcs_client
+        self.docling_processor = docling_processor
 
     @staticmethod
     def compute_file_hash(content: bytes) -> str:
@@ -140,10 +139,7 @@ class DocumentService:
         content: bytes,
         content_type: str | None = None,
     ) -> Document:
-        """Upload a document: validate, hash check, store in GCS, create DB record.
-
-        NOTE: This does NOT process the document. Processing happens async via
-        Cloud Tasks (Phase 3). Document will have status=PENDING after this call.
+        """Upload a document: validate, hash check, store in GCS, process with Docling.
 
         Args:
             filename: Original filename
@@ -151,7 +147,7 @@ class DocumentService:
             content_type: MIME type of the file
 
         Returns:
-            Created Document record with status=PENDING
+            Document record with status=COMPLETED or FAILED
 
         Raises:
             DuplicateDocumentError: If file with same hash exists
@@ -199,8 +195,24 @@ class DocumentService:
             )
             raise DocumentUploadError(f"Failed to upload to storage: {e}") from e
 
-        # NOTE: In Phase 3, we would queue a Cloud Tasks job here:
-        # await self.queue_processing_task(document_id)
+        # 7. Process document with Docling (synchronous)
+        try:
+            result = self.docling_processor.process_bytes(content, filename)
+            await self.update_processing_result(
+                document_id,
+                success=True,
+                page_count=result.page_count,
+            )
+            # Refresh document to get updated status
+            document = await self.repository.get_by_id(document_id)
+        except DocumentProcessingError as e:
+            await self.update_processing_result(
+                document_id,
+                success=False,
+                error_message=f"Document processing failed: {e.message}",
+            )
+            # Refresh document to get updated status
+            document = await self.repository.get_by_id(document_id)
 
         return document
 

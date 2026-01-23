@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from src.config import settings
+from src.ingestion.docling_processor import DoclingProcessor
 from src.ingestion.document_service import DocumentService
 from src.storage.database import DBSession
 from src.storage.gcs_client import GCSClient
@@ -44,6 +45,31 @@ def get_gcs_client() -> GCSClient:
 GCSClientDep = Annotated[GCSClient, Depends(get_gcs_client)]
 
 
+# DoclingProcessor dependency
+_docling_processor: DoclingProcessor | None = None
+
+
+def get_docling_processor() -> DoclingProcessor:
+    """Get or create DoclingProcessor singleton.
+
+    Returns:
+        DoclingProcessor instance
+    """
+    global _docling_processor
+
+    if _docling_processor is None:
+        _docling_processor = DoclingProcessor(
+            enable_ocr=True,
+            enable_tables=True,
+            max_pages=100,
+        )
+
+    return _docling_processor
+
+
+DoclingProcessorDep = Annotated[DoclingProcessor, Depends(get_docling_processor)]
+
+
 def get_document_repository(session: DBSession) -> DocumentRepository:
     """Get document repository with session."""
     return DocumentRepository(session)
@@ -55,11 +81,13 @@ DocumentRepoDep = Annotated[DocumentRepository, Depends(get_document_repository)
 def get_document_service(
     repository: DocumentRepoDep,
     gcs_client: GCSClientDep,
+    docling_processor: DoclingProcessorDep,
 ) -> DocumentService:
     """Get document service with dependencies."""
     return DocumentService(
         repository=repository,
         gcs_client=gcs_client,
+        docling_processor=docling_processor,
     )
 
 
