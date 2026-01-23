@@ -38,7 +38,7 @@ Plans:
 - [x] 01-02-PLAN.md - Frontend Next.js project with shadcn/ui
 - [x] 01-03-PLAN.md - Pydantic data models with unit tests
 
-### Phase 2: Document Ingestion Pipeline
+### Phase 2: Document Ingestion Pipeline ✅
 **Goal**: Process uploaded documents (PDF, DOCX, images) through Docling and store in GCS with database tracking
 **Depends on**: Phase 1
 **Requirements**: INGEST-01, INGEST-02, INGEST-03, INGEST-04, INGEST-05, INGEST-06, INGEST-07, INGEST-08, INGEST-09, INGEST-10, INGEST-11, INGEST-12, INGEST-13, INGEST-14, DB-01, DB-02, DB-03, DB-04, DB-05, DB-06, DB-07, DB-08, DB-09, DB-10, DB-11, DB-12
@@ -49,13 +49,13 @@ Plans:
   4. Duplicate uploads (same file hash) are detected and rejected
   5. Failed document processing gracefully records error status without crashing
 **Plans**: 4 plans
-**Status**: Gap closure in progress
+**Status**: Complete (2026-01-23)
 
 Plans:
 - [x] 02-01-PLAN.md - Database models and Alembic setup (SQLAlchemy models, migrations, DocumentRepository)
 - [x] 02-02-PLAN.md - Docling processor and GCS client (document conversion, file storage)
 - [x] 02-03-PLAN.md - Document service and upload API (orchestration, POST /api/documents endpoint)
-- [ ] 02-04-PLAN.md - Gap closure: Wire Docling processing into upload flow, add end-to-end tests
+- [x] 02-04-PLAN.md - Gap closure: Wire Docling processing into upload flow, add end-to-end tests
 
 ### Phase 3: LLM Extraction & Validation
 **Goal**: Extract structured borrower data from document text using Gemini 3.0 with complexity-based model selection and hybrid validation
@@ -153,7 +153,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
-| 2. Document Ingestion Pipeline | 3/4 | Gap closure pending | - |
+| 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
 | 3. LLM Extraction & Validation | 0/4 | Not started | - |
 | 4. Data Storage & REST API | 0/3 | Not started | - |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
