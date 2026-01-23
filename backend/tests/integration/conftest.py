@@ -8,7 +8,13 @@ from unittest.mock import MagicMock
 from src.main import app
 from src.storage.models import Base
 from src.storage.database import get_db_session
-from src.api.dependencies import get_gcs_client
+from src.api.dependencies import get_gcs_client, get_docling_processor
+from src.ingestion.docling_processor import (
+    DoclingProcessor,
+    DocumentContent,
+    DocumentProcessingError,
+    PageContent,
+)
 
 
 @pytest.fixture
@@ -59,7 +65,33 @@ def mock_gcs_client_failing():
 
 
 @pytest.fixture
-async def client(async_engine, db_session, mock_gcs_client):
+def mock_docling_processor():
+    """Create mock DoclingProcessor that returns successful result."""
+    processor = MagicMock(spec=DoclingProcessor)
+    processor.process_bytes = MagicMock(
+        return_value=DocumentContent(
+            text="Test document content",
+            pages=[PageContent(page_number=1, text="Page 1 content", tables=[])],
+            page_count=1,
+            tables=[],
+            metadata={"status": "SUCCESS"},
+        )
+    )
+    return processor
+
+
+@pytest.fixture
+def mock_docling_processor_failing():
+    """Create mock DoclingProcessor that fails (for error testing)."""
+    processor = MagicMock(spec=DoclingProcessor)
+    processor.process_bytes = MagicMock(
+        side_effect=DocumentProcessingError("Invalid PDF format", details="Corrupted file")
+    )
+    return processor
+
+
+@pytest.fixture
+async def client(async_engine, db_session, mock_gcs_client, mock_docling_processor):
     """Create test client with mocked dependencies."""
     session_factory = async_sessionmaker(
         async_engine,
@@ -79,8 +111,12 @@ async def client(async_engine, db_session, mock_gcs_client):
     def override_get_gcs_client():
         return mock_gcs_client
 
+    def override_get_docling_processor():
+        return mock_docling_processor
+
     app.dependency_overrides[get_db_session] = override_get_db_session
     app.dependency_overrides[get_gcs_client] = override_get_gcs_client
+    app.dependency_overrides[get_docling_processor] = override_get_docling_processor
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -90,7 +126,9 @@ async def client(async_engine, db_session, mock_gcs_client):
 
 
 @pytest.fixture
-async def client_with_failing_gcs(async_engine, db_session, mock_gcs_client_failing):
+async def client_with_failing_gcs(
+    async_engine, db_session, mock_gcs_client_failing, mock_docling_processor
+):
     """Create test client with GCS that fails (for error testing)."""
     session_factory = async_sessionmaker(
         async_engine,
@@ -110,8 +148,49 @@ async def client_with_failing_gcs(async_engine, db_session, mock_gcs_client_fail
     def override_get_gcs_client():
         return mock_gcs_client_failing
 
+    def override_get_docling_processor():
+        return mock_docling_processor
+
     app.dependency_overrides[get_db_session] = override_get_db_session
     app.dependency_overrides[get_gcs_client] = override_get_gcs_client
+    app.dependency_overrides[get_docling_processor] = override_get_docling_processor
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def client_with_failing_docling(
+    async_engine, db_session, mock_gcs_client, mock_docling_processor_failing
+):
+    """Create test client with DoclingProcessor that fails (for error testing)."""
+    session_factory = async_sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    async def override_get_db_session():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    def override_get_gcs_client():
+        return mock_gcs_client
+
+    def override_get_docling_processor():
+        return mock_docling_processor_failing
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_gcs_client] = override_get_gcs_client
+    app.dependency_overrides[get_docling_processor] = override_get_docling_processor
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

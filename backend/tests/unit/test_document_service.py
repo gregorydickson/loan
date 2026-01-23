@@ -2,14 +2,46 @@
 
 import pytest
 from uuid import uuid4
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
+from src.ingestion.docling_processor import (
+    DoclingProcessor,
+    DocumentContent,
+    DocumentProcessingError,
+    PageContent,
+)
 from src.ingestion.document_service import (
     DocumentService,
     DuplicateDocumentError,
     DocumentUploadError,
 )
 from src.storage.models import Document, DocumentStatus
+
+
+@pytest.fixture
+def mock_docling_processor():
+    """Create mock DoclingProcessor that returns successful result."""
+    processor = MagicMock(spec=DoclingProcessor)
+    processor.process_bytes = MagicMock(
+        return_value=DocumentContent(
+            text="Test document content",
+            pages=[PageContent(page_number=1, text="Page 1 content", tables=[])],
+            page_count=1,
+            tables=[],
+            metadata={"status": "SUCCESS"},
+        )
+    )
+    return processor
+
+
+@pytest.fixture
+def mock_docling_processor_failing():
+    """Create mock DoclingProcessor that fails (for error testing)."""
+    processor = MagicMock(spec=DoclingProcessor)
+    processor.process_bytes = MagicMock(
+        side_effect=DocumentProcessingError("Invalid PDF format", details="Corrupted file")
+    )
+    return processor
 
 
 class TestDocumentServiceValidation:
@@ -30,11 +62,12 @@ class TestDocumentServiceValidation:
         hash2 = DocumentService.compute_file_hash(b"content 2")
         assert hash1 != hash2
 
-    def test_validate_file_pdf(self):
+    def test_validate_file_pdf(self, mock_docling_processor):
         """Test PDF validation."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
         content_type, file_type = service.validate_file(
             b"pdf content",
@@ -44,11 +77,12 @@ class TestDocumentServiceValidation:
         assert content_type == "application/pdf"
         assert file_type == "pdf"
 
-    def test_validate_file_docx(self):
+    def test_validate_file_docx(self, mock_docling_processor):
         """Test DOCX validation."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
         docx_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         content_type, file_type = service.validate_file(
@@ -58,11 +92,12 @@ class TestDocumentServiceValidation:
         )
         assert file_type == "docx"
 
-    def test_validate_file_infer_from_filename(self):
+    def test_validate_file_infer_from_filename(self, mock_docling_processor):
         """Test content type inference from filename."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
         content_type, file_type = service.validate_file(
             b"pdf content",
@@ -72,11 +107,12 @@ class TestDocumentServiceValidation:
         assert content_type == "application/pdf"
         assert file_type == "pdf"
 
-    def test_validate_file_unsupported_type(self):
+    def test_validate_file_unsupported_type(self, mock_docling_processor):
         """Test rejection of unsupported file types."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
         with pytest.raises(ValueError, match="Unsupported file type"):
             service.validate_file(
@@ -85,11 +121,12 @@ class TestDocumentServiceValidation:
                 "test.txt",
             )
 
-    def test_validate_file_too_large(self):
+    def test_validate_file_too_large(self, mock_docling_processor):
         """Test rejection of oversized files."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
         large_content = b"x" * (51 * 1024 * 1024)  # 51MB
         with pytest.raises(ValueError, match="File too large"):
@@ -109,6 +146,8 @@ class TestDocumentServiceUpload:
         repo = AsyncMock()
         repo.get_by_hash = AsyncMock(return_value=None)
         repo.create = AsyncMock()
+        repo.get_by_id = AsyncMock()
+        repo.update_status = AsyncMock()
         repo.session = AsyncMock()
         repo.session.flush = AsyncMock()
         return repo
@@ -121,11 +160,14 @@ class TestDocumentServiceUpload:
         return client
 
     @pytest.mark.asyncio
-    async def test_upload_success_returns_pending(self, mock_repository, mock_gcs_client):
-        """Test successful upload returns document with PENDING status."""
+    async def test_upload_success_returns_completed(
+        self, mock_repository, mock_gcs_client, mock_docling_processor
+    ):
+        """Test successful upload returns document with COMPLETED status."""
         # Setup mock to return the created document
+        doc_id = uuid4()
         created_doc = Document(
-            id=uuid4(),
+            id=doc_id,
             filename="test.pdf",
             file_hash="abc123",
             file_type="pdf",
@@ -134,9 +176,22 @@ class TestDocumentServiceUpload:
         )
         mock_repository.create.return_value = created_doc
 
+        # After processing, get_by_id returns completed document
+        completed_doc = Document(
+            id=doc_id,
+            filename="test.pdf",
+            file_hash="abc123",
+            file_type="pdf",
+            file_size_bytes=100,
+            status=DocumentStatus.COMPLETED,
+            page_count=1,
+        )
+        mock_repository.get_by_id.return_value = completed_doc
+
         service = DocumentService(
             repository=mock_repository,
             gcs_client=mock_gcs_client,
+            docling_processor=mock_docling_processor,
         )
 
         result = await service.upload(
@@ -146,14 +201,18 @@ class TestDocumentServiceUpload:
         )
 
         assert result.filename == "test.pdf"
-        # CRITICAL: Status should be PENDING (processing is async)
-        assert result.status == DocumentStatus.PENDING
+        # CRITICAL: Status should be COMPLETED (processing is synchronous)
+        assert result.status == DocumentStatus.COMPLETED
+        assert result.page_count == 1
         mock_repository.get_by_hash.assert_called_once()
         mock_repository.create.assert_called_once()
         mock_gcs_client.upload.assert_called_once()
+        mock_docling_processor.process_bytes.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_upload_duplicate_rejected(self, mock_repository, mock_gcs_client):
+    async def test_upload_duplicate_rejected(
+        self, mock_repository, mock_gcs_client, mock_docling_processor
+    ):
         """Test that duplicate file is rejected."""
         existing_doc = Document(
             id=uuid4(),
@@ -168,6 +227,7 @@ class TestDocumentServiceUpload:
         service = DocumentService(
             repository=mock_repository,
             gcs_client=mock_gcs_client,
+            docling_processor=mock_docling_processor,
         )
 
         with pytest.raises(DuplicateDocumentError) as exc_info:
@@ -182,7 +242,9 @@ class TestDocumentServiceUpload:
         mock_gcs_client.upload.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_upload_gcs_failure_marks_failed(self, mock_repository, mock_gcs_client):
+    async def test_upload_gcs_failure_marks_failed(
+        self, mock_repository, mock_gcs_client, mock_docling_processor
+    ):
         """Test that GCS upload failure marks document as FAILED."""
         created_doc = Document(
             id=uuid4(),
@@ -198,6 +260,7 @@ class TestDocumentServiceUpload:
         service = DocumentService(
             repository=mock_repository,
             gcs_client=mock_gcs_client,
+            docling_processor=mock_docling_processor,
         )
 
         with pytest.raises(DocumentUploadError, match="Failed to upload"):
@@ -215,10 +278,13 @@ class TestDocumentServiceUpload:
         assert "GCS" in call_args[1]["error_message"]
 
     @pytest.mark.asyncio
-    async def test_upload_does_not_call_docling(self, mock_repository, mock_gcs_client):
-        """Test that upload does NOT call DoclingProcessor (processing is async)."""
+    async def test_upload_calls_docling_processor(
+        self, mock_repository, mock_gcs_client, mock_docling_processor
+    ):
+        """Test that upload calls DoclingProcessor.process_bytes."""
+        doc_id = uuid4()
         created_doc = Document(
-            id=uuid4(),
+            id=doc_id,
             filename="test.pdf",
             file_hash="abc123",
             file_type="pdf",
@@ -227,31 +293,81 @@ class TestDocumentServiceUpload:
         )
         mock_repository.create.return_value = created_doc
 
+        completed_doc = Document(
+            id=doc_id,
+            filename="test.pdf",
+            file_hash="abc123",
+            file_type="pdf",
+            file_size_bytes=100,
+            status=DocumentStatus.COMPLETED,
+            page_count=1,
+        )
+        mock_repository.get_by_id.return_value = completed_doc
+
         service = DocumentService(
             repository=mock_repository,
             gcs_client=mock_gcs_client,
+            docling_processor=mock_docling_processor,
         )
 
-        # Patch DoclingProcessor to verify it's NOT called
-        with patch("src.ingestion.docling_processor.DoclingProcessor") as mock_docling:
-            result = await service.upload(
-                filename="test.pdf",
-                content=b"pdf content",
-                content_type="application/pdf",
-            )
+        await service.upload(
+            filename="test.pdf",
+            content=b"pdf content",
+            content_type="application/pdf",
+        )
 
-            # DoclingProcessor should NOT be instantiated or called
-            mock_docling.assert_not_called()
+        # DoclingProcessor should be called with content and filename
+        mock_docling_processor.process_bytes.assert_called_once_with(b"pdf content", "test.pdf")
 
-        # Document should still be PENDING (not COMPLETED)
-        assert result.status == DocumentStatus.PENDING
+    @pytest.mark.asyncio
+    async def test_upload_processing_error_marks_failed(
+        self, mock_repository, mock_gcs_client, mock_docling_processor_failing
+    ):
+        """Test that processing errors mark document as FAILED."""
+        doc_id = uuid4()
+        created_doc = Document(
+            id=doc_id,
+            filename="test.pdf",
+            file_hash="abc123",
+            file_type="pdf",
+            file_size_bytes=100,
+            status=DocumentStatus.PENDING,
+        )
+        mock_repository.create.return_value = created_doc
+
+        failed_doc = Document(
+            id=doc_id,
+            filename="test.pdf",
+            file_hash="abc123",
+            file_type="pdf",
+            file_size_bytes=100,
+            status=DocumentStatus.FAILED,
+            error_message="Document processing failed: Invalid PDF format",
+        )
+        mock_repository.get_by_id.return_value = failed_doc
+
+        service = DocumentService(
+            repository=mock_repository,
+            gcs_client=mock_gcs_client,
+            docling_processor=mock_docling_processor_failing,
+        )
+
+        result = await service.upload(
+            filename="test.pdf",
+            content=b"content",
+            content_type="application/pdf",
+        )
+
+        # Document should be FAILED (not crash)
+        assert result.status == DocumentStatus.FAILED
+        assert result.error_message is not None
 
 
 class TestDocumentServiceProcessing:
     """Tests for DocumentService processing methods."""
 
     @pytest.mark.asyncio
-    async def test_update_processing_success(self):
+    async def test_update_processing_success(self, mock_docling_processor):
         """Test updating document after successful processing."""
         mock_repository = AsyncMock()
         updated_doc = Document(
@@ -268,6 +384,7 @@ class TestDocumentServiceProcessing:
         service = DocumentService(
             repository=mock_repository,
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
 
         result = await service.update_processing_result(
@@ -285,7 +402,7 @@ class TestDocumentServiceProcessing:
         )
 
     @pytest.mark.asyncio
-    async def test_update_processing_failure(self):
+    async def test_update_processing_failure(self, mock_docling_processor):
         """Test updating document after failed processing."""
         mock_repository = AsyncMock()
         doc_id = uuid4()
@@ -302,6 +419,7 @@ class TestDocumentServiceProcessing:
         service = DocumentService(
             repository=mock_repository,
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
 
         result = await service.update_processing_result(
@@ -323,11 +441,12 @@ class TestDocumentServiceErrorHandling:
     """Tests for error handling (INGEST-14 coverage)."""
 
     @pytest.mark.asyncio
-    async def test_validation_error_does_not_crash(self):
+    async def test_validation_error_does_not_crash(self, mock_docling_processor):
         """Test that validation errors are raised properly without crashing."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
 
         # Invalid file type should raise ValueError, not crash
@@ -341,7 +460,7 @@ class TestDocumentServiceErrorHandling:
         assert "Unsupported file type" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_duplicate_error_does_not_crash(self):
+    async def test_duplicate_error_does_not_crash(self, mock_docling_processor):
         """Test that duplicate detection errors are raised properly."""
         mock_repository = AsyncMock()
         existing_doc = Document(
@@ -357,6 +476,7 @@ class TestDocumentServiceErrorHandling:
         service = DocumentService(
             repository=mock_repository,
             gcs_client=MagicMock(),
+            docling_processor=mock_docling_processor,
         )
 
         with pytest.raises(DuplicateDocumentError) as exc_info:
@@ -371,7 +491,7 @@ class TestDocumentServiceErrorHandling:
         assert exc_info.value.file_hash is not None
 
     @pytest.mark.asyncio
-    async def test_gcs_error_wrapped_properly(self):
+    async def test_gcs_error_wrapped_properly(self, mock_docling_processor):
         """Test that GCS errors are wrapped in DocumentUploadError."""
         mock_repository = AsyncMock()
         mock_repository.get_by_hash.return_value = None
@@ -390,6 +510,7 @@ class TestDocumentServiceErrorHandling:
         service = DocumentService(
             repository=mock_repository,
             gcs_client=mock_gcs,
+            docling_processor=mock_docling_processor,
         )
 
         with pytest.raises(DocumentUploadError) as exc_info:

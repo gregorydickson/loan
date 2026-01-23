@@ -28,26 +28,33 @@ class TestDocumentUpload:
         assert response.status_code == 201
         data = response.json()
         assert data["filename"] == "test.pdf"
-        # CRITICAL: Status should be 'pending' (processing is async)
-        assert data["status"] == "pending"
+        # CRITICAL: Status should be 'completed' (processing is synchronous)
+        assert data["status"] == "completed"
         assert "id" in data
         assert "file_hash" in data
         assert len(data["file_hash"]) == 64  # SHA-256
 
     @pytest.mark.asyncio
-    async def test_upload_returns_pending_not_completed(self, client: AsyncClient):
-        """Test that upload returns PENDING status (not COMPLETED)."""
-        files = {
-            "file": ("test.pdf", b"%PDF-1.4 test content", "application/pdf")
-        }
-
+    async def test_upload_processes_pdf_to_completed(self, client: AsyncClient):
+        """Test that upload processes document and status becomes COMPLETED."""
+        files = {"file": ("test.pdf", b"%PDF-1.4 test", "application/pdf")}
         response = await client.post("/api/documents/", files=files)
 
         assert response.status_code == 201
         data = response.json()
-        # CRITICAL: This verifies async processing model
-        assert data["status"] == "pending", "Upload should return PENDING, not COMPLETED (processing is async)"
-        assert "asynchronous" in data["message"].lower() or "poll" in data["message"].lower()
+        # CRITICAL: Status should now be 'completed' (not 'pending')
+        assert data["status"] == "completed"
+        assert data["page_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_upload_populates_page_count(self, client: AsyncClient):
+        """Test that page_count is set after processing."""
+        files = {"file": ("doc.pdf", b"%PDF-1.4 content", "application/pdf")}
+        response = await client.post("/api/documents/", files=files)
+
+        assert response.status_code == 201
+        assert response.json()["page_count"] is not None
+        assert response.json()["page_count"] >= 1
 
     @pytest.mark.asyncio
     async def test_upload_docx_success(self, client: AsyncClient):
@@ -62,7 +69,7 @@ class TestDocumentUpload:
         assert response.status_code == 201
         data = response.json()
         assert data["filename"] == "document.docx"
-        assert data["status"] == "pending"
+        assert data["status"] == "completed"
 
     @pytest.mark.asyncio
     async def test_upload_image_success(self, client: AsyncClient):
@@ -76,7 +83,7 @@ class TestDocumentUpload:
         assert response.status_code == 201
         data = response.json()
         assert data["filename"] == "scan.png"
-        assert data["status"] == "pending"
+        assert data["status"] == "completed"
 
     @pytest.mark.asyncio
     async def test_upload_unsupported_type_rejected(self, client: AsyncClient):
@@ -172,6 +179,49 @@ class TestDocumentUploadErrorHandling:
         assert "Unsupported" in response.json()["detail"]
 
 
+class TestDocumentProcessingErrors:
+    """Tests for processing error handling (Gap 2 closure)."""
+
+    @pytest.mark.asyncio
+    async def test_corrupted_pdf_becomes_failed(self, client_with_failing_docling: AsyncClient):
+        """Test that corrupted PDF results in FAILED status (INGEST-14)."""
+        files = {"file": ("bad.pdf", b"not a pdf", "application/pdf")}
+        response = await client_with_failing_docling.post("/api/documents/", files=files)
+
+        # Upload succeeds (201) but status is 'failed'
+        assert response.status_code == 201
+        data = response.json()
+        assert data["status"] == "failed"
+        assert data.get("error_message") is not None
+
+    @pytest.mark.asyncio
+    async def test_processing_error_does_not_crash(self, client_with_failing_docling: AsyncClient):
+        """Test that processing error doesn't crash the app (INGEST-14)."""
+        files = {"file": ("corrupt.pdf", b"corrupted", "application/pdf")}
+        response = await client_with_failing_docling.post("/api/documents/", files=files)
+
+        # Should return 201 (upload succeeded), not 500 (crash)
+        assert response.status_code == 201
+        # Server is still running - make another request
+        health = await client_with_failing_docling.get("/health")
+        assert health.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_processing_error_includes_error_message(
+        self, client_with_failing_docling: AsyncClient
+    ):
+        """Test that processing error includes error_message in response."""
+        files = {"file": ("invalid.pdf", b"invalid content", "application/pdf")}
+        response = await client_with_failing_docling.post("/api/documents/", files=files)
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["status"] == "failed"
+        assert "error_message" in data
+        assert data["error_message"] is not None
+        assert "processing failed" in data["error_message"].lower()
+
+
 class TestDocumentGet:
     """Tests for GET /api/documents/{id}."""
 
@@ -193,7 +243,7 @@ class TestDocumentGet:
         assert data["id"] == document_id
         assert data["filename"] == "test.pdf"
         assert data["file_type"] == "pdf"
-        assert data["status"] == "pending"  # Still pending (not processed)
+        assert data["status"] == "completed"  # Processed synchronously
 
     @pytest.mark.asyncio
     async def test_get_document_not_found(self, client: AsyncClient):
