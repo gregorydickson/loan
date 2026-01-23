@@ -10,7 +10,7 @@ This roadmap transforms the loan document extraction system from concept to depl
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Foundation & Data Models** - Project scaffolding, dependencies, and Pydantic schemas for extraction output
+- [x] **Phase 1: Foundation & Data Models** - Project scaffolding, dependencies, and Pydantic schemas for extraction output
 - [ ] **Phase 2: Document Ingestion Pipeline** - Docling integration, GCS storage, document database layer
 - [ ] **Phase 3: LLM Extraction & Validation** - Gemini client, complexity classifier, extractor, data validation
 - [ ] **Phase 4: Data Storage & REST API** - Borrower repositories, complete API endpoints
@@ -48,12 +48,12 @@ Plans:
   3. Document files are stored in GCS with retrievable gs:// URI
   4. Duplicate uploads (same file hash) are detected and rejected
   5. Failed document processing gracefully records error status without crashing
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Document SQLAlchemy models and database setup
-- [ ] 02-02: Docling processor for PDF/DOCX/image files
-- [ ] 02-03: GCS client and document service integration
+- [ ] 02-01-PLAN.md - Database models and Alembic setup (SQLAlchemy models, migrations, DocumentRepository)
+- [ ] 02-02-PLAN.md - Docling processor and GCS client (document conversion, file storage)
+- [ ] 02-03-PLAN.md - Document service and upload API (orchestration, POST /api/documents endpoint)
 
 ### Phase 3: LLM Extraction & Validation
 **Goal**: Extract structured borrower data from document text using Gemini 3.0 with complexity-based model selection and hybrid validation
@@ -151,7 +151,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
-| 2. Document Ingestion Pipeline | 0/3 | Not started | - |
+| 2. Document Ingestion Pipeline | 0/3 | Ready to execute | - |
 | 3. LLM Extraction & Validation | 0/4 | Not started | - |
 | 4. Data Storage & REST API | 0/3 | Not started | - |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
