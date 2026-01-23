@@ -10,6 +10,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 
 from src.config import settings
+from src.api.documents import router as documents_router
 
 
 @asynccontextmanager
@@ -18,8 +19,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     Startup: Initialize database connection pool, verify connectivity.
     Shutdown: Dispose connection pool, clean up resources.
-
-    Database engine will be added in Phase 01-03 after models are defined.
     """
     # Startup
     if settings.debug:
@@ -38,6 +37,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Include routers
+app.include_router(documents_router)
 
 
 @app.get("/health")
