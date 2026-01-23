@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -9,9 +11,7 @@ export default function Home() {
           Extract and organize borrower data from loan documents with complete source traceability
         </p>
         <div className="pt-4">
-          <span className="inline-block rounded-lg bg-foreground px-6 py-3 text-background font-medium">
-            Get Started
-          </span>
+          <Button size="lg">Get Started</Button>
         </div>
       </div>
     </div>
