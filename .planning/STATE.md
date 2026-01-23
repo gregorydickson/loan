@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 2 of 7 (Document Ingestion Pipeline)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-23 - Completed 02-01-PLAN.md (Database Layer)
+Last activity: 2026-01-23 - Completed 02-02-PLAN.md (DoclingProcessor and GCS Client)
 
-Progress: [████░░░░░░] 19%
+Progress: [█████░░░░░] 24%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 5.8 min
-- Total execution time: 0.38 hours
+- Total plans completed: 5
+- Average duration: 6.2 min
+- Total execution time: 0.52 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
-| 02-document-ingestion-pipeline | 1 | 6 min | 6 min |
+| 02-document-ingestion-pipeline | 2 | 14 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 8 min, 5 min, 4 min, 6 min
+- Last 5 plans: 5 min, 4 min, 6 min, 8 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -72,6 +72,11 @@ Recent decisions affecting current work:
 - Repository uses flush() not commit() - caller controls transaction
 - SQLite in-memory with aiosqlite for fast unit tests
 
+**Phase 02-02 Decisions:**
+- Fresh DocumentConverter per document (memory-safe, avoids GitHub #2209 leak)
+- Page text via iterate_items() with provenance (actual content extraction)
+- Application Default Credentials for GCS (works on Cloud Run)
+
 ### Pending Todos
 
 None yet.
@@ -82,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-23 22:31 UTC
-Stopped at: Completed 02-01-PLAN.md (Database Layer)
+Last session: 2026-01-23 22:41 UTC
+Stopped at: Completed 02-02-PLAN.md (DoclingProcessor and GCS Client)
 Resume file: None
