@@ -5,6 +5,7 @@ Exports:
 - Document, DocumentStatus, Borrower, IncomeRecord, AccountNumber, SourceReference: ORM models
 - engine, async_session_factory: Database connection components
 - get_db_session, DBSession: FastAPI dependency injection
+- DocumentRepository: Repository for Document CRUD operations
 """
 
 from src.storage.database import DBSession, async_session_factory, engine, get_db_session
@@ -17,6 +18,7 @@ from src.storage.models import (
     IncomeRecord,
     SourceReference,
 )
+from src.storage.repositories import DocumentRepository
 
 __all__ = [
     # Base
@@ -33,4 +35,6 @@ __all__ = [
     "async_session_factory",
     "get_db_session",
     "DBSession",
+    # Repositories
+    "DocumentRepository",
 ]
