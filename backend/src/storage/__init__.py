@@ -1,14 +1,12 @@
-"""Storage module for database models and async operations.
+"""Storage module for database and GCS operations."""
 
-Exports:
-- Base: SQLAlchemy declarative base
-- Document, DocumentStatus, Borrower, IncomeRecord, AccountNumber, SourceReference: ORM models
-- engine, async_session_factory: Database connection components
-- get_db_session, DBSession: FastAPI dependency injection
-- DocumentRepository: Repository for Document CRUD operations
-"""
-
-from src.storage.database import DBSession, async_session_factory, engine, get_db_session
+from src.storage.database import (
+    DBSession,
+    async_session_factory,
+    engine,
+    get_db_session,
+)
+from src.storage.gcs_client import GCSClient, GCSDownloadError, GCSError, GCSUploadError
 from src.storage.models import (
     AccountNumber,
     Base,
@@ -21,20 +19,22 @@ from src.storage.models import (
 from src.storage.repositories import DocumentRepository
 
 __all__ = [
-    # Base
+    # Database
     "Base",
-    # Models
     "Document",
     "DocumentStatus",
     "Borrower",
     "IncomeRecord",
     "AccountNumber",
     "SourceReference",
-    # Database
     "engine",
     "async_session_factory",
     "get_db_session",
     "DBSession",
-    # Repositories
     "DocumentRepository",
+    # GCS
+    "GCSClient",
+    "GCSError",
+    "GCSUploadError",
+    "GCSDownloadError",
 ]
