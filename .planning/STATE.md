@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 2 - Document Ingestion Pipeline
+**Current focus:** Phase 2 - Document Ingestion Pipeline (Complete)
 
 ## Current Position
 
 Phase: 2 of 7 (Document Ingestion Pipeline)
-Plan: 3 of 3 in current phase
+Plan: 4 of 4 in current phase (Gap Closure)
 Status: Phase complete
-Last activity: 2026-01-23 - Completed 02-03-PLAN.md (DocumentService and Upload API)
+Last activity: 2026-01-23 - Completed 02-04-PLAN.md (Gap Closure - Docling Integration)
 
-Progress: [██████░░░░] 29%
+Progress: [███████░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 6.8 min
-- Total execution time: 0.68 hours
+- Total plans completed: 7
+- Average duration: 7.1 min
+- Total execution time: 0.83 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
-| 02-document-ingestion-pipeline | 3 | 24 min | 8 min |
+| 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 4 min, 6 min, 8 min, 10 min
+- Last 5 plans: 4 min, 6 min, 8 min, 10 min, 10 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -82,6 +82,12 @@ Recent decisions affecting current work:
 - SHA-256 hash computed before DB insert for early duplicate detection
 - Mock GCS client when bucket not configured (enables local development)
 
+**Phase 02-04 Decisions:**
+- Synchronous processing instead of async Cloud Tasks (simpler for Phase 2)
+- Upload returns final status (COMPLETED/FAILED), not PENDING
+- Include page_count and error_message in upload response
+- DoclingProcessor injection via FastAPI dependencies
+
 ### Pending Todos
 
 None yet.
@@ -92,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-23 22:43 UTC
-Stopped at: Completed 02-03-PLAN.md (DocumentService and Upload API) - Phase 2 complete
+Last session: 2026-01-23 23:12 UTC
+Stopped at: Completed 02-04-PLAN.md (Gap Closure - Docling Integration) - Phase 2 fully complete
 Resume file: None
