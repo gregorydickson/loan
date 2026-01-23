@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 2 of 7 (Document Ingestion Pipeline)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-23 - Completed 02-02-PLAN.md (DoclingProcessor and GCS Client)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-23 - Completed 02-03-PLAN.md (DocumentService and Upload API)
 
-Progress: [█████░░░░░] 24%
+Progress: [██████░░░░] 29%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 6.2 min
-- Total execution time: 0.52 hours
+- Total plans completed: 6
+- Average duration: 6.8 min
+- Total execution time: 0.68 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
-| 02-document-ingestion-pipeline | 2 | 14 min | 7 min |
+| 02-document-ingestion-pipeline | 3 | 24 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min, 4 min, 6 min, 8 min
+- Last 5 plans: 4 min, 6 min, 8 min, 10 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -77,6 +77,11 @@ Recent decisions affecting current work:
 - Page text via iterate_items() with provenance (actual content extraction)
 - Application Default Credentials for GCS (works on Cloud Run)
 
+**Phase 02-03 Decisions:**
+- Upload returns PENDING immediately (Docling processing is async via Cloud Tasks)
+- SHA-256 hash computed before DB insert for early duplicate detection
+- Mock GCS client when bucket not configured (enables local development)
+
 ### Pending Todos
 
 None yet.
@@ -87,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-23 22:41 UTC
-Stopped at: Completed 02-02-PLAN.md (DoclingProcessor and GCS Client)
+Last session: 2026-01-23 22:43 UTC
+Stopped at: Completed 02-03-PLAN.md (DocumentService and Upload API) - Phase 2 complete
 Resume file: None
