@@ -88,12 +88,12 @@ Plans:
   3. GET /api/borrowers/search returns filtered results by name or account number
   4. OpenAPI documentation accessible at /docs with all endpoints documented
   5. Invalid requests return appropriate HTTP status codes (400, 404, 500)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Borrower repository and database migrations
-- [ ] 04-02: Document API endpoints
-- [ ] 04-03: Borrower API endpoints with search
+- [ ] 04-01-PLAN.md - BorrowerRepository with CRUD and search operations
+- [ ] 04-02-PLAN.md - CORS middleware, exception handlers, document status endpoint
+- [ ] 04-03-PLAN.md - Borrower API endpoints with search and pagination
 
 ### Phase 5: Frontend Dashboard
 **Goal**: Provide a visual interface for document upload, borrower browsing, and architecture documentation
@@ -158,11 +158,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
 | 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
 | 3. LLM Extraction & Validation | 5/5 | ✅ Complete | 2026-01-24 |
-| 4. Data Storage & REST API | 0/3 | Not started | - |
+| 4. Data Storage & REST API | 0/3 | Planned | - |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
 | 6. GCP Infrastructure | 0/3 | Not started | - |
 | 7. Documentation & Testing | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-23*
+*Last updated: 2026-01-24*
