@@ -11,7 +11,7 @@ This roadmap transforms the loan document extraction system from concept to depl
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Foundation & Data Models** - Project scaffolding, dependencies, and Pydantic schemas for extraction output
-- [ ] **Phase 2: Document Ingestion Pipeline** - Docling integration, GCS storage, document database layer
+- [x] **Phase 2: Document Ingestion Pipeline** - Docling integration, GCS storage, document database layer
 - [ ] **Phase 3: LLM Extraction & Validation** - Gemini client, complexity classifier, extractor, data validation
 - [ ] **Phase 4: Data Storage & REST API** - Borrower repositories, complete API endpoints
 - [ ] **Phase 5: Frontend Dashboard** - Next.js UI with document/borrower management and architecture visualization
@@ -67,13 +67,14 @@ Plans:
   3. Confidence scores calculated for each extraction (0.0-1.0 scale)
   4. SSN, phone, and zip code formats validated with errors tracked
   5. Large documents chunked and results aggregated correctly
-**Plans**: TBD
+**Plans**: 4 plans
+**Status**: Planned (2026-01-23)
 
 Plans:
-- [ ] 03-01: Gemini client with retry and error handling
-- [ ] 03-02: Complexity classifier and prompt templates
-- [ ] 03-03: Extraction orchestrator with chunking
-- [ ] 03-04: Validation service and confidence scoring
+- [ ] 03-01-PLAN.md - Gemini client with retry and error handling
+- [ ] 03-02-PLAN.md - Complexity classifier, prompt templates, and document chunker
+- [ ] 03-03-PLAN.md - Validation service and confidence scoring
+- [ ] 03-04-PLAN.md - Extraction orchestrator with deduplication
 
 ### Phase 4: Data Storage & REST API
 **Goal**: Persist extracted borrower data with relationships and expose through searchable REST endpoints
@@ -154,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
 | 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
-| 3. LLM Extraction & Validation | 0/4 | Not started | - |
+| 3. LLM Extraction & Validation | 0/4 | Planned | - |
 | 4. Data Storage & REST API | 0/3 | Not started | - |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
 | 6. GCP Infrastructure | 0/3 | Not started | - |
