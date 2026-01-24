@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 3 of 7 (LLM Extraction & Validation)
-Plan: 2 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 03-02-PLAN.md (Document Preprocessing)
+Last activity: 2026-01-24 - Completed 03-01-PLAN.md (Gemini LLM Client)
 
-Progress: [█████████░] 36%
+Progress: [██████████] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 6.7 min
-- Total execution time: 1.0 hours
+- Total execution time: 1.17 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [█████████░] 36%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
-| 03-llm-extraction-validation | 2 | 10 min | 5.0 min |
+| 03-llm-extraction-validation | 3 | 20 min | 6.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 8 min, 10 min, 10 min, 5 min, 5 min
+- Last 5 plans: 10 min, 10 min, 5 min, 5 min, 10 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -101,6 +101,12 @@ Recent decisions affecting current work:
 - Year validation range 1950 to current+1 (historical + projected income)
 - Confidence threshold 0.7 for review flagging
 
+**Phase 03-01 Decisions:**
+- Type-safe token extraction via helper function (handles None usage_metadata)
+- Let RetryError propagate after exhaustion (caller can distinguish from single-attempt failure)
+- Temperature=1.0 for Gemini 3 (lower causes looping)
+- No max_output_tokens (causes None response with structured output)
+
 ### Pending Todos
 
 None yet.
@@ -111,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 03:52 UTC
-Stopped at: Completed 03-02-PLAN.md (Document Preprocessing)
+Last session: 2026-01-24 03:57 UTC
+Stopped at: Completed 03-01-PLAN.md (Gemini LLM Client)
 Resume file: None
