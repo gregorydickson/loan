@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 6 of 7 (GCP Infrastructure)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 06-02-PLAN.md
+Last activity: 2026-01-24 - Completed 06-03-PLAN.md
 
-Progress: [██████████████████████████░░] 92%
+Progress: [███████████████████████████░] 96%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 7.1 min
-- Total execution time: 2.63 hours
+- Total plans completed: 23
+- Average duration: 6.9 min
+- Total execution time: 2.68 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [███████████████████████
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 | 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
 | 05-frontend-dashboard | 5 | 16 min | 3.2 min |
-| 06-gcp-infrastructure | 2 | 25 min | 12.5 min |
+| 06-gcp-infrastructure | 3 | 28 min | 9.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min, 6 min, 1 min, 12 min, 13 min
-- Trend: Infrastructure plans take longer due to Docker builds and Terraform
+- Last 5 plans: 6 min, 1 min, 12 min, 13 min, 3 min
+- Trend: Terraform config plans faster than Docker builds
 
 *Updated after each plan completion*
 
@@ -184,6 +184,16 @@ Recent decisions affecting current work:
 - Pre-compiled Python bytecode for faster cold starts
 - Git commit hash as default image tag for deployment traceability
 
+**Phase 06-03 Decisions:**
+- PostgreSQL 16 on db-f1-micro tier (smallest, sufficient for demo)
+- Private IP only via VPC peering (ipv4_enabled=false)
+- 7-day backup retention with point-in-time recovery
+- Secret Manager stores connection strings (not in Terraform state)
+- Per-secret IAM bindings for Cloud Run service account
+- Storage lifecycle: NEARLINE at 90d, COLDLINE at 365d, 5 version limit
+- Queue rate limits: 10/s dispatches, 5 concurrent
+- Queue retry: 5 attempts, exponential backoff, 1 hour max duration
+
 ### Pending Todos
 
 None yet.
@@ -194,6 +204,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 16:20 UTC
-Stopped at: Completed 06-02-PLAN.md (Dockerfiles & Deployment Scripts)
+Last session: 2026-01-24 16:28 UTC
+Stopped at: Completed 06-03-PLAN.md (Managed Services)
 Resume file: None
