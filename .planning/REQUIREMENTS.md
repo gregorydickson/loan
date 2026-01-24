@@ -26,9 +26,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **INGEST-05**: Docling processor returns page-level metadata
 - [ ] **INGEST-06**: Document service uploads files to Google Cloud Storage
 - [ ] **INGEST-07**: Document service creates database record with metadata
-- [ ] **INGEST-08**: Document service queues processing task in Cloud Tasks
+- [x] **INGEST-08**: Document service queues processing task in Cloud Tasks
 - [ ] **INGEST-09**: Document service detects duplicates via file hash (SHA-256)
-- [ ] **INGEST-10**: Document service handles processing errors gracefully
+- [x] **INGEST-10**: Document service handles processing errors gracefully
 - [ ] **INGEST-11**: GCS client uploads files and returns gs:// URI
 - [ ] **INGEST-12**: GCS client downloads files by URI
 - [ ] **INGEST-13**: GCS client generates signed URLs for temporary access
@@ -328,9 +328,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INGEST-05 | Phase 2 | Pending |
 | INGEST-06 | Phase 2 | Pending |
 | INGEST-07 | Phase 2 | Pending |
-| INGEST-08 | Phase 2 | Pending |
+| INGEST-08 | Phase 9 | Complete |
 | INGEST-09 | Phase 2 | Pending |
-| INGEST-10 | Phase 2 | Pending |
+| INGEST-10 | Phase 9 | Complete |
 | INGEST-11 | Phase 2 | Pending |
 | INGEST-12 | Phase 2 | Pending |
 | INGEST-13 | Phase 2 | Pending |
