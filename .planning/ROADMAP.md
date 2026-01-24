@@ -67,7 +67,8 @@ Plans:
   3. Confidence scores calculated for each extraction (0.0-1.0 scale)
   4. SSN, phone, and zip code formats validated with errors tracked
   5. Large documents chunked and results aggregated correctly
-**Plans**: 4 plans
+  6. Consistency validation flags address conflicts, income anomalies, and cross-document mismatches
+**Plans**: 5 plans
 **Status**: Planned (2026-01-23)
 
 Plans:
@@ -75,6 +76,7 @@ Plans:
 - [ ] 03-02-PLAN.md - Complexity classifier, prompt templates, and document chunker
 - [ ] 03-03-PLAN.md - Validation service and confidence scoring
 - [ ] 03-04-PLAN.md - Extraction orchestrator with deduplication
+- [ ] 03-05-PLAN.md - Consistency validation (address conflicts, income progression, cross-document checks)
 
 ### Phase 4: Data Storage & REST API
 **Goal**: Persist extracted borrower data with relationships and expose through searchable REST endpoints
@@ -155,7 +157,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
 | 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
-| 3. LLM Extraction & Validation | 0/4 | Planned | - |
+| 3. LLM Extraction & Validation | 0/5 | Planned | - |
 | 4. Data Storage & REST API | 0/3 | Not started | - |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
 | 6. GCP Infrastructure | 0/3 | Not started | - |
