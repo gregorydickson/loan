@@ -106,13 +106,13 @@ Plans:
   3. Borrower detail page shows income timeline visualization and source references
   4. Architecture pages display system diagram, pipeline flow, and scaling analysis
   5. All pages render correctly on desktop and tablet viewports
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 05-01: App shell, layout, and API client
-- [ ] 05-02: Document upload and list pages
-- [ ] 05-03: Borrower list and detail pages
-- [ ] 05-04: Architecture documentation pages
+- [ ] 05-01-PLAN.md — App shell, layout, and API client (Wave 1)
+- [ ] 05-02-PLAN.md — Document upload and list pages (Wave 2)
+- [ ] 05-03-PLAN.md — Borrower list and detail pages (Wave 2)
+- [ ] 05-04-PLAN.md — Architecture documentation pages (Wave 2)
 
 ### Phase 6: GCP Infrastructure
 **Goal**: Deploy the complete system to Google Cloud Platform with infrastructure as code
@@ -160,10 +160,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
 | 3. LLM Extraction & Validation | 5/5 | ✅ Complete | 2026-01-24 |
 | 4. Data Storage & REST API | 3/3 | ✅ Complete | 2026-01-24 |
-| 5. Frontend Dashboard | 0/4 | Not started | - |
+| 5. Frontend Dashboard | 0/4 | Planned | - |
 | 6. GCP Infrastructure | 0/3 | Not started | - |
 | 7. Documentation & Testing | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Phase 4 complete)*
+*Last updated: 2026-01-24 (Phase 5 planned)*
