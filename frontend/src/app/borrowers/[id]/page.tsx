@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BorrowerCard } from "@/components/borrowers/borrower-card";
 import { IncomeTimeline } from "@/components/borrowers/income-timeline";
 import { SourceReferences } from "@/components/borrowers/source-references";
 import { useBorrower } from "@/hooks/use-borrowers";
@@ -134,6 +135,9 @@ export default function BorrowerDetailPage({ params }: BorrowerPageProps) {
           {(confidenceScore * 100).toFixed(0)}% confidence
         </Badge>
       </div>
+
+      {/* Borrower Card Summary */}
+      <BorrowerCard borrower={borrower} disableLink />
 
       {/* Summary Card */}
       <Card>
