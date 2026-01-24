@@ -35,6 +35,14 @@ resource "google_project_iam_member" "logging_writer" {
   member  = "serviceAccount:${google_service_account.cloud_run_sa.email}"
 }
 
+# Role: Cloud Run Invoker - Allow service account to invoke Cloud Run
+# Required for Cloud Tasks OIDC authentication when calling /api/tasks/process-document
+resource "google_project_iam_member" "run_invoker" {
+  project = var.project_id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+}
+
 # Local value for service account email - used by other files (e.g., storage IAM)
 locals {
   cloud_run_service_account_email = google_service_account.cloud_run_sa.email
