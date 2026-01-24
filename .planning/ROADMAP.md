@@ -185,10 +185,16 @@ Plans:
   1. DocumentService queues extraction to Cloud Tasks instead of synchronous processing
   2. Upload endpoint returns immediately with PENDING status
   3. Extraction runs asynchronously in background worker
-  4. Failed extractions retry with exponential backoff (max 3 attempts)
+  4. Failed extractions retry with exponential backoff (max 5 attempts)
   5. Document status updates to COMPLETED or FAILED after extraction finishes
-**Plans**: TBD
+**Plans**: 4 plans
 **Status**: Pending
+
+Plans:
+- [ ] 09-01-PLAN.md - Cloud Tasks client and configuration (dependency, settings, IAM)
+- [ ] 09-02-PLAN.md - Task handler endpoint for async document processing
+- [ ] 09-03-PLAN.md - Wire async task queueing into document upload flow
+- [ ] 09-04-PLAN.md - Comprehensive tests for async processing
 
 ## Progress
 
@@ -205,8 +211,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 6. GCP Infrastructure | 4/4 | Complete | 2026-01-24 |
 | 7. Documentation & Testing | 5/5 | Complete | 2026-01-24 |
 | 8. Wire Document-to-Extraction Pipeline | 3/3 | Complete | 2026-01-24 |
-| 9. Cloud Tasks Background Processing | 0/? | Pending | - |
+| 9. Cloud Tasks Background Processing | 0/4 | Pending | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Phase 8 executed with 3 plans)*
+*Last updated: 2026-01-24 (Phase 9 planned with 4 plans)*
