@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 8 of 9 (Wire Document to Extraction Pipeline)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-24 - Completed 08-01-PLAN.md (Extraction DI Wiring)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 08-02-PLAN.md (Pipeline Integration)
 
-Progress: [██████████████████████████████░] 97% (30/31 plans)
+Progress: [███████████████████████████████] 100% (31/31 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
+- Total plans completed: 31
 - Average duration: 6.2 min
-- Total execution time: 3.3 hours
+- Total execution time: 3.4 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [███████████████████████
 | 05-frontend-dashboard | 5 | 16 min | 3.2 min |
 | 06-gcp-infrastructure | 4 | 30 min | 7.5 min |
 | 07-documentation-testing | 5 | 35 min | 7.0 min |
-| 08-wire-document-to-extraction-pipeline | 1 | 6 min | 6.0 min |
+| 08-wire-document-to-extraction-pipeline | 2 | 14 min | 7.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 13 min, 13 min, 6 min
-- Trend: Gap closure phase started, DI wiring complete
+- Last 5 plans: 13 min, 13 min, 6 min, 8 min
+- Trend: Phase 8 complete - document-to-extraction pipeline fully wired
 
 *Updated after each plan completion*
 
@@ -232,16 +232,21 @@ Recent decisions affecting current work:
 - TYPE_CHECKING import to avoid circular dependency (extraction -> ingestion -> extraction)
 - Singleton pattern for BorrowerExtractor (expensive to instantiate with 7 components)
 
+**Phase 08-02 Decisions:**
+- SSN hashed with SHA-256 before storage (never stored raw - PII protection)
+- Extraction failures logged but don't fail document upload
+- Individual borrower persistence errors don't fail extraction loop
+
 ### Pending Todos
 
-- Plan 08-02: Call extractor from upload() and persist borrowers
+None - Phase 8 complete.
 
 ### Blockers/Concerns
 
-None - DI wiring complete, ready for extraction integration.
+None - document-to-extraction pipeline fully wired and operational.
 
 ## Session Continuity
 
-Last session: 2026-01-24 19:51 UTC
-Stopped at: Completed 08-01-PLAN.md
-Resume file: .planning/phases/08-wire-document-to-extraction-pipeline/08-02-PLAN.md
+Last session: 2026-01-24 20:10 UTC
+Stopped at: Completed 08-02-PLAN.md
+Resume file: None - Phase 8 complete
