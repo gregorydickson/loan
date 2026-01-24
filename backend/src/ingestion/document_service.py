@@ -235,6 +235,51 @@ class DocumentService:
                 success=True,
                 page_count=result.page_count,
             )
+
+            # 8. Extract borrowers from processed document
+            try:
+                extraction_result = self.borrower_extractor.extract(
+                    document=result,
+                    document_id=document_id,
+                    document_name=filename,
+                )
+
+                # 9. Persist extracted borrowers
+                for borrower_record in extraction_result.borrowers:
+                    try:
+                        await self._persist_borrower(borrower_record, document_id)
+                        logger.info(
+                            "Persisted borrower '%s' from document %s",
+                            borrower_record.name,
+                            document_id,
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            "Failed to persist borrower '%s': %s",
+                            borrower_record.name,
+                            str(e),
+                        )
+
+                # Log extraction summary
+                logger.info(
+                    "Extraction complete for document %s: %d borrowers, "
+                    "%d validation errors, %d consistency warnings",
+                    document_id,
+                    len(extraction_result.borrowers),
+                    len(extraction_result.validation_errors),
+                    len(extraction_result.consistency_warnings),
+                )
+
+            except Exception as e:
+                # Extraction failure should not fail the document - log and continue
+                # Document is COMPLETED (Docling worked), extraction just didn't find borrowers
+                logger.warning(
+                    "Extraction failed for document %s: %s. "
+                    "Document marked completed anyway.",
+                    document_id,
+                    str(e),
+                )
+
             # Refresh document to get updated status
             refreshed = await self.repository.get_by_id(document_id)
             if refreshed is not None:
