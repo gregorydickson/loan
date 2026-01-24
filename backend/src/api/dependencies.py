@@ -92,3 +92,15 @@ def get_document_service(
 
 
 DocumentServiceDep = Annotated[DocumentService, Depends(get_document_service)]
+
+# Re-export EntityNotFoundError for API module convenience
+from src.api.errors import EntityNotFoundError
+
+__all__ = [
+    "DBSession",
+    "GCSClientDep",
+    "DoclingProcessorDep",
+    "DocumentRepoDep",
+    "DocumentServiceDep",
+    "EntityNotFoundError",
+]

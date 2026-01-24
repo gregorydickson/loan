@@ -54,6 +54,15 @@ class DocumentListResponse(BaseModel):
     offset: int
 
 
+class DocumentStatusResponse(BaseModel):
+    """Lightweight status response for polling."""
+
+    id: UUID
+    status: str
+    page_count: int | None = None
+    error_message: str | None = None
+
+
 @router.post(
     "/",
     response_model=DocumentUploadResponse,
@@ -142,6 +151,43 @@ async def upload_document(
 
     finally:
         await file.close()
+
+
+@router.get(
+    "/{document_id}/status",
+    response_model=DocumentStatusResponse,
+    summary="Get document processing status",
+    description="Lightweight endpoint for polling document status. Use this instead of GET /{id} when only status is needed.",
+)
+async def get_document_status(
+    document_id: UUID,
+    repository: DocumentRepoDep,
+) -> DocumentStatusResponse:
+    """Get document processing status.
+
+    Args:
+        document_id: Document UUID
+        repository: DocumentRepository (injected)
+
+    Returns:
+        DocumentStatusResponse with status, page_count, error_message
+
+    Raises:
+        404: Document not found
+    """
+    document = await repository.get_by_id(document_id)
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document not found: {document_id}",
+        )
+
+    return DocumentStatusResponse(
+        id=document.id,
+        status=document.status.value,
+        page_count=document.page_count,
+        error_message=document.error_message,
+    )
 
 
 @router.get(
