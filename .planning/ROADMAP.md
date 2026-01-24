@@ -14,7 +14,7 @@ This roadmap transforms the loan document extraction system from concept to depl
 - [x] **Phase 2: Document Ingestion Pipeline** - Docling integration, GCS storage, document database layer
 - [x] **Phase 3: LLM Extraction & Validation** - Gemini client, complexity classifier, extractor, data validation
 - [x] **Phase 4: Data Storage & REST API** - Borrower repositories, complete API endpoints
-- [ ] **Phase 5: Frontend Dashboard** - Next.js UI with document/borrower management and architecture visualization
+- [x] **Phase 5: Frontend Dashboard** - Next.js UI with document/borrower management and architecture visualization
 - [ ] **Phase 6: GCP Infrastructure** - Terraform configuration, Cloud Run deployment, CI/CD scripts
 - [ ] **Phase 7: Documentation & Testing** - System design docs, architecture decisions, comprehensive test suite
 
@@ -107,13 +107,14 @@ Plans:
   4. Architecture pages display system diagram, pipeline flow, and scaling analysis
   5. All pages render correctly on desktop and tablet viewports
 **Plans**: 5 plans
+**Status**: Complete (2026-01-24)
 
 Plans:
 - [x] 05-01-PLAN.md - App shell, layout, and API client (Wave 1)
 - [x] 05-02-PLAN.md - Document upload and list pages (Wave 2)
 - [x] 05-03-PLAN.md - Borrower list and detail pages (Wave 2)
 - [x] 05-04-PLAN.md - Architecture documentation pages (Wave 2)
-- [ ] 05-05-PLAN.md - Gap closure: Wire BorrowerCard into detail page (Wave 1)
+- [x] 05-05-PLAN.md - Gap closure: Wire BorrowerCard into detail page (Wave 1)
 
 ### Phase 6: GCP Infrastructure
 **Goal**: Deploy the complete system to Google Cloud Platform with infrastructure as code
@@ -161,7 +162,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Document Ingestion Pipeline | 4/4 | Complete | 2026-01-23 |
 | 3. LLM Extraction & Validation | 5/5 | Complete | 2026-01-24 |
 | 4. Data Storage & REST API | 3/3 | Complete | 2026-01-24 |
-| 5. Frontend Dashboard | 4/5 | Gap closure | - |
+| 5. Frontend Dashboard | 5/5 | Complete | 2026-01-24 |
 | 6. GCP Infrastructure | 0/3 | Not started | - |
 | 7. Documentation & Testing | 0/4 | Not started | - |
 
