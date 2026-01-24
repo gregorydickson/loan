@@ -29,7 +29,24 @@ from tenacity import (
 )
 
 if TYPE_CHECKING:
-    pass
+    from google.genai.types import GenerateContentResponse
+
+
+def _get_token_counts(response: "GenerateContentResponse") -> tuple[int, int]:
+    """Safely extract token counts from response, handling None values.
+
+    Args:
+        response: The Gemini API response
+
+    Returns:
+        Tuple of (input_tokens, output_tokens), defaulting to 0 if unavailable
+    """
+    if response.usage_metadata is None:
+        return 0, 0
+
+    input_tokens = response.usage_metadata.prompt_token_count or 0
+    output_tokens = response.usage_metadata.candidates_token_count or 0
+    return input_tokens, output_tokens
 
 
 @dataclass
@@ -131,12 +148,15 @@ class GeminiClient:
 
         latency_ms = int((time.perf_counter() - start_time) * 1000)
 
+        # Extract token counts safely
+        input_tokens, output_tokens = _get_token_counts(response)
+
         # Handle None response (can happen when output truncated)
         if response.text is None:
             return LLMResponse(
                 content="",
                 parsed=None,
-                input_tokens=response.usage_metadata.prompt_token_count or 0,
+                input_tokens=input_tokens,
                 output_tokens=0,
                 latency_ms=latency_ms,
                 model_used=model,
@@ -156,8 +176,8 @@ class GeminiClient:
         return LLMResponse(
             content=response.text,
             parsed=parsed,
-            input_tokens=response.usage_metadata.prompt_token_count or 0,
-            output_tokens=response.usage_metadata.candidates_token_count or 0,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             latency_ms=latency_ms,
             model_used=model,
             finish_reason=finish_reason,
@@ -199,11 +219,14 @@ class GeminiClient:
 
         latency_ms = int((time.perf_counter() - start_time) * 1000)
 
+        # Extract token counts safely
+        input_tokens, output_tokens = _get_token_counts(response)
+
         if response.text is None:
             return LLMResponse(
                 content="",
                 parsed=None,
-                input_tokens=response.usage_metadata.prompt_token_count or 0,
+                input_tokens=input_tokens,
                 output_tokens=0,
                 latency_ms=latency_ms,
                 model_used=model,
@@ -222,8 +245,8 @@ class GeminiClient:
         return LLMResponse(
             content=response.text,
             parsed=parsed,
-            input_tokens=response.usage_metadata.prompt_token_count or 0,
-            output_tokens=response.usage_metadata.candidates_token_count or 0,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             latency_ms=latency_ms,
             model_used=model,
             finish_reason=finish_reason,
