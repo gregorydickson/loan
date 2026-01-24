@@ -316,6 +316,56 @@ class TestDocumentList:
         assert len(data["documents"]) == 1
 
 
+class TestDocumentStatus:
+    """Tests for GET /api/documents/{id}/status endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_get_status_success(self, client: AsyncClient):
+        """Test getting document status returns correct fields."""
+        # First upload a document
+        files = {"file": ("test.pdf", b"%PDF status test", "application/pdf")}
+        upload_response = await client.post("/api/documents/", files=files)
+        document_id = upload_response.json()["id"]
+
+        # Get status
+        response = await client.get(f"/api/documents/{document_id}/status")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == document_id
+        assert data["status"] == "completed"
+        assert data["page_count"] is not None
+
+    @pytest.mark.asyncio
+    async def test_get_status_not_found(self, client: AsyncClient):
+        """Test getting status for non-existent document returns 404."""
+        fake_id = "00000000-0000-0000-0000-000000000000"
+        response = await client.get(f"/api/documents/{fake_id}/status")
+
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_get_status_failed_document(
+        self, client_with_failing_docling: AsyncClient
+    ):
+        """Test getting status for failed document includes error_message."""
+        files = {"file": ("bad.pdf", b"not a pdf", "application/pdf")}
+        upload_response = await client_with_failing_docling.post(
+            "/api/documents/", files=files
+        )
+        document_id = upload_response.json()["id"]
+
+        response = await client_with_failing_docling.get(
+            f"/api/documents/{document_id}/status"
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "failed"
+        assert data["error_message"] is not None
+
+
 class TestHealthCheck:
     """Tests for health check endpoint."""
 
