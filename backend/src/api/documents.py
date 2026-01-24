@@ -1,7 +1,7 @@
 """Document API endpoints.
 
-Document upload includes synchronous Docling processing. Uploads return
-with status=COMPLETED or status=FAILED after processing completes.
+In production (Cloud Tasks configured): Upload returns immediately with PENDING status.
+In development (no Cloud Tasks): Upload returns after synchronous processing completes.
 """
 
 from uuid import UUID
@@ -18,7 +18,8 @@ router = APIRouter(prefix="/api/documents", tags=["documents"])
 class DocumentUploadResponse(BaseModel):
     """Response for document upload.
 
-    Processing is synchronous - status will be 'completed' or 'failed' after upload.
+    In async mode (production): status='pending', poll /status endpoint.
+    In sync mode (development): status='completed' or 'failed' immediately.
     """
 
     id: UUID = Field(..., description="Document ID")
@@ -70,8 +71,11 @@ class DocumentStatusResponse(BaseModel):
     summary="Upload a document",
     description="""Upload a document for processing. Supports PDF, DOCX, PNG, and JPG files.
 
-Document processing (text extraction via Docling) is synchronous.
-Response will include status='completed' with page_count, or status='failed' with error_message.""",
+In production (Cloud Tasks configured): Returns immediately with status='pending'.
+Poll GET /api/documents/{id}/status to check processing progress.
+
+In development (no Cloud Tasks): Processing is synchronous.
+Response will include status='completed' or status='failed'.""",
 )
 async def upload_document(
     file: UploadFile,
@@ -113,7 +117,8 @@ async def upload_document(
                 f"{document.error_message or 'Unknown error'}"
             )
         else:
-            message = "Document uploaded. Processing status: pending"
+            # PENDING or PROCESSING
+            message = "Document uploaded and queued for processing. Poll status endpoint for updates."
 
         return DocumentUploadResponse(
             id=document.id,
