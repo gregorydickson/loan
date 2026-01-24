@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 3 of 7 (LLM Extraction & Validation)
-Plan: 3 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 03-01-PLAN.md (Gemini LLM Client)
+Last activity: 2026-01-24 - Completed 03-04-PLAN.md (Extraction Orchestrator)
 
-Progress: [██████████] 40%
+Progress: [████████████] 48%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 6.7 min
-- Total execution time: 1.17 hours
+- Total plans completed: 11
+- Average duration: 7.3 min
+- Total execution time: 1.4 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [██████████] 40%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
-| 03-llm-extraction-validation | 3 | 20 min | 6.7 min |
+| 03-llm-extraction-validation | 4 | 34 min | 8.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 10 min, 10 min, 5 min, 5 min, 10 min
+- Last 5 plans: 10 min, 5 min, 5 min, 10 min, 14 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -107,6 +107,12 @@ Recent decisions affecting current work:
 - Temperature=1.0 for Gemini 3 (lower causes looping)
 - No max_output_tokens (causes None response with structured output)
 
+**Phase 03-04 Decisions:**
+- Gemini-compatible schemas separate from storage models (simpler types for LLM)
+- Multi-strategy deduplication (SSN > account > fuzzy name) with priority ordering
+- Pydantic validation errors caught and tracked (not crash extraction)
+- Optional[T] = None pattern for Gemini compatibility (not Field(default=...))
+
 ### Pending Todos
 
 None yet.
@@ -117,6 +123,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 03:57 UTC
-Stopped at: Completed 03-01-PLAN.md (Gemini LLM Client)
+Last session: 2026-01-24 04:14 UTC
+Stopped at: Completed 03-04-PLAN.md (Extraction Orchestrator)
 Resume file: None
