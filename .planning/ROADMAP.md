@@ -13,7 +13,7 @@ This roadmap transforms the loan document extraction system from concept to depl
 - [x] **Phase 1: Foundation & Data Models** - Project scaffolding, dependencies, and Pydantic schemas for extraction output
 - [x] **Phase 2: Document Ingestion Pipeline** - Docling integration, GCS storage, document database layer
 - [x] **Phase 3: LLM Extraction & Validation** - Gemini client, complexity classifier, extractor, data validation
-- [ ] **Phase 4: Data Storage & REST API** - Borrower repositories, complete API endpoints
+- [x] **Phase 4: Data Storage & REST API** - Borrower repositories, complete API endpoints
 - [ ] **Phase 5: Frontend Dashboard** - Next.js UI with document/borrower management and architecture visualization
 - [ ] **Phase 6: GCP Infrastructure** - Terraform configuration, Cloud Run deployment, CI/CD scripts
 - [ ] **Phase 7: Documentation & Testing** - System design docs, architecture decisions, comprehensive test suite
@@ -78,7 +78,7 @@ Plans:
 - [x] 03-04-PLAN.md - Extraction orchestrator with deduplication
 - [x] 03-05-PLAN.md - Consistency validation (address conflicts, income progression, cross-document checks)
 
-### Phase 4: Data Storage & REST API
+### Phase 4: Data Storage & REST API ✅
 **Goal**: Persist extracted borrower data with relationships and expose through searchable REST endpoints
 **Depends on**: Phase 3
 **Requirements**: DB-13, DB-14, DB-15, DB-16, DB-17, DB-18, DB-19, DB-20, API-01, API-02, API-03, API-04, API-05, API-06, API-07, API-08, API-09, API-10, API-11, API-12, API-13, API-14, API-15, API-16, API-17, API-18, API-19, API-20, API-21, API-22, API-23, API-24
@@ -89,11 +89,12 @@ Plans:
   4. OpenAPI documentation accessible at /docs with all endpoints documented
   5. Invalid requests return appropriate HTTP status codes (400, 404, 500)
 **Plans**: 3 plans
+**Status**: Complete (2026-01-24)
 
 Plans:
-- [ ] 04-01-PLAN.md - BorrowerRepository with CRUD and search operations
-- [ ] 04-02-PLAN.md - CORS middleware, exception handlers, document status endpoint
-- [ ] 04-03-PLAN.md - Borrower API endpoints with search and pagination
+- [x] 04-01-PLAN.md - BorrowerRepository with CRUD and search operations
+- [x] 04-02-PLAN.md - CORS middleware, exception handlers, document status endpoint
+- [x] 04-03-PLAN.md - Borrower API endpoints with search and pagination
 
 ### Phase 5: Frontend Dashboard
 **Goal**: Provide a visual interface for document upload, borrower browsing, and architecture documentation
@@ -158,11 +159,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
 | 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
 | 3. LLM Extraction & Validation | 5/5 | ✅ Complete | 2026-01-24 |
-| 4. Data Storage & REST API | 0/3 | Planned | - |
+| 4. Data Storage & REST API | 3/3 | ✅ Complete | 2026-01-24 |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
 | 6. GCP Infrastructure | 0/3 | Not started | - |
 | 7. Documentation & Testing | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24*
+*Last updated: 2026-01-24 (Phase 4 complete)*

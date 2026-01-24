@@ -102,41 +102,41 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DB-10**: DocumentRepository retrieves documents by file hash
 - [ ] **DB-11**: DocumentRepository updates document status
 - [ ] **DB-12**: DocumentRepository lists documents with pagination
-- [ ] **DB-13**: BorrowerRepository creates borrower records with related entities
-- [ ] **DB-14**: BorrowerRepository retrieves borrowers by ID with relationships
-- [ ] **DB-15**: BorrowerRepository searches borrowers by name
-- [ ] **DB-16**: BorrowerRepository searches borrowers by account number
-- [ ] **DB-17**: BorrowerRepository lists borrowers with pagination
-- [ ] **DB-18**: Repositories handle transactions with automatic rollback on error
-- [ ] **DB-19**: Alembic migrations configured for async PostgreSQL
-- [ ] **DB-20**: Initial migration creates all tables
+- [x] **DB-13**: BorrowerRepository creates borrower records with related entities
+- [x] **DB-14**: BorrowerRepository retrieves borrowers by ID with relationships
+- [x] **DB-15**: BorrowerRepository searches borrowers by name
+- [x] **DB-16**: BorrowerRepository searches borrowers by account number
+- [x] **DB-17**: BorrowerRepository lists borrowers with pagination
+- [x] **DB-18**: Repositories handle transactions with automatic rollback on error
+- [x] **DB-19**: Alembic migrations configured for async PostgreSQL
+- [x] **DB-20**: Initial migration creates all tables
 
 ### REST API
 
-- [ ] **API-01**: FastAPI application configured with CORS middleware
-- [ ] **API-02**: FastAPI exception handlers for custom errors
-- [ ] **API-03**: OpenAPI documentation auto-generated and accessible
-- [ ] **API-04**: Health check endpoint returns service status
-- [ ] **API-05**: Lifespan manager handles database connection pool
-- [ ] **API-06**: Dependency injection provides database session
-- [ ] **API-07**: Dependency injection provides DocumentService instance
-- [ ] **API-08**: Dependency injection provides BorrowerRepository instance
-- [ ] **API-09**: POST /api/documents endpoint accepts file upload
-- [ ] **API-10**: POST /api/documents returns 201 with document ID
-- [ ] **API-11**: POST /api/documents validates file type and size
-- [ ] **API-12**: GET /api/documents/{id} returns document details
-- [ ] **API-13**: GET /api/documents/{id}/status returns processing status
-- [ ] **API-14**: GET /api/documents lists documents with pagination
-- [ ] **API-15**: GET /api/documents returns 404 for non-existent document
-- [ ] **API-16**: GET /api/borrowers lists borrowers with pagination
-- [ ] **API-17**: GET /api/borrowers/{id} returns full borrower details
-- [ ] **API-18**: GET /api/borrowers/{id} includes income history
-- [ ] **API-19**: GET /api/borrowers/{id} includes account numbers
-- [ ] **API-20**: GET /api/borrowers/{id} includes source references
-- [ ] **API-21**: GET /api/borrowers/{id}/sources returns source documents
-- [ ] **API-22**: GET /api/borrowers/search supports name query
-- [ ] **API-23**: GET /api/borrowers/search supports account number query
-- [ ] **API-24**: API returns meaningful HTTP status codes (400, 404, 500)
+- [x] **API-01**: FastAPI application configured with CORS middleware
+- [x] **API-02**: FastAPI exception handlers for custom errors
+- [x] **API-03**: OpenAPI documentation auto-generated and accessible
+- [x] **API-04**: Health check endpoint returns service status
+- [x] **API-05**: Lifespan manager handles database connection pool
+- [x] **API-06**: Dependency injection provides database session
+- [x] **API-07**: Dependency injection provides DocumentService instance
+- [x] **API-08**: Dependency injection provides BorrowerRepository instance
+- [x] **API-09**: POST /api/documents endpoint accepts file upload
+- [x] **API-10**: POST /api/documents returns 201 with document ID
+- [x] **API-11**: POST /api/documents validates file type and size
+- [x] **API-12**: GET /api/documents/{id} returns document details
+- [x] **API-13**: GET /api/documents/{id}/status returns processing status
+- [x] **API-14**: GET /api/documents lists documents with pagination
+- [x] **API-15**: GET /api/documents returns 404 for non-existent document
+- [x] **API-16**: GET /api/borrowers lists borrowers with pagination
+- [x] **API-17**: GET /api/borrowers/{id} returns full borrower details
+- [x] **API-18**: GET /api/borrowers/{id} includes income history
+- [x] **API-19**: GET /api/borrowers/{id} includes account numbers
+- [x] **API-20**: GET /api/borrowers/{id} includes source references
+- [x] **API-21**: GET /api/borrowers/{id}/sources returns source documents
+- [x] **API-22**: GET /api/borrowers/search supports name query
+- [x] **API-23**: GET /api/borrowers/search supports account number query
+- [x] **API-24**: API returns meaningful HTTP status codes (400, 404, 500)
 
 ### Frontend UI
 
@@ -385,38 +385,38 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VALID-07 | Phase 3 | Pending |
 | VALID-08 | Phase 3 | Pending |
 | VALID-09 | Phase 3 | Pending |
-| DB-13 | Phase 4 | Pending |
-| DB-14 | Phase 4 | Pending |
-| DB-15 | Phase 4 | Pending |
-| DB-16 | Phase 4 | Pending |
-| DB-17 | Phase 4 | Pending |
-| DB-18 | Phase 4 | Pending |
-| DB-19 | Phase 4 | Pending |
-| DB-20 | Phase 4 | Pending |
-| API-01 | Phase 4 | Pending |
-| API-02 | Phase 4 | Pending |
-| API-03 | Phase 4 | Pending |
-| API-04 | Phase 4 | Pending |
-| API-05 | Phase 4 | Pending |
-| API-06 | Phase 4 | Pending |
-| API-07 | Phase 4 | Pending |
-| API-08 | Phase 4 | Pending |
-| API-09 | Phase 4 | Pending |
-| API-10 | Phase 4 | Pending |
-| API-11 | Phase 4 | Pending |
-| API-12 | Phase 4 | Pending |
-| API-13 | Phase 4 | Pending |
-| API-14 | Phase 4 | Pending |
-| API-15 | Phase 4 | Pending |
-| API-16 | Phase 4 | Pending |
-| API-17 | Phase 4 | Pending |
-| API-18 | Phase 4 | Pending |
-| API-19 | Phase 4 | Pending |
-| API-20 | Phase 4 | Pending |
-| API-21 | Phase 4 | Pending |
-| API-22 | Phase 4 | Pending |
-| API-23 | Phase 4 | Pending |
-| API-24 | Phase 4 | Pending |
+| DB-13 | Phase 4 | Complete |
+| DB-14 | Phase 4 | Complete |
+| DB-15 | Phase 4 | Complete |
+| DB-16 | Phase 4 | Complete |
+| DB-17 | Phase 4 | Complete |
+| DB-18 | Phase 4 | Complete |
+| DB-19 | Phase 4 | Complete |
+| DB-20 | Phase 4 | Complete |
+| API-01 | Phase 4 | Complete |
+| API-02 | Phase 4 | Complete |
+| API-03 | Phase 4 | Complete |
+| API-04 | Phase 4 | Complete |
+| API-05 | Phase 4 | Complete |
+| API-06 | Phase 4 | Complete |
+| API-07 | Phase 4 | Complete |
+| API-08 | Phase 4 | Complete |
+| API-09 | Phase 4 | Complete |
+| API-10 | Phase 4 | Complete |
+| API-11 | Phase 4 | Complete |
+| API-12 | Phase 4 | Complete |
+| API-13 | Phase 4 | Complete |
+| API-14 | Phase 4 | Complete |
+| API-15 | Phase 4 | Complete |
+| API-16 | Phase 4 | Complete |
+| API-17 | Phase 4 | Complete |
+| API-18 | Phase 4 | Complete |
+| API-19 | Phase 4 | Complete |
+| API-20 | Phase 4 | Complete |
+| API-21 | Phase 4 | Complete |
+| API-22 | Phase 4 | Complete |
+| API-23 | Phase 4 | Complete |
+| API-24 | Phase 4 | Complete |
 | UI-01 | Phase 5 | Pending |
 | UI-02 | Phase 5 | Pending |
 | UI-03 | Phase 5 | Pending |
