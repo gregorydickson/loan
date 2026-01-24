@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 9 of 9 (Cloud Tasks Background Processing)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 09-02-PLAN.md (Task Handler Endpoint)
+Last activity: 2026-01-24 - Completed 09-03-PLAN.md (Wire Async Task Queueing)
 
-Progress: [██████████████████████████████████] 94% (34/36 plans)
+Progress: [███████████████████████████████████] 97% (35/36 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
-- Average duration: 6.0 min
+- Total plans completed: 35
+- Average duration: 5.9 min
 - Total execution time: 3.7 hours
 
 **By Phase:**
@@ -35,11 +35,11 @@ Progress: [███████████████████████
 | 06-gcp-infrastructure | 4 | 30 min | 7.5 min |
 | 07-documentation-testing | 5 | 35 min | 7.0 min |
 | 08-wire-document-to-extraction-pipeline | 3 | 19 min | 6.3 min |
-| 09-cloud-tasks-background-processing | 2 | 10 min | 5.0 min |
+| 09-cloud-tasks-background-processing | 3 | 15 min | 5.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 8 min, 5 min, 7 min, 3 min
-- Trend: Phase 9 progressing - Task handler endpoint complete
+- Last 5 plans: 5 min, 7 min, 3 min, 7 min, 5 min
+- Trend: Phase 9 nearly complete - Async upload flow wired
 
 *Updated after each plan completion*
 
@@ -255,17 +255,22 @@ Recent decisions affecting current work:
 - Set FAILED status only on final retry attempt
 - Idempotent: skip processing if document already COMPLETED or FAILED
 
+**Phase 09-03 Decisions:**
+- CloudTasksClient returns None when GCP settings not configured (local dev)
+- Async mode queues task and returns PENDING immediately
+- Sync mode (local dev) processes inline for testing without Cloud Tasks
+- Task queueing failure marks document FAILED with error message
+
 ### Pending Todos
 
-- Complete 09-03: Wire upload endpoint to Cloud Tasks
 - Complete 09-04: Cloud Tasks integration tests
 
 ### Blockers/Concerns
 
-None - Task handler endpoint ready to receive Cloud Tasks callbacks.
+None - Async upload flow complete and ready for integration testing.
 
 ## Session Continuity
 
-Last session: 2026-01-24 21:05 UTC
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-01-24 21:15 UTC
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
