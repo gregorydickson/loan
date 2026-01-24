@@ -16,6 +16,7 @@ from src.extraction import (
     FieldValidator,
     GeminiClient,
 )
+from src.ingestion.cloud_tasks_client import CloudTasksClient
 from src.ingestion.docling_processor import DoclingProcessor
 from src.ingestion.document_service import DocumentService
 from src.storage.database import DBSession
@@ -117,6 +118,42 @@ def get_borrower_extractor() -> BorrowerExtractor:
 BorrowerExtractorDep = Annotated[BorrowerExtractor, Depends(get_borrower_extractor)]
 
 
+# CloudTasksClient dependency
+_cloud_tasks_client: CloudTasksClient | None = None
+
+
+def get_cloud_tasks_client() -> CloudTasksClient | None:
+    """Get or create CloudTasksClient singleton.
+
+    Returns:
+        CloudTasksClient if configured, None for local development.
+
+    Note:
+        Returns None if Cloud Tasks settings are not configured.
+        This allows running locally without Cloud Tasks.
+    """
+    global _cloud_tasks_client
+
+    if _cloud_tasks_client is None:
+        # Check if Cloud Tasks is configured
+        if not settings.gcp_project_id or not settings.cloud_run_service_url:
+            # Local development - no Cloud Tasks
+            return None
+
+        _cloud_tasks_client = CloudTasksClient(
+            project_id=settings.gcp_project_id,
+            location=settings.gcp_location,
+            queue_id=settings.cloud_tasks_queue,
+            service_url=settings.cloud_run_service_url,
+            service_account_email=settings.cloud_run_service_account,
+        )
+
+    return _cloud_tasks_client
+
+
+CloudTasksClientDep = Annotated[CloudTasksClient | None, Depends(get_cloud_tasks_client)]
+
+
 def get_document_repository(session: DBSession) -> DocumentRepository:
     """Get document repository with session."""
     return DocumentRepository(session)
@@ -139,6 +176,7 @@ def get_document_service(
     docling_processor: DoclingProcessorDep,
     borrower_extractor: BorrowerExtractorDep,
     borrower_repository: BorrowerRepoDep,
+    cloud_tasks_client: CloudTasksClientDep,
 ) -> DocumentService:
     """Get document service with all dependencies."""
     return DocumentService(
@@ -147,6 +185,7 @@ def get_document_service(
         docling_processor=docling_processor,
         borrower_extractor=borrower_extractor,
         borrower_repository=borrower_repository,
+        cloud_tasks_client=cloud_tasks_client,
     )
 
 
@@ -160,7 +199,9 @@ __all__ = [
     "DocumentRepoDep",
     "DocumentServiceDep",
     "BorrowerRepoDep",
+    "CloudTasksClientDep",
     "EntityNotFoundError",
     "get_borrower_extractor",
     "get_borrower_repository",
+    "get_cloud_tasks_client",
 ]
