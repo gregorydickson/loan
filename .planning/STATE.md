@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 6 of 7 (GCP Infrastructure)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-24 - Completed 06-03-PLAN.md
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 06-04-PLAN.md
 
-Progress: [███████████████████████████░] 96%
+Progress: [████████████████████████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
-- Average duration: 6.9 min
-- Total execution time: 2.68 hours
+- Total plans completed: 24
+- Average duration: 6.6 min
+- Total execution time: 2.7 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [███████████████████████
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 | 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
 | 05-frontend-dashboard | 5 | 16 min | 3.2 min |
-| 06-gcp-infrastructure | 3 | 28 min | 9.3 min |
+| 06-gcp-infrastructure | 4 | 30 min | 7.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 6 min, 1 min, 12 min, 13 min, 3 min
-- Trend: Terraform config plans faster than Docker builds
+- Last 5 plans: 1 min, 12 min, 13 min, 3 min, 2 min
+- Trend: Cloud Run config (06-04) fastest at 2 min
 
 *Updated after each plan completion*
 
@@ -194,6 +194,15 @@ Recent decisions affecting current work:
 - Queue rate limits: 10/s dispatches, 5 concurrent
 - Queue retry: 5 attempts, exponential backoff, 1 hour max duration
 
+**Phase 06-04 Decisions:**
+- Cloud Run v2 API for direct VPC egress (no VPC connector cost)
+- Backend: 1Gi memory for Docling processing, scale 0-10
+- Frontend: 512Mi memory, scale 0-5
+- PRIVATE_RANGES_ONLY egress for Cloud SQL private IP access
+- Secret injection via secret_key_ref for DATABASE_URL and GEMINI_API_KEY
+- allUsers invoker role for public access (no auth on endpoints)
+- Startup probe on /health endpoint with 10s initial delay
+
 ### Pending Todos
 
 None yet.
@@ -204,6 +213,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 16:28 UTC
-Stopped at: Completed 06-03-PLAN.md (Managed Services)
+Last session: 2026-01-24 16:40 UTC
+Stopped at: Completed 06-04-PLAN.md (Cloud Run Deployment) - Phase 6 Complete
 Resume file: None
