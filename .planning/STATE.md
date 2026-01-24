@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 8 of 9 (Wire Document to Extraction Pipeline)
-Plan: 2 of 2 in current phase
+Plan: 3 of 3 in current phase
 Status: Phase complete
-Last activity: 2026-01-24 - Completed 08-02-PLAN.md (Pipeline Integration)
+Last activity: 2026-01-24 - Completed 08-03-PLAN.md (E2E Integration Tests)
 
-Progress: [███████████████████████████████] 100% (31/31 plans)
+Progress: [████████████████████████████████] 100% (32/32 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
-- Average duration: 6.2 min
-- Total execution time: 3.4 hours
+- Total plans completed: 32
+- Average duration: 6.1 min
+- Total execution time: 3.5 hours
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [███████████████████████
 | 05-frontend-dashboard | 5 | 16 min | 3.2 min |
 | 06-gcp-infrastructure | 4 | 30 min | 7.5 min |
 | 07-documentation-testing | 5 | 35 min | 7.0 min |
-| 08-wire-document-to-extraction-pipeline | 2 | 14 min | 7.0 min |
+| 08-wire-document-to-extraction-pipeline | 3 | 19 min | 6.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 13 min, 13 min, 6 min, 8 min
-- Trend: Phase 8 complete - document-to-extraction pipeline fully wired
+- Last 5 plans: 13 min, 6 min, 8 min, 5 min
+- Trend: Phase 8 complete - document-to-extraction pipeline fully wired and tested
 
 *Updated after each plan completion*
 
@@ -237,6 +237,11 @@ Recent decisions affecting current work:
 - Extraction failures logged but don't fail document upload
 - Individual borrower persistence errors don't fail extraction loop
 
+**Phase 08-03 Decisions:**
+- Use float() for confidence_score assertions (Decimal serializes to string in JSON)
+- Each test uploads fresh document to ensure test isolation
+- Mock extractor creates new borrower per call with unique UUID
+
 ### Pending Todos
 
 None - Phase 8 complete.
@@ -247,6 +252,6 @@ None - document-to-extraction pipeline fully wired and operational.
 
 ## Session Continuity
 
-Last session: 2026-01-24 20:10 UTC
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-01-24 20:11 UTC
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None - Phase 8 complete
