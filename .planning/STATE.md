@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** v1.0 Milestone Complete - Ready for GCP deployment validation
+**Current focus:** v2.0 Milestone - LangExtract extraction pipeline + CloudBuild deployment
 
 ## Current Position
 
-Milestone: v1.0 Complete
-Phase: N/A (awaiting next milestone)
-Plan: N/A
-Status: Milestone shipped
-Last activity: 2026-01-24 - v1.0 milestone completed and archived
+Milestone: v2.0 LangExtract & CloudBuild
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-01-24 - Milestone v2.0 started
 
-Progress: v1.0 (36/36 plans) ✅ SHIPPED
+Progress: Not started
 
 ## Performance Metrics
 

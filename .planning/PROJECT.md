@@ -10,6 +10,18 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 
 **Accurate extraction of borrower data with complete traceability.** Every extracted field (PII, income history, account/loan numbers) must include source attribution showing which document and page it came from, with confidence scoring to flag data needing manual review.
 
+## Current Milestone: v2.0 LangExtract & CloudBuild
+
+**Goal:** Add LangExtract-based extraction pipeline with character-level source grounding, optional LightOnOCR GPU service for scanned documents, and migrate from Terraform to CloudBuild + CLI deployment.
+
+**Target features:**
+- LangExtract + Gemini 2.5 Flash extraction with character-level offsets for precise source grounding
+- LightOnOCR Cloud Run service with L4 GPU for high-quality OCR of scanned documents
+- Dual extraction method support (Docling + LangExtract) with API selection
+- Complete infrastructure migration from Terraform to CloudBuild + Google Cloud CLI
+- Few-shot example-based extraction schema definition for loan documents
+- Enhanced source attribution with character offsets (not just page/snippet)
+
 ## Requirements
 
 ### Validated
@@ -29,14 +41,13 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 
 ### Active
 
-(v1.0 complete — requirements for next milestone to be defined)
+(v2.0 requirements to be defined)
 
 ### Out of Scope
 
 - **Real-time processing** — Asynchronous queue-based processing is sufficient for the use case
 - **Multi-tenancy** — Single deployment model, no tenant isolation needed
 - **Mobile native apps** — Web-first approach, responsive design covers mobile browsers
-- **Custom OCR beyond Docling** — Docling's built-in OCR capabilities are sufficient
 - **Custom LLM fine-tuning** — Using Gemini models as-is without custom training
 - **User authentication** — Public demo application, no user accounts
 - **Audit logging** — Basic application logs sufficient, no compliance audit trail
@@ -101,4 +112,4 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 | Phase 8 Gap Closure | Wired orphaned extraction subsystem into upload flow; added E2E tests. | ✓ Good — Closed 44 blocked requirements; all E2E flows now working; zero orphaned code |
 
 ---
-*Last updated: 2026-01-24 after v1.0 milestone completion*
+*Last updated: 2026-01-24 after v2.0 milestone initialization*
