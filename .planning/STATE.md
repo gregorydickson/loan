@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 5 of 7 (Frontend Dashboard)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 05-01-PLAN.md
+Last activity: 2026-01-24 - Completed 05-02-PLAN.md
 
-Progress: [██████████████████░░░░░░░░░░] 62%
+Progress: [███████████████████░░░░░░░░░] 65%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
-- Average duration: 7.2 min
-- Total execution time: 1.93 hours
+- Total plans completed: 17
+- Average duration: 7.1 min
+- Total execution time: 2.01 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [██████████████████░░░░░
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 | 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
-| 05-frontend-dashboard | 1 | 3 min | 3.0 min |
+| 05-frontend-dashboard | 2 | 8 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 14 min, 8 min, 5 min, 5 min, 3 min
-- Trend: Fastest plan yet for frontend setup
+- Last 5 plans: 8 min, 5 min, 5 min, 3 min, 5 min
+- Trend: Consistent fast execution for frontend plans
 
 *Updated after each plan completion*
 
@@ -143,6 +143,12 @@ Recent decisions affecting current work:
 - Sidebar uses usePathname for active state highlighting
 - Dashboard calls API directly without hooks (hooks created in later plans)
 
+**Phase 05-02 Decisions:**
+- Status polling uses refetchInterval callback returning 2000ms or false based on status
+- DocumentTable uses Link components in cells for full row clickability
+- Upload zone shows truncated document ID in success message for verification
+- Detail page polls status only when document is pending/processing
+
 ### Pending Todos
 
 None yet.
@@ -153,6 +159,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 14:37 UTC
-Stopped at: Completed 05-01-PLAN.md (App Shell and API Foundation)
+Last session: 2026-01-24 14:45 UTC
+Stopped at: Completed 05-02-PLAN.md (Document Upload and Listing)
 Resume file: None
