@@ -16,6 +16,11 @@ This document captures the key architectural decisions made during the developme
 - [ADR-010: Confidence Threshold 0.7 for Review Flagging](#adr-010-confidence-threshold-07-for-review-flagging)
 - [ADR-011: CORS Configuration for Local Development](#adr-011-cors-configuration-for-local-development)
 - [ADR-012: selectinload() for Eager Loading Relationships](#adr-012-selectinload-for-eager-loading-relationships)
+- [ADR-013: Private VPC for Cloud SQL (No Public IP)](#adr-013-private-vpc-for-cloud-sql-no-public-ip)
+- [ADR-014: Secret Manager for Credentials](#adr-014-secret-manager-for-credentials)
+- [ADR-015: pytest-asyncio Auto Mode for Testing](#adr-015-pytest-asyncio-auto-mode-for-testing)
+- [ADR-016: In-Memory SQLite for Unit Tests](#adr-016-in-memory-sqlite-for-unit-tests)
+- [ADR-017: Income Anomaly Thresholds (50% drop, 300% spike)](#adr-017-income-anomaly-thresholds-50-drop-300-spike)
 
 ---
 
@@ -613,3 +618,274 @@ Use `selectinload()` for all relationship loading:
 | joinedload() | Single query for all data | Cartesian product explosion with collections |
 | subqueryload() | Efficient for large collections | Generates complex subqueries |
 | Lazy loading with batching | Balances simplicity and performance | More complex, less predictable |
+
+---
+
+## ADR-013: Private VPC for Cloud SQL (No Public IP)
+
+### Status
+
+Accepted
+
+### Context
+
+The Cloud SQL PostgreSQL instance contains sensitive borrower data (PII, SSNs, income history). Security best practices require:
+- Minimizing attack surface
+- Network-level access control
+- No direct internet exposure for database
+
+GCP offers two connectivity modes:
+- Public IP with authorized networks
+- Private IP via VPC peering
+
+### Decision
+
+Configure Cloud SQL with private IP only:
+- `ipv4_enabled=false` in Terraform configuration
+- VPC peering between project VPC and Cloud SQL services
+- Cloud Run accesses via direct VPC egress with PRIVATE_RANGES_ONLY
+- No public IP means no internet-accessible attack surface
+
+### Consequences
+
+**Positive:**
+- Database not accessible from public internet
+- Reduced attack surface for sensitive data
+- Compliant with security best practices
+- Network-level isolation from other GCP projects
+
+**Negative:**
+- Cannot connect directly from local development machines
+- Requires Cloud SQL Auth Proxy for local access
+- More complex initial setup
+- Debugging production requires VPC access
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Public IP with authorized networks | Simple local connectivity | Internet-accessible, requires IP management |
+| Private IP + Cloud SQL Proxy | Secure, local access via proxy | Extra component to manage |
+| Private IP + VPN | Secure tunnel for all access | Complex VPN setup |
+
+---
+
+## ADR-014: Secret Manager for Credentials
+
+### Status
+
+Accepted
+
+### Context
+
+The application requires sensitive credentials:
+- DATABASE_URL (PostgreSQL connection string with password)
+- GEMINI_API_KEY (API key for LLM service)
+- Potentially other service credentials
+
+These credentials should not be:
+- Hardcoded in source code
+- Stored in Terraform state files
+- Visible in container environment dumps
+
+### Decision
+
+Store all credentials in Google Cloud Secret Manager:
+- Create secrets via Terraform (secret exists, not the value)
+- Secret values added manually or via secure pipeline
+- Cloud Run injects secrets via `secret_key_ref` in environment variables
+- Per-secret IAM bindings for Cloud Run service account
+
+### Consequences
+
+**Positive:**
+- Credentials not in source control
+- Credentials not in Terraform state
+- Audit trail for secret access
+- Rotation without redeployment (via secret versions)
+- Fine-grained IAM for secret access
+
+**Negative:**
+- Manual step to populate secret values
+- Additional GCP service to manage
+- Requires proper IAM setup
+- Local development needs alternative credential source
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Environment variables in Terraform | Simple, all-in-one | Secrets visible in state, source control risk |
+| Kubernetes secrets | K8s native | Cloud Run doesn't use K8s secrets |
+| HashiCorp Vault | Feature-rich, multi-cloud | Additional infrastructure |
+| .env files in containers | Simple | Baked into images, rotation requires rebuild |
+
+---
+
+## ADR-015: pytest-asyncio Auto Mode for Testing
+
+### Status
+
+Accepted
+
+### Context
+
+The backend uses async/await extensively:
+- Async database sessions (SQLAlchemy)
+- Async HTTP clients (httpx)
+- Async FastAPI endpoints
+
+Testing async code requires proper event loop management. pytest-asyncio offers two modes:
+- Strict mode: Requires explicit `@pytest.mark.asyncio` on each test
+- Auto mode: Automatically handles async fixtures and tests
+
+### Decision
+
+Configure pytest-asyncio with `asyncio_mode = "auto"` in pyproject.toml:
+- Async fixtures automatically get event loops
+- Async tests run without explicit marks
+- Consistent async handling across all test files
+
+### Consequences
+
+**Positive:**
+- Less boilerplate (no `@pytest.mark.asyncio` everywhere)
+- Consistent async handling
+- Easier to write async tests correctly
+- Fixtures and tests use same event loop
+
+**Negative:**
+- Implicit behavior may surprise developers used to strict mode
+- All async defs treated as tests (watch naming)
+- Harder to mix sync and async in same module
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Strict mode | Explicit, clear intent | Verbose, easy to forget marks |
+| Manual event loop | Full control | Complex, error-prone |
+| anyio testing | Multi-async-framework support | Different patterns, less pytest integration |
+
+---
+
+## ADR-016: In-Memory SQLite for Unit Tests
+
+### Status
+
+Accepted
+
+### Context
+
+Unit tests require fast, isolated database access:
+- Each test should start with clean state
+- Tests should not affect each other
+- Test suite should run quickly (hundreds of tests)
+- Schema should match production (mostly)
+
+Options include:
+- PostgreSQL in Docker
+- SQLite file-based
+- SQLite in-memory
+- Mock database entirely
+
+### Decision
+
+Use SQLite with aiosqlite for in-memory async testing:
+- `sqlite+aiosqlite:///:memory:` connection string
+- Fresh database per test fixture
+- Tables created from SQLAlchemy models
+- Fast execution (no disk, no network)
+
+### Consequences
+
+**Positive:**
+- Very fast test execution
+- Perfect isolation (each test gets fresh DB)
+- No external dependencies
+- Works in CI without Docker
+
+**Negative:**
+- SQLite differs from PostgreSQL in some behaviors
+- Some PostgreSQL-specific features not testable
+- In-memory DB lost after test (no debugging persistence)
+- May miss PostgreSQL-specific bugs
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| PostgreSQL in Docker | Production parity | Slower, requires Docker in CI |
+| SQLite file-based | Persistence for debugging | Slower, cleanup complexity |
+| Mock database | Fastest | No real SQL testing, fake behavior |
+| Test containers | Real PostgreSQL, isolated | Slower startup, requires Docker |
+
+---
+
+## ADR-017: Income Anomaly Thresholds (50% drop, 300% spike)
+
+### Status
+
+Accepted
+
+### Context
+
+Loan underwriting requires accurate income assessment. Borrowers may have:
+- Legitimate income changes (job change, promotion)
+- Data entry errors
+- Fraudulent income inflation
+
+The system should flag suspicious income patterns for review while not flagging normal variations.
+
+### Decision
+
+Implement income anomaly detection with specific thresholds:
+- **50% drop**: Flag if year-over-year income decreases more than 50%
+- **300% spike**: Flag if year-over-year income increases more than 300%
+
+Consistency checks run AFTER deduplication and flag items for review without auto-resolving.
+
+Cross-document checks use normalized names for matching.
+
+### Consequences
+
+**Positive:**
+- Catches significant anomalies (data errors, potential fraud)
+- Allows normal income variations (raises, bonuses)
+- Clear, explainable thresholds
+- Flags for review, doesn't reject
+
+**Negative:**
+- May miss sophisticated manipulation
+- May flag legitimate major career changes
+- Single threshold may not suit all income types
+- Requires human review to resolve flags
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| No anomaly detection | Simple, no false positives | Misses errors and fraud |
+| Tighter thresholds (20%/150%) | Catches more variations | Too many false positives |
+| Industry-specific thresholds | Tailored accuracy | Complex rules, more maintenance |
+| ML-based detection | Learns patterns | Training data, less explainable |
+
+---
+
+## Decision Log by Phase
+
+This table maps each ADR to the development phase where the decision originated.
+
+| Phase | ADRs |
+|-------|------|
+| 01. Foundation & Data Models | ADR-005 (Next.js), ADR-015 (pytest-asyncio), ADR-016 (In-Memory SQLite) |
+| 02. Document Ingestion Pipeline | ADR-001 (Docling), ADR-006 (expire_on_commit), ADR-007 (Repository Pattern) |
+| 03. LLM Extraction & Validation | ADR-002 (Gemini), ADR-008 (Chunking), ADR-009 (Deduplication), ADR-010 (Confidence), ADR-017 (Anomaly Thresholds) |
+| 04. Data Storage & REST API | ADR-003 (PostgreSQL), ADR-011 (CORS), ADR-012 (selectinload) |
+| 05. Frontend Dashboard | (Covered by ADR-005) |
+| 06. GCP Infrastructure | ADR-004 (Cloud Run), ADR-013 (Private VPC), ADR-014 (Secret Manager) |
+| 07. Documentation & Testing | (Meta-documentation of all above) |
+
+---
+
+*Last updated: 2026-01-24*
