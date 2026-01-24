@@ -18,6 +18,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
+from src.ingestion.cloud_tasks_client import CloudTasksClient
 from src.ingestion.docling_processor import DoclingProcessor, DocumentProcessingError
 from src.models.borrower import BorrowerRecord
 from src.storage.gcs_client import GCSClient
@@ -55,12 +56,17 @@ class DocumentUploadError(Exception):
 class DocumentService:
     """Orchestrates document upload, processing, and extraction.
 
-    Upload workflow:
+    Upload workflow (async mode - Cloud Tasks configured):
     1. Validate file (type, size)
     2. Compute file hash (SHA-256)
     3. Check for duplicate (reject if exists)
     4. Create database record (PENDING status)
     5. Upload to GCS
+    6. Queue Cloud Task for processing
+    7. Return immediately with PENDING status
+
+    Upload workflow (sync mode - local development):
+    1-5. Same as async
     6. Process document with Docling
     7. Update status to COMPLETED/FAILED
     8. Extract borrowers via BorrowerExtractor
@@ -93,6 +99,7 @@ class DocumentService:
         docling_processor: DoclingProcessor,
         borrower_extractor: BorrowerExtractor,
         borrower_repository: BorrowerRepository,
+        cloud_tasks_client: CloudTasksClient | None = None,
     ) -> None:
         """Initialize DocumentService.
 
@@ -102,12 +109,14 @@ class DocumentService:
             docling_processor: DoclingProcessor for document processing
             borrower_extractor: BorrowerExtractor for LLM-based extraction
             borrower_repository: BorrowerRepository for persisting borrowers
+            cloud_tasks_client: CloudTasksClient for async task queueing (None for sync mode)
         """
         self.repository = repository
         self.gcs_client = gcs_client
         self.docling_processor = docling_processor
         self.borrower_extractor = borrower_extractor
         self.borrower_repository = borrower_repository
+        self.cloud_tasks_client = cloud_tasks_client
 
     @staticmethod
     def compute_file_hash(content: bytes) -> str:
@@ -171,7 +180,13 @@ class DocumentService:
         content: bytes,
         content_type: str | None = None,
     ) -> Document:
-        """Upload a document: validate, hash check, store in GCS, process with Docling.
+        """Upload a document: validate, hash check, store in GCS, queue/process.
+
+        In async mode (cloud_tasks_client configured):
+            Queues Cloud Task and returns immediately with PENDING status.
+
+        In sync mode (cloud_tasks_client is None):
+            Processes document with Docling and extracts borrowers before returning.
 
         Args:
             filename: Original filename
@@ -179,7 +194,10 @@ class DocumentService:
             content_type: MIME type of the file
 
         Returns:
-            Document record with status=COMPLETED or FAILED
+            Document record with status:
+            - PENDING (async mode, queued successfully)
+            - COMPLETED (sync mode, processing succeeded)
+            - FAILED (task queueing failed OR sync processing failed)
 
         Raises:
             DuplicateDocumentError: If file with same hash exists
@@ -227,7 +245,35 @@ class DocumentService:
             )
             raise DocumentUploadError(f"Failed to upload to storage: {e}") from e
 
-        # 7. Process document with Docling (synchronous)
+        # 7. Queue for async processing OR process synchronously
+        if self.cloud_tasks_client is not None:
+            # Async mode: Queue Cloud Task and return immediately
+            try:
+                self.cloud_tasks_client.create_document_processing_task(
+                    document_id=document_id,
+                    filename=filename,
+                )
+                logger.info(
+                    "Queued document %s for async processing",
+                    document_id,
+                )
+            except Exception as e:
+                logger.error("Failed to queue task for document %s: %s", document_id, e)
+                # Mark as failed if we can't queue
+                await self.repository.update_status(
+                    document_id,
+                    DocumentStatus.FAILED,
+                    error_message=f"Failed to queue processing: {e}",
+                )
+                # Refresh and return the failed document
+                refreshed = await self.repository.get_by_id(document_id)
+                if refreshed is not None:
+                    document = refreshed
+
+            # Return immediately with PENDING status
+            return document
+
+        # Sync mode: Process immediately (for local development)
         try:
             result = self.docling_processor.process_bytes(content, filename)
             await self.update_processing_result(
@@ -236,7 +282,7 @@ class DocumentService:
                 page_count=result.page_count,
             )
 
-            # 8. Extract borrowers from processed document
+            # Extract borrowers from processed document
             try:
                 extraction_result = self.borrower_extractor.extract(
                     document=result,
@@ -244,7 +290,7 @@ class DocumentService:
                     document_name=filename,
                 )
 
-                # 9. Persist extracted borrowers
+                # Persist extracted borrowers
                 for borrower_record in extraction_result.borrowers:
                     try:
                         await self._persist_borrower(borrower_record, document_id)
