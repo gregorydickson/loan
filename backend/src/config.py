@@ -41,5 +41,18 @@ class Settings(BaseSettings):
     # GCS (for later phases)
     gcs_bucket: str = Field(default="", description="Google Cloud Storage bucket name")
 
+    # Cloud Tasks configuration
+    gcp_project_id: str = Field(default="", description="GCP project ID for Cloud Tasks")
+    gcp_location: str = Field(default="us-central1", description="GCP region for Cloud Tasks queue")
+    cloud_tasks_queue: str = Field(
+        default="document-processing", description="Cloud Tasks queue name"
+    )
+    cloud_run_service_url: str = Field(
+        default="", description="Cloud Run backend service URL for task callbacks"
+    )
+    cloud_run_service_account: str = Field(
+        default="", description="Service account email for OIDC token"
+    )
+
 
 settings = Settings()
