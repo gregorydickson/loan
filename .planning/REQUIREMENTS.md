@@ -210,57 +210,57 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Documentation
 
-- [ ] **DOCS-01**: SYSTEM_DESIGN.md includes architecture overview
-- [ ] **DOCS-02**: SYSTEM_DESIGN.md includes component diagram (Mermaid)
-- [ ] **DOCS-03**: SYSTEM_DESIGN.md describes data flow
-- [ ] **DOCS-04**: SYSTEM_DESIGN.md documents technology stack
-- [ ] **DOCS-05**: SYSTEM_DESIGN.md includes pipeline flowchart (Mermaid)
-- [ ] **DOCS-06**: SYSTEM_DESIGN.md describes ingestion with Docling
-- [ ] **DOCS-07**: SYSTEM_DESIGN.md describes LLM extraction with Gemini
-- [ ] **DOCS-08**: SYSTEM_DESIGN.md describes validation layer
-- [ ] **DOCS-09**: SYSTEM_DESIGN.md describes storage in PostgreSQL
-- [ ] **DOCS-10**: SYSTEM_DESIGN.md describes API retrieval
-- [ ] **DOCS-11**: SYSTEM_DESIGN.md documents AI/LLM integration strategy
-- [ ] **DOCS-12**: SYSTEM_DESIGN.md explains model selection rationale
-- [ ] **DOCS-13**: SYSTEM_DESIGN.md explains dynamic model selection
-- [ ] **DOCS-14**: SYSTEM_DESIGN.md documents prompt engineering approach
-- [ ] **DOCS-15**: SYSTEM_DESIGN.md documents chunking strategy
-- [ ] **DOCS-16**: SYSTEM_DESIGN.md documents confidence scoring formula
-- [ ] **DOCS-17**: SYSTEM_DESIGN.md documents error recovery strategy
-- [ ] **DOCS-18**: SYSTEM_DESIGN.md includes cost analysis (Flash vs Pro)
-- [ ] **DOCS-19**: SYSTEM_DESIGN.md includes scaling projections (10x, 100x)
-- [ ] **DOCS-20**: ARCHITECTURE_DECISIONS.md includes ADR-001 (Docling)
-- [ ] **DOCS-21**: ARCHITECTURE_DECISIONS.md includes ADR-002 (Gemini)
-- [ ] **DOCS-22**: ARCHITECTURE_DECISIONS.md includes ADR-003 (PostgreSQL)
-- [ ] **DOCS-23**: ARCHITECTURE_DECISIONS.md includes ADR-004 (Cloud Run)
-- [ ] **DOCS-24**: ARCHITECTURE_DECISIONS.md includes ADR-005 (Next.js)
-- [ ] **DOCS-25**: README.md includes setup instructions
-- [ ] **DOCS-26**: README.md includes run instructions (local and GCP)
-- [ ] **DOCS-27**: README.md includes architecture summary
-- [ ] **DOCS-28**: README.md includes API usage examples
+- [x] **DOCS-01**: SYSTEM_DESIGN.md includes architecture overview
+- [x] **DOCS-02**: SYSTEM_DESIGN.md includes component diagram (Mermaid)
+- [x] **DOCS-03**: SYSTEM_DESIGN.md describes data flow
+- [x] **DOCS-04**: SYSTEM_DESIGN.md documents technology stack
+- [x] **DOCS-05**: SYSTEM_DESIGN.md includes pipeline flowchart (Mermaid)
+- [x] **DOCS-06**: SYSTEM_DESIGN.md describes ingestion with Docling
+- [x] **DOCS-07**: SYSTEM_DESIGN.md describes LLM extraction with Gemini
+- [x] **DOCS-08**: SYSTEM_DESIGN.md describes validation layer
+- [x] **DOCS-09**: SYSTEM_DESIGN.md describes storage in PostgreSQL
+- [x] **DOCS-10**: SYSTEM_DESIGN.md describes API retrieval
+- [x] **DOCS-11**: SYSTEM_DESIGN.md documents AI/LLM integration strategy
+- [x] **DOCS-12**: SYSTEM_DESIGN.md explains model selection rationale
+- [x] **DOCS-13**: SYSTEM_DESIGN.md explains dynamic model selection
+- [x] **DOCS-14**: SYSTEM_DESIGN.md documents prompt engineering approach
+- [x] **DOCS-15**: SYSTEM_DESIGN.md documents chunking strategy
+- [x] **DOCS-16**: SYSTEM_DESIGN.md documents confidence scoring formula
+- [x] **DOCS-17**: SYSTEM_DESIGN.md documents error recovery strategy
+- [x] **DOCS-18**: SYSTEM_DESIGN.md includes cost analysis (Flash vs Pro)
+- [x] **DOCS-19**: SYSTEM_DESIGN.md includes scaling projections (10x, 100x)
+- [x] **DOCS-20**: ARCHITECTURE_DECISIONS.md includes ADR-001 (Docling)
+- [x] **DOCS-21**: ARCHITECTURE_DECISIONS.md includes ADR-002 (Gemini)
+- [x] **DOCS-22**: ARCHITECTURE_DECISIONS.md includes ADR-003 (PostgreSQL)
+- [x] **DOCS-23**: ARCHITECTURE_DECISIONS.md includes ADR-004 (Cloud Run)
+- [x] **DOCS-24**: ARCHITECTURE_DECISIONS.md includes ADR-005 (Next.js)
+- [x] **DOCS-25**: README.md includes setup instructions
+- [x] **DOCS-26**: README.md includes run instructions (local and GCP)
+- [x] **DOCS-27**: README.md includes architecture summary
+- [x] **DOCS-28**: README.md includes API usage examples
 
 ### Testing & Quality
 
-- [ ] **TEST-01**: Docling processor unit tests cover all file types
-- [ ] **TEST-02**: Document service unit tests mock GCS and Docling
-- [ ] **TEST-03**: GCS client unit tests mock Google Cloud Storage
-- [ ] **TEST-04**: Ingestion integration tests cover full pipeline
-- [ ] **TEST-05**: LLM client unit tests mock Gemini API
-- [ ] **TEST-06**: Complexity classifier unit tests cover edge cases
-- [ ] **TEST-07**: Extractor unit tests cover chunking and deduplication
-- [ ] **TEST-08**: Validation unit tests cover all format checks
-- [ ] **TEST-09**: Extraction integration tests use Flash and Pro models
-- [ ] **TEST-10**: Database models unit tests cover relationships
-- [ ] **TEST-11**: Repository unit tests mock database
-- [ ] **TEST-12**: Document routes unit tests cover all endpoints
-- [ ] **TEST-13**: Borrower routes unit tests cover search functionality
-- [ ] **TEST-14**: E2E API tests cover upload-to-query flow
-- [ ] **TEST-15**: Sample loan documents integration test with real corpus
-- [ ] **TEST-16**: Frontend smoke tests cover critical paths
-- [ ] **TEST-17**: pytest coverage report shows >80% backend coverage
-- [ ] **TEST-18**: mypy strict mode passes with zero errors
-- [ ] **TEST-19**: Frontend builds successfully with npm run build
-- [ ] **TEST-20**: Terraform validates successfully
+- [x] **TEST-01**: Docling processor unit tests cover all file types
+- [x] **TEST-02**: Document service unit tests mock GCS and Docling
+- [x] **TEST-03**: GCS client unit tests mock Google Cloud Storage
+- [x] **TEST-04**: Ingestion integration tests cover full pipeline
+- [x] **TEST-05**: LLM client unit tests mock Gemini API
+- [x] **TEST-06**: Complexity classifier unit tests cover edge cases
+- [x] **TEST-07**: Extractor unit tests cover chunking and deduplication
+- [x] **TEST-08**: Validation unit tests cover all format checks
+- [x] **TEST-09**: Extraction integration tests use Flash and Pro models
+- [x] **TEST-10**: Database models unit tests cover relationships
+- [x] **TEST-11**: Repository unit tests mock database
+- [x] **TEST-12**: Document routes unit tests cover all endpoints
+- [x] **TEST-13**: Borrower routes unit tests cover search functionality
+- [x] **TEST-14**: E2E API tests cover upload-to-query flow
+- [x] **TEST-15**: Sample loan documents integration test with real corpus
+- [x] **TEST-16**: Frontend smoke tests cover critical paths
+- [x] **TEST-17**: pytest coverage report shows >80% backend coverage
+- [x] **TEST-18**: mypy strict mode passes with zero errors
+- [x] **TEST-19**: Frontend builds successfully with npm run build
+- [x] **TEST-20**: Terraform validates successfully
 
 ## v2 Requirements
 
