@@ -1,310 +1,349 @@
-# Feature Research: Loan Document Extraction System
+# Feature Research: LangExtract + LightOnOCR Integration (v2.0)
 
-**Domain:** AI-powered loan document data extraction
-**Researched:** 2026-01-23
-**Confidence:** HIGH (verified with multiple industry sources)
+**Domain:** Document extraction with source grounding and GPU-based OCR
+**Researched:** 2026-01-24
+**Confidence:** HIGH (verified with official documentation and GitHub repositories)
 
 ## Executive Summary
 
-Document extraction systems for financial/loan documents have a well-established feature landscape. For a **3-day portfolio project** demonstrating production-ready practices, the key is to implement table stakes features thoroughly while adding 1-2 high-visibility differentiators that showcase technical sophistication without overcomplicating the architecture.
+This research covers feature requirements for adding LangExtract-based extraction and LightOnOCR GPU OCR service to the existing loan document extraction system. The key value propositions are:
 
-The PRD already captures most table stakes. This research identifies **what makes features production-ready** vs merely functional, and highlights **portfolio-specific optimizations** that maximize impact for evaluators.
+1. **LangExtract:** Character-level source grounding for complete audit traceability
+2. **LightOnOCR:** GPU-accelerated OCR for high-quality scanned document processing
+
+The existing Docling + Gemini pipeline remains valuable for fast, simple document processing. The v2.0 milestone adds LangExtract as an alternative extraction path for compliance-focused workflows and LightOnOCR for scanned document quality improvement.
 
 ---
 
 ## Feature Landscape
 
-### Table Stakes (Users/Evaluators Expect These)
+### Table Stakes (Users Expect These)
 
-Features users assume exist. Missing these = product feels incomplete or amateurish.
+Features users assume exist when adopting LangExtract and LightOnOCR. Missing these = integration feels incomplete.
 
-| Feature | Why Expected | Complexity | Priority | Notes |
-|---------|--------------|------------|----------|-------|
-| **Multi-format document ingestion** | Loan documents come as PDFs, scans, images | MEDIUM | P1 | PRD covers via Docling. Support PDF, DOCX, images. Scanned document handling is critical. |
-| **Structured data extraction** | Core value proposition | HIGH | P1 | Extract borrower name, address, income, account numbers. PRD defines BorrowerRecord schema. |
-| **Source attribution/traceability** | Auditors and evaluators need to verify extractions | MEDIUM | P1 | **Critical differentiator when done well.** Link each extracted field to page, section, snippet. |
-| **Confidence scoring** | Production systems flag uncertain extractions | MEDIUM | P1 | Score each extraction. PRD formula: 0.5 base + field completeness bonuses. |
-| **Document status tracking** | Users need to know processing state | LOW | P1 | PENDING -> PROCESSING -> COMPLETED/FAILED states. Show in UI. |
-| **Search/query interface** | Users need to find borrowers/documents | MEDIUM | P1 | Search by name, account number, loan number. Basic filtering and pagination. |
-| **Error handling & recovery** | Production systems don't crash silently | MEDIUM | P1 | Graceful failures, meaningful error messages, retry logic for LLM calls. |
-| **REST API** | Standard interface for integration | MEDIUM | P1 | OpenAPI/Swagger docs auto-generated. Clean endpoint design. |
-| **Basic validation** | Extracted data should be format-valid | LOW | P1 | SSN format, phone format, zip code format validation. |
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| **Character-level offset tracking** | Core LangExtract value prop - every extraction maps to exact source location | MEDIUM | Extends existing page-level `SourceReference` to include `start_char` and `end_char` offsets |
+| **Few-shot example-based schema** | LangExtract enforces schemas via examples, not Pydantic models | LOW | Define loan extraction examples once; model learns field patterns |
+| **Multi-pass extraction** | Expected for recall improvement on long documents | LOW | Configure `extraction_passes=2-5` for thorough extraction |
+| **HTML visualization output** | LangExtract generates interactive visualizations for audit | LOW | Generate self-contained HTML showing highlighted extractions |
+| **High-quality scanned document OCR** | Primary LightOnOCR use case | MEDIUM | Replace Docling OCR path with LightOnOCR for scanned docs |
+| **Extraction method selection API** | Users need to choose between Docling+Gemini vs LangExtract | LOW | Query param or request body field: `extraction_method: "docling" | "langextract"` |
+| **Confidence scores per extraction** | Already have this; LangExtract should maintain parity | LOW | Map LangExtract confidence to existing 0.0-1.0 scale |
+| **Chunking for long documents** | LangExtract handles internally via `max_char_buffer` | LOW | Configure chunk size (1000-3000 chars) for loan documents |
 
-### Differentiators (Competitive Advantage / Portfolio Standouts)
+### Differentiators (Competitive Advantage)
 
-Features that set the product apart. These demonstrate production-readiness and technical sophistication.
+Features that set LangExtract + LightOnOCR apart from current Docling + Gemini approach.
 
-| Feature | Value Proposition | Complexity | Priority | Notes |
-|---------|-------------------|------------|----------|-------|
-| **Visual source linking in UI** | Click extracted field -> see highlighted source in document | HIGH | P2 | **Huge portfolio impact.** Evaluators love seeing evidence trails. Requires storing bounding boxes or text positions. |
-| **Human-in-the-loop review workflow** | Low-confidence extractions flagged for manual review | MEDIUM | P2 | Flag records with confidence < 0.7. Show review queue in UI. Demonstrates production thinking. |
-| **Cross-document entity resolution** | Same borrower across multiple docs merged correctly | HIGH | P3 | Dedupe by SSN/account match, fuzzy name matching. Complex but impressive when done. |
-| **Architecture visualization in UI** | Interactive system diagram, pipeline flow, scaling strategy | MEDIUM | P1* | **PRD requires this as bonus.** High-impact for evaluators. Low technical risk. |
-| **Document classification** | Auto-categorize document types (W-2, tax return, bank statement) | MEDIUM | P3 | Useful for routing but not core to demo. Could add later. |
-| **Batch processing with progress** | Upload multiple docs, see aggregate progress | MEDIUM | P3 | Nice for demo but adds UI complexity. |
-| **Income trend analysis** | Visualize income history over time | LOW | P2 | Recharts integration per PRD. Simple but looks impressive. |
-| **Model selection intelligence** | Auto-choose Flash vs Pro based on document complexity | MEDIUM | P2 | PRD has ComplexityClassifier. Good demo of cost optimization thinking. |
-| **Audit logging** | Immutable log of all processing decisions | MEDIUM | P3 | Production-critical but less visible in demo. |
-
-*Priority P1 for architecture visualization because PRD lists high-fidelity UI as bonus deliverable.
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Precise source grounding with visual audit** | Every extracted field links to exact character range in source; interactive HTML shows highlighted spans | MEDIUM | Critical for compliance review - click on any extracted value to see exact source location |
+| **End-to-end GPU OCR (no pipeline fragmentation)** | LightOnOCR is fully differentiable, no brittle pipeline stages | MEDIUM | Single model handles text+layout vs traditional OCR + layout + parsing chain |
+| **Schema enforcement via controlled generation** | Gemini's controlled generation guarantees valid JSON matching schema | LOW | No more schema violation errors or hallucinated field names |
+| **Parallel chunk processing** | `max_workers` enables concurrent LLM calls across chunks | LOW | 10-20x throughput improvement for long documents vs sequential |
+| **Multi-sample merge for recall** | Multiple extraction passes catch entities missed in single pass | LOW | LangExtract runs stochastic extraction multiple times, merges results |
+| **Auditability for regulated industries** | Character-level provenance enables compliance verification | LOW | Every loan amount, SSN, income figure traceable to exact source text |
+| **OCR cost efficiency** | LightOnOCR: <$0.01 per 1,000 pages on GPU | MEDIUM | 10-100x cheaper than proprietary OCR APIs for scanned documents |
+| **vLLM deployment for OCR** | Standard vLLM serving for LightOnOCR on Cloud Run GPU | MEDIUM | Production-ready inference server with batching |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
-Features that seem good but create problems for a 3-day portfolio project.
+Features that seem good but create problems in this domain.
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| **Real-time streaming extraction** | "Watch extraction happen live" | Adds WebSocket complexity, minimal demo value, LLM calls are batched anyway | Polling-based status updates are fine |
-| **Full PII encryption at rest** | "Handle sensitive data properly" | 3-day scope, adds key management complexity, portfolio disclaimers are acceptable | Note PII considerations in docs, use disclaimer |
-| **Multi-tenant architecture** | "Production would need this" | Massive scope creep, unnecessary for demo | Single-tenant with note about multi-tenant patterns |
-| **Custom model fine-tuning** | "Better extraction accuracy" | Requires training data, time, infrastructure | Use well-crafted prompts with structured output |
-| **Complex workflow orchestration** | "Enterprise-grade processing" | Celery/temporal adds operational complexity | Cloud Tasks for async, simple status machine |
-| **Document versioning** | "Track document updates" | Adds complexity to data model, rare use case for extraction | Simple overwrite, note limitation |
-| **Full RBAC/permissions** | "Production security" | Auth adds days of work | API keys or basic auth, note production would need RBAC |
-| **LLM as OCR** | "Just send image to GPT/Gemini" | LLMs hallucinate numbers, miss table structure | Docling for OCR, LLM for reasoning |
-| **Real-time chat with documents** | "RAG-style Q&A" | Different product entirely, scope creep | Stick to structured extraction |
+| **Real-time character-level updates** | "Show extraction as it happens" | WebSocket complexity; LLM extraction is batch-oriented; adds latency | Async processing with status polling; show results after completion |
+| **Universal extraction schema** | "One schema for all loan doc types" | Loan apps, W-2s, bank statements have different structures; generic schema loses precision | Document-type-specific few-shot examples (loan app examples, W-2 examples) |
+| **Always use LangExtract** | "New = better, replace Docling path" | LangExtract requires text input (no native PDF); Docling handles structure recovery | Docling for layout/table recovery, LangExtract for semantic extraction on text output |
+| **Always use LightOnOCR** | "GPU = better, replace all OCR" | Native digital PDFs don't need OCR; GPU cold start adds latency | Auto-detect scanned vs digital; LightOnOCR only for scanned docs |
+| **Character offsets for all fields** | "Consistency means offsets everywhere" | Many fields (SSN, phone) are synthetic/normalized, not verbatim from text | Offset tracking for entity mentions; acknowledge normalized fields have no direct offset |
+| **Custom LangExtract model fine-tuning** | "Train on our specific loan docs" | Fine-tuning Gemini not supported; few-shot examples are the customization mechanism | Add domain-specific few-shot examples; iterate on example quality |
+| **Bounding box extraction from LightOnOCR** | "Visual grounding like V7 Go" | LightOnOCR-2-1B base doesn't include bbox; requires -bbox variant and more memory | Use LightOnOCR for text extraction; if visual grounding needed, consider LightOnOCR-2-1B-bbox variant |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Document Ingestion]
-    |
-    +-- requires --> [Multi-format parsing (Docling)]
-    |
-    v
-[Text/Table Extraction]
-    |
-    +-- requires --> [Document processing complete]
-    |
-    v
-[LLM Extraction]
-    |
-    +-- requires --> [Extracted text available]
-    +-- requires --> [Pydantic schemas defined]
-    |
-    v
-[Source Attribution] <-- requires -- [Page/section metadata from parsing]
-    |
-    v
-[Confidence Scoring] <-- requires -- [Extraction complete]
-    |
-    v
-[Validation] <-- requires -- [Extracted records]
-    |
-    v
-[Storage]
-    |
-    +-- requires --> [Database schema]
-    +-- requires --> [Validated records]
-    |
-    v
-[Search/Query API]
-    |
-    +-- requires --> [Stored records]
-    |
-    v
-[UI Visualization]
-    |
-    +-- requires --> [API endpoints]
-    +-- enhances --> [Source Attribution] (visual linking)
+[LangExtract Character Offsets]
+    |-- requires --> [Docling Text with Page Boundaries]
+    |-- requires --> [Few-shot Example Definition]
+    |-- enables --> [HTML Visualization]
+    |-- enables --> [Enhanced SourceReference Model]
+
+[LightOnOCR GPU Service]
+    |-- requires --> [Cloud Run GPU (L4/T4)]
+    |-- requires --> [vLLM Deployment]
+    |-- enables --> [Scanned Document Path]
+    |-- enhances --> [Document Ingestion Pipeline]
+
+[Extraction Method Selection]
+    |-- requires --> [LangExtract Integration]
+    |-- requires --> [Existing Docling+Gemini Path]
+    |-- enables --> [API Method Parameter]
+
+[Few-shot Examples]
+    |-- defines --> [Loan Application Schema]
+    |-- defines --> [Income Verification Schema]
+    |-- defines --> [W-2/Tax Document Schema]
 ```
 
 ### Dependency Notes
 
-- **Docling before LLM**: Never skip OCR. LLMs hallucinate numbers and miss table structure. Docling extracts text faithfully, LLM reasons about it.
-- **Source Attribution early**: Track page/section during parsing, not as afterthought. Retrofitting is painful.
-- **Confidence Scoring at extraction**: Calculate during LLM response processing, not in separate pass.
-- **Validation before storage**: Catch format errors before persisting bad data.
-- **UI depends on stable API**: Design API contracts before building frontend. OpenAPI spec helps parallel work.
+- **LangExtract requires Docling preprocessing:** LangExtract works on raw text strings only. Docling converts PDF/DOCX to structured text with page metadata. The integration pipeline: Docling -> LangExtract -> character offsets mapped back to pages.
+
+- **LightOnOCR requires GPU infrastructure:** Cannot run on standard Cloud Run instances. Requires L4 GPU (24GB VRAM) or similar. Deploy as separate service with GPU allocation.
+
+- **Few-shot examples drive extraction quality:** Unlike Pydantic schemas, LangExtract learns from examples. Quality of examples directly impacts extraction accuracy. Start with 2-3 well-crafted examples per document type.
+
+- **Character offsets require careful chunking:** Offsets are relative to chunk start. Must track chunk position in full document to provide document-level offsets.
+
+---
+
+## When to Use LangExtract vs Docling+Gemini
+
+### Use LangExtract When:
+
+| Scenario | Why LangExtract | Notes |
+|----------|-----------------|-------|
+| **Compliance/audit requirements** | Character-level traceability for every extracted value | Regulated industries (finance, healthcare) require provenance |
+| **Long documents (10+ pages)** | Multi-pass extraction catches entities missed in single pass | `extraction_passes=3-5` improves recall |
+| **Need to verify extraction visually** | Interactive HTML visualization shows highlighted spans | Click any value to see exact source location |
+| **Complex multi-entity documents** | Chunking + parallel processing handles entity density | Loan apps with multiple borrowers, co-signers |
+| **Few-shot schema customization** | Define extraction via examples, no code changes | Add new field types by providing examples |
+
+### Use Docling+Gemini (Current Path) When:
+
+| Scenario | Why Docling+Gemini | Notes |
+|----------|-------------------|-------|
+| **Simple documents** | Faster, lower cost for straightforward extraction | Single borrower, clear structure |
+| **Table-heavy documents** | Docling's TableFormer excels at table recovery | Financial statements, asset schedules |
+| **Page-level attribution sufficient** | If character offsets aren't required, simpler path | Internal processing without audit trail |
+| **Cold start latency matters** | Docling is simpler to deploy, faster startup | High-volume, latency-sensitive workloads |
+
+### Decision Matrix
+
+| Factor | Docling+Gemini | LangExtract |
+|--------|----------------|-------------|
+| Source grounding | Page + snippet | Character offset |
+| Long document handling | Manual chunking | Built-in multi-pass |
+| Schema definition | Pydantic models | Few-shot examples |
+| Visualization | None | Interactive HTML |
+| Audit compliance | Basic | Full traceability |
+| Deployment complexity | Standard | Requires Docling frontend |
+
+**Recommendation:** Offer both paths via API selection. Default to LangExtract for compliance-focused workflows, Docling+Gemini for simple/fast workflows.
+
+---
+
+## When to Use LightOnOCR vs Docling OCR
+
+### Use LightOnOCR When:
+
+| Scenario | Why LightOnOCR | Notes |
+|----------|----------------|-------|
+| **Scanned documents** | End-to-end VLM architecture handles noise, skew, low quality | W-2s, pay stubs, bank statements often scanned |
+| **High-volume OCR workloads** | 5.71 pages/sec on H100; <$0.01/1000 pages | Cost-effective for batch processing |
+| **Complex layouts** | Handles tables, multi-column, forms without pipeline | Financial documents with varied layouts |
+| **GPU infrastructure available** | Requires L4/T4/A100 GPU allocation | Cloud Run GPU or dedicated VM |
+
+### Use Docling OCR (Current Path) When:
+
+| Scenario | Why Docling | Notes |
+|----------|-------------|-------|
+| **Native digital PDFs** | No OCR needed; Docling extracts text directly | Most loan applications are digital-origin |
+| **No GPU available** | Docling runs on CPU | Dev environments, cost-sensitive deploys |
+| **Cold start matters** | Docling is lighter than LightOnOCR model | Real-time processing needs |
+| **DOCX/PPTX input** | Docling handles multiple formats | LightOnOCR is image-only |
+
+### Auto-Selection Logic
+
+```python
+def select_ocr_method(document: DocumentMetadata) -> Literal["docling", "lightonocr"]:
+    """Auto-select OCR method based on document characteristics."""
+    # Images always need OCR
+    if document.file_type in ["png", "jpg", "jpeg"]:
+        return "lightonocr"  # Best quality for images
+
+    # PDFs: check if scanned
+    if document.file_type == "pdf":
+        # If extractable text is minimal, likely scanned
+        if is_scanned_pdf(document):
+            return "lightonocr"
+        return "docling"  # Native PDF, no OCR needed
+
+    # DOCX doesn't need OCR
+    return "docling"
+```
+
+**Recommendation:** Implement scanned document detection. Route scanned docs to LightOnOCR GPU service, native docs to Docling CPU path. Expose manual override via API.
 
 ---
 
 ## MVP Definition
 
-### Launch With (Day 1-2 Core)
+### Launch With (v2.0)
 
-Minimum viable product that proves the concept works.
+Minimum viable LangExtract + LightOnOCR integration.
 
-- [x] **Document upload endpoint** - Accept PDF/DOCX/images, store in GCS
-- [x] **Docling processing** - Convert to structured text with table preservation
-- [x] **LLM extraction with Gemini** - Extract BorrowerRecord fields with structured output
-- [x] **Source attribution** - Track document_id, page_number, section for each extraction
-- [x] **Confidence scoring** - Implement formula from PRD
-- [x] **PostgreSQL storage** - Borrowers, documents, income records, source references
-- [x] **Basic REST API** - CRUD for documents and borrowers, search endpoint
-- [x] **Basic validation** - Format validation for SSN, phone, zip
+- [ ] **LangExtract basic integration** - Extract borrowers with character offsets
+- [ ] **Few-shot examples for loan docs** - 3 examples covering common patterns
+- [ ] **Enhanced SourceReference model** - Add `start_char`, `end_char` fields
+- [ ] **Extraction method selection API** - `extraction_method` parameter on upload/extract endpoints
+- [ ] **LightOnOCR Cloud Run service** - Deployed with L4 GPU
+- [ ] **Scanned document detection** - Auto-route to LightOnOCR
+- [ ] **HTML visualization generation** - Save to GCS alongside extraction results
 
-### Add After Core Works (Day 2-3 Polish)
+### Add After Validation (v2.x)
 
-Features to add once core is stable.
+Features to add once core is working.
 
-- [ ] **Frontend dashboard** - Document list, borrower list, status indicators
-- [ ] **Borrower detail view** - Show all extracted data with source references
-- [ ] **Architecture pages** - System diagram, pipeline flow, scaling strategy
-- [ ] **Low-confidence flagging** - Visual indicator for records needing review
-- [ ] **Income timeline visualization** - Recharts component showing income history
-- [ ] **Search with filters** - Filter by name, account, confidence level
-- [ ] **Document detail with extraction preview** - Show what was extracted from each doc
+- [ ] **Multi-pass extraction config** - Expose `extraction_passes` via API for recall tuning
+- [ ] **Parallel chunk workers** - Configure `max_workers` for throughput optimization
+- [ ] **Document-type-specific examples** - Separate example sets for W-2, bank statements, pay stubs
+- [ ] **Visualization in dashboard** - Embed HTML viewer in Next.js frontend
+- [ ] **Extraction method comparison** - Side-by-side results from both methods
 
-### Future Consideration (Post-Demo)
+### Future Consideration (v3+)
 
-Features to defer until project timeline extends.
+Features to defer until product-market fit is established.
 
-- [ ] **Visual source linking** - Click field to see highlighted source text (complex UI work)
-- [ ] **Entity resolution/deduplication** - Merge same borrower across documents
-- [ ] **Batch upload** - Upload ZIP of multiple documents
-- [ ] **Export functionality** - CSV/JSON export of extracted data
-- [ ] **Webhook notifications** - Notify external systems on processing complete
-- [ ] **Comprehensive audit logging** - Full processing decision trail
+- [ ] **Bounding box extraction** - LightOnOCR-2-1B-bbox for visual grounding
+- [ ] **Cross-document entity resolution** - Link same borrower across multiple documents
+- [ ] **Example library management** - UI for adding/editing few-shot examples
+- [ ] **Extraction analytics** - Track accuracy metrics by document type and method
 
 ---
 
 ## Feature Prioritization Matrix
 
-| Feature | User/Evaluator Value | Implementation Cost | Priority | Rationale |
-|---------|---------------------|---------------------|----------|-----------|
-| Multi-format ingestion | HIGH | MEDIUM | P1 | Core functionality, Docling handles heavy lifting |
-| LLM extraction | HIGH | MEDIUM | P1 | Core value prop, Gemini structured output simplifies |
-| Source attribution | HIGH | LOW | P1 | Key differentiator when visible, low effort with proper design |
-| Confidence scoring | MEDIUM | LOW | P1 | Simple formula, adds production credibility |
-| REST API with docs | HIGH | LOW | P1 | FastAPI auto-generates OpenAPI, minimal effort |
-| Basic validation | MEDIUM | LOW | P1 | Regex patterns, quick win |
-| Frontend dashboard | HIGH | MEDIUM | P1 | Portfolio requires visible demo |
-| Architecture pages | HIGH | LOW | P1 | PRD bonus, high evaluator impact, mostly static content |
-| Search functionality | MEDIUM | LOW | P1 | Basic SQL queries, expected feature |
-| Income visualization | MEDIUM | LOW | P2 | Recharts makes this easy, looks impressive |
-| HITL review workflow | MEDIUM | MEDIUM | P2 | Shows production thinking, badge + queue UI |
-| Complexity-based model selection | LOW | MEDIUM | P2 | Cost optimization demo, but subtle |
-| Visual source linking | HIGH | HIGH | P3 | Impressive but complex, defer |
-| Entity resolution | MEDIUM | HIGH | P3 | Complex, defer unless time permits |
-| Batch processing | LOW | MEDIUM | P3 | Nice to have, not core demo |
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Character-level source offsets | HIGH | MEDIUM | P1 |
+| Few-shot example schema | HIGH | LOW | P1 |
+| Extraction method selection API | HIGH | LOW | P1 |
+| LightOnOCR service deployment | MEDIUM | HIGH | P1 |
+| Scanned document detection | MEDIUM | MEDIUM | P1 |
+| HTML visualization | MEDIUM | LOW | P2 |
+| Multi-pass extraction | MEDIUM | LOW | P2 |
+| Document-type examples | MEDIUM | MEDIUM | P2 |
+| Dashboard visualization | LOW | MEDIUM | P3 |
+| Bounding box extraction | LOW | HIGH | P3 |
 
 **Priority key:**
-- P1: Must have for launch (complete by end of day 2)
-- P2: Should have, add if time permits (day 3)
+- P1: Must have for v2.0 launch
+- P2: Should have, add when possible
 - P3: Nice to have, future consideration
+
+---
+
+## Integration with Existing Features
+
+The v2.0 features build on the existing v1.0 system:
+
+### Existing Features (v1.0 - Already Built)
+
+| Feature | Status | v2.0 Impact |
+|---------|--------|-------------|
+| Document upload (PDF/DOCX/image) | Complete | Add extraction_method parameter |
+| Docling text extraction with pages | Complete | Serves as input to LangExtract |
+| Gemini extraction with confidence | Complete | Alternative path preserved |
+| SourceReference (page + snippet) | Complete | Extended with char offsets |
+| Borrower search/query APIs | Complete | No changes needed |
+| Next.js dashboard | Complete | Add visualization viewer |
+
+### Integration Points
+
+```
+                    Document Upload
+                           |
+                    +------v------+
+                    |  Detection  |
+                    | (scanned?)  |
+                    +------+------+
+                           |
+        +------------------+------------------+
+        |                                     |
+   Scanned                              Native PDF/DOCX
+        |                                     |
++-------v-------+                    +--------v--------+
+|  LightOnOCR   |                    |     Docling     |
+|  (GPU Cloud   |                    |  (CPU-based)    |
+|   Run L4)     |                    +--------+--------+
++-------+-------+                             |
+        |                                     |
+        +------------------+------------------+
+                           |
+                    Text + Metadata
+                           |
+                    +------v------+
+                    |   Method    |
+                    |  Selection  |
+                    +------+------+
+                           |
+        +------------------+------------------+
+        |                                     |
+   LangExtract                        Docling+Gemini
+   (character offsets,                (page attribution,
+    multi-pass,                        simple/fast)
+    visualization)
+        |                                     |
++-------v-------+                    +--------v--------+
+|   Enhanced    |                    |    Current      |
+| BorrowerRecord|                    | BorrowerRecord  |
+| (char offsets)|                    | (page+snippet)  |
++---------------+                    +-----------------+
+```
 
 ---
 
 ## Competitor Feature Analysis
 
-Comparison with production IDP (Intelligent Document Processing) platforms.
+| Feature | Current System (Docling+Gemini) | LangExtract | LangChain Extraction | LlamaIndex |
+|---------|--------------------------------|-------------|---------------------|------------|
+| Source grounding | Page + 200-char snippet | Character offsets | No native grounding | Document metadata |
+| Long doc handling | Manual chunking | Built-in multi-pass | Manual | Built-in nodes |
+| Schema definition | Pydantic models | Few-shot examples | Pydantic | Pydantic |
+| Visualization | None | Interactive HTML | None | None |
+| Model support | Gemini only | Gemini, OpenAI, Ollama | Any LLM | Any LLM |
+| Controlled generation | No | Yes (Gemini) | No | No |
 
-| Feature | Infrrd/Docsumo | Amazon Textract | Our Approach |
-|---------|---------------|-----------------|--------------|
-| OCR + Layout | Custom models | Native | Docling (production-grade, open source) |
-| LLM Extraction | Internal models | Not included | Gemini 3.0 Pro/Flash with structured output |
-| Source Attribution | Visual highlighting | Bounding boxes | Page/section/snippet references (text-based) |
-| Confidence Scoring | ML-based | Per-field confidence | Formula-based (simpler, explainable) |
-| HITL Review | Full workflow builder | Not included | Basic flagging and queue (simplified) |
-| Document Classification | 100+ document types | 50+ lending docs | Implicit via extraction (document agnostic) |
-| Integration | Enterprise APIs | AWS ecosystem | REST API with OpenAPI spec |
-| Deployment | Cloud SaaS | AWS managed | GCP Cloud Run (serverless) |
-| Cost Model | Per-page pricing | Per-page pricing | Gemini token-based (transparent) |
-
-### Our Niche
-
-We're not competing with enterprise IDP platforms. Our demo showcases:
-1. **Modern AI-native architecture** - LLM-first extraction with structured output
-2. **Full traceability** - Every extraction linked to source
-3. **Production patterns** - Async processing, error handling, confidence scoring
-4. **Cloud-native deployment** - Serverless, scalable infrastructure
-5. **Code quality** - TDD, type hints, clean architecture
-
----
-
-## Portfolio-Specific Recommendations
-
-### What Makes This Project Stand Out
-
-Based on recruiter expectations for 2025-2026:
-
-1. **Live demo is essential** - Deploy to Cloud Run, have working URL
-2. **Visual elements matter** - Architecture diagrams, data visualizations, clean UI
-3. **Documentation quality** - Clear README, system design doc, API docs
-4. **End-to-end implementation** - Not just ML model, but full pipeline to UI
-5. **Production patterns** - Error handling, validation, confidence scoring show maturity
-
-### High-Impact, Low-Effort Wins
-
-| Win | Effort | Impact | How |
-|-----|--------|--------|-----|
-| Architecture visualization page | 4 hours | Very High | Static React components with Mermaid diagrams |
-| Income timeline chart | 2 hours | High | Recharts line chart, looks impressive |
-| Confidence badges in UI | 1 hour | Medium | Color-coded badges (green/yellow/red) |
-| Processing status indicators | 1 hour | Medium | Animated spinner, status badges |
-| OpenAPI documentation | 0 hours | High | FastAPI generates automatically |
-| System design markdown | 3 hours | Very High | PRD requires, evaluators read this |
-
-### Features to Skip for Portfolio
-
-| Skip | Why |
-|------|-----|
-| Complex auth | Time sink, evaluators don't care |
-| Full PII compliance | Add disclaimer instead |
-| Batch processing | Single doc upload is fine for demo |
-| Real-time updates | Polling is sufficient |
-| Multi-tenant | Note in docs as "production consideration" |
+**Our Approach (v2.0):**
+- Keep Docling+Gemini as fast path for simple documents
+- Add LangExtract for compliance-focused workflows with full traceability
+- Expose selection via API; let users choose based on requirements
+- LightOnOCR as dedicated GPU service for scanned document quality
 
 ---
 
 ## Sources
 
-### Intelligent Document Processing (IDP)
-- [Docsumo IDP Market Report 2025](https://www.docsumo.com/blogs/intelligent-document-processing/intelligent-document-processing-market-report-2025)
-- [IDP Trends 2025 - AlgoDocs](https://algodocs.com/intelligent-document-processing-trends-2025-2/)
-- [Infrrd IDP Platform](https://www.infrrd.ai/intelligent-document-processing-automation-software)
-- [IDP Use Cases 2025 - Cleveroad](https://www.cleveroad.com/blog/idp-use-cases/)
-- [IDP in Lending - Docsumo](https://www.docsumo.com/blogs/intelligent-document-processing/lending-industry)
+### LangExtract
 
-### Mortgage/Loan Document Processing
-- [AI Mortgage Document Processing - Ascendix](https://ascendixtech.com/ai-mortgage-document-processing/)
-- [Mortgage Automation 2026 - ABBYY](https://www.abbyy.com/blog/ai-mortgage-process-automation/)
-- [Mortgage Document Automation - Unstract](https://unstract.com/blog/mortgage-document-processing-and-automation-with-unstract/)
-- [AWS Bedrock Mortgage Processing](https://aws.amazon.com/blogs/machine-learning/autonomous-mortgage-processing-using-amazon-bedrock-data-automation-and-amazon-bedrock-agents/)
-- [Mortgage Data Extraction - Astera](https://www.astera.com/by-use-case/mortgage-data-extraction/)
+- [Google LangExtract GitHub Repository](https://github.com/google/langextract) - Official source, verified features and API
+- [Introducing LangExtract - Google Developers Blog](https://developers.googleblog.com/introducing-langextract-a-gemini-powered-information-extraction-library/) - July 2025 release announcement
+- [LangExtract + Docling Integration](https://dev.to/_aparna_pradhan_/the-perfect-extraction-unlocking-unstructured-data-with-docling-langextract-1j3b) - Combined workflow documentation
+- [LangExtract Critical Review](https://medium.com/@meghanaharishankara/googles-langextract-a-critical-review-from-the-trenches-e41fae3e03b0) - Real-world usage experience
 
-### Confidence Scoring & Source Attribution
-- [Microsoft Document Analysis - Confidence & Grounding](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/document/analyzer-improvement)
-- [Audit Trails for Financial Compliance - Medium](https://lawrence-emenike.medium.com/audit-trails-and-explainability-for-compliance-building-the-transparency-layer-financial-services-d24961bad987)
-- [Data Extraction Best Practices for Auditors - DataSnipper](https://www.datasnipper.com/resources/data-extraction-invoices-best-practices)
+### LightOnOCR
 
-### LLM Extraction Pitfalls
-- [Don't Use LLMs as OCR - Medium](https://medium.com/@martia_es/dont-use-llms-as-ocr-lessons-learned-from-extracting-complex-documents-db2d1fafcdfb)
-- [LLMs for PDF Extraction 2026 - Unstract](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/)
-- [Why LLMs Suck at OCR - Pulse AI](https://www.runpulse.com/blog/why-llms-suck-at-ocr)
-- [Best LLM Document Parsers 2025 - Reducto](https://llms.reducto.ai/best-llm-ready-document-parsers-2025)
-- [LLM Extraction Challenges at Scale - Zilliz](https://zilliz.com/blog/challenges-in-structured-document-data-extraction-at-scale-llms)
+- [LightOnOCR-2-1B Hugging Face Model Card](https://huggingface.co/lightonai/LightOnOCR-2-1B) - Official model with deployment instructions
+- [LightOnOCR Blog Post](https://www.lighton.ai/lighton-blogs/making-knowledge-machine-readable) - Architecture and performance details
+- [LightOnOCR Hugging Face Blog](https://huggingface.co/blog/lightonai/lightonocr) - Technical deep dive
 
-### Human-in-the-Loop (HITL)
-- [HITL for AI Document Processing - Unstract](https://unstract.com/blog/human-in-the-loop-hitl-for-ai-document-processing/)
-- [HITL Best Practices - Parseur](https://parseur.com/blog/hitl-best-practices)
-- [HITL Guide 2026 - Parseur](https://parseur.com/blog/human-in-the-loop-ai)
-- [Human Review for Document Processing - Sensible](https://www.sensible.so/blog/human-review-document-processing)
-- [HITL - Docsumo](https://www.docsumo.com/platform/features/human-in-the-loop)
+### Comparison and Selection
 
-### Entity Resolution & Deduplication
-- [Dedupe Python Library](https://github.com/dedupeio/dedupe)
-- [Zingg Entity Resolution](https://github.com/zinggAI/zingg)
-- [Entity Resolution Guide - Spot Intelligence](https://spotintelligence.com/2024/01/22/entity-resolution/)
-- [Entity Resolution for Legal Documents - Instructor](https://python.useinstructor.com/examples/entity_resolution/)
+- [Docling vs LangExtract Comparison](https://github.com/google/langextract/issues/184) - Integration proposal with rationale
+- [OCR Models Comparison 2025](https://www.e2enetworks.com/blog/complete-guide-open-source-ocr-models-2025) - GPU vs CPU OCR benchmarks
+- [Document Analysis with Grounding - Azure](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/document/enrichments) - Industry grounding patterns
 
-### Portfolio Project Best Practices
-- [ML Portfolio Projects 2025 - Medium](https://medium.com/@santosh.rout.cr7/ml-engineer-portfolio-projects-that-will-get-you-hired-in-2025-d1f2e20d6c79)
-- [Tech Portfolio 2025 - TieTalent](https://tietalent.com/en/blog/220/beyond-the-ats-how-to-build-a-tech-portfolio)
-- [Data Science Portfolio - Refonte Learning](https://www.refontelearning.com/blog/how-to-build-a-data-science-portfolio-that-gets-you-hired)
-- [Projects That Impress Recruiters - NareshIT](https://nareshit.com/blogs/portfolio-projects-to-impress-recruiters-guide-nareshit)
+### Source Grounding and Compliance
 
-### Document Extraction APIs
-- [Best Document Extraction APIs - Eden AI](https://www.edenai.co/post/best-document-data-extraction-apis)
-- [Amazon Textract Lending Docs](https://docs.aws.amazon.com/textract/latest/dg/lending-document-classification-extraction.html)
-- [Data Extraction in Lending - Docsumo](https://www.docsumo.com/blogs/data-extraction/lending-industry)
-- [Fintech Document Extraction - Sensible](https://www.sensible.so/solutions/financial-services)
+- [Google Cloud Grounding Overview](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview) - Enterprise grounding patterns
+- [Agentic Document Extraction for Financial Services](https://landing.ai/solutions/financial-services) - Compliance workflow integration
 
 ---
-
-*Feature research for: Loan Document Extraction System*
-*Researched: 2026-01-23*
+*Feature research for: LangExtract + LightOnOCR integration for loan document extraction*
+*Researched: 2026-01-24*
 *Confidence: HIGH*

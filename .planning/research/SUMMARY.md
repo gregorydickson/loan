@@ -1,319 +1,258 @@
 # Project Research Summary
 
-**Project:** Loan Document Extraction System
-**Domain:** AI-powered document extraction for financial/loan documents
-**Researched:** 2026-01-23
+**Project:** Loan Document Extraction System v2.0
+**Domain:** LLM-powered document extraction with source grounding and GPU OCR
+**Researched:** 2026-01-24
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This loan document extraction system leverages modern AI infrastructure to convert unstructured financial documents (PDFs, scanned images) into structured borrower records. Industry best practices establish a **hybrid architecture**: Docling handles faithful text extraction while Gemini 3.0 provides semantic understanding with native structured output. This separation prevents the critical hallucination problem where LLMs fabricate financial data.
+The v2.0 milestone enhances an existing production-ready loan document extraction system with three major capabilities: LangExtract for character-level source grounding, LightOnOCR GPU service for high-quality scanned document processing, and CloudBuild deployment to replace Terraform. This is a brownfield enhancement, not a greenfield project — the v1.0 Docling + Gemini pipeline remains fully functional and valuable for simple document processing.
 
-The recommended approach uses **FastAPI** for async processing, **PostgreSQL** with full source attribution, **Cloud Run** for serverless deployment, and **Next.js 15** with shadcn/ui for the frontend. The key differentiator for portfolio evaluation is comprehensive traceability—every extracted field links to its source document location, building trust and enabling audit trails. Cost optimization through document complexity classification routes 80-90% of documents to cheaper Flash models while reserving Pro for truly complex cases.
+The research reveals a clear technical strategy: dual extraction pipelines coexisting with API-based selection. LangExtract provides character-level offsets enabling complete audit traceability for compliance-focused workflows, while the existing Docling path handles simple documents faster and cheaper. LightOnOCR deployed as a dedicated GPU Cloud Run service processes scanned documents with state-of-the-art quality (83.2% on OlmOCR-Bench), routing only when needed to manage costs. CloudBuild simplifies deployment without sacrificing reproducibility, replacing Terraform for Cloud Run services while keeping infrastructure provisioning as one-time scripts.
 
-The primary risk is **data hallucination** at scale—LLMs are trained to generate plausible content, not faithful extraction. Mitigation requires Docling for text extraction (never raw PDFs to LLMs), hybrid validation combining Pydantic schemas with regex checks for financial fields, and mandatory source attribution with verification. The 3-day timeline demands ruthless scope control: core extraction working by end of day 1, quality/validation systems on day 2, polish and deployment on day 3.
+The critical risks are integration-focused, not greenfield risks. Character offset alignment between LangExtract and Docling requires careful offset translation. GPU cold start costs ($0.67/hour) must be managed through smart routing (scanned vs digital document detection). Terraform state orphaning during migration requires explicit archival and service account revocation. Few-shot example quality directly determines LangExtract accuracy — examples must use verbatim text in document order or prompt alignment warnings degrade extraction quality. These are addressable through deliberate architecture decisions in early phases, not intractable technical challenges.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack leverages production-proven technologies optimized for document extraction use cases. **Docling** (IBM Research, v2.70.0) handles document-to-text conversion with layout understanding and automatic OCR, eliminating the need to send raw PDFs to LLMs. **Gemini 3.0** provides native structured output with Pydantic models, removing separate parsing/validation layers. The architecture is fully async (FastAPI + asyncpg + SQLAlchemy 2.0) for scalability, with Cloud Run providing serverless deployment.
+**v2.0 adds three major components to existing v1.0 stack:**
+
+**LangExtract (v1.1.1)** provides character-level source grounding that the current Gemini structured output approach lacks. Every extracted field maps to exact `(char_start, char_end)` positions in source text, enabling interactive HTML visualizations where users click any value to see its exact source location. Built-in chunking with multi-pass extraction improves recall on long documents (10+ page loan applications with multiple borrowers). Few-shot schema definition is more flexible than Pydantic models for domain customization.
+
+**LightOnOCR-2-1B** is a 1B parameter vision-language model delivering state-of-the-art OCR quality (83.2% on OlmOCR-Bench, outperforming models 9x larger). End-to-end architecture eliminates brittle OCR pipelines — direct image-to-text with natural reading order. Deployed as dedicated Cloud Run GPU service (L4 GPU, 24GB VRAM) with vLLM serving for production-grade batching and optimization. Cost-effective at <$0.01 per 1,000 pages, but requires smart routing to avoid $485/month baseline if kept always-on.
+
+**CloudBuild + gcloud CLI** replaces Terraform for application deployment while keeping infrastructure provisioning as one-time scripts. Native GCP integration eliminates external tooling dependencies. Direct `gcloud run deploy` commands in cloudbuild.yaml provide faster iteration than Terraform state management. Built-in CI/CD with GitHub triggers enables automatic builds on push. Hybrid approach avoids re-provisioning costs (Cloud SQL, VPC remain as-is) while simplifying the deployment pipeline.
 
 **Core technologies:**
-- **Docling 2.70.0**: Document parsing (PDF/DOCX/images) — production-grade layout analysis, table extraction, native LangChain integration
-- **google-genai 1.60.0**: Gemini 3.0 client — native Pydantic structured output, replaces deprecated SDK
-- **FastAPI 0.128.0**: Async REST API — Pydantic validation, auto-generated OpenAPI docs, 15-20k req/s performance
-- **SQLAlchemy 2.0.46 + asyncpg**: Async ORM — full async support, battle-tested PostgreSQL integration
-- **Next.js 15.5**: Frontend framework — App Router with React Server Components, TypeScript-first
-- **Cloud Run + Cloud SQL + GCS**: GCP infrastructure — serverless auto-scaling, managed database, durable storage
+- **LangExtract 1.1.1**: Source-grounded extraction with character offsets — Google's purpose-built library for LLM extraction with precise attribution
+- **LightOnOCR-2-1B**: GPU OCR model (1B params, BF16) — SOTA quality for scanned documents, vLLM deployment
+- **CloudBuild**: Native GCP CI/CD — Replaces Terraform for Cloud Run deployments
+- **Gemini 2.5 Flash**: LLM backend for LangExtract — Best speed-cost-quality balance ($0.075 per 1M input tokens)
+- **Cloud Run GPU (L4)**: Serverless GPU compute — 24GB VRAM, scale-to-zero, $0.67/hour when running
 
-**Key insight from research:** Never use LLMs for OCR. Docling extracts text faithfully; Gemini reasons about that text. This separation prevents the catastrophic hallucination problem where LLMs invent financial figures.
+**Existing v1.0 stack (unchanged):**
+- Docling 2.70.0, FastAPI 0.128.0, SQLAlchemy 2.0.46, PostgreSQL, Cloud Storage, Cloud Tasks
 
 ### Expected Features
 
-Production document extraction systems have a well-defined feature landscape. For a 3-day portfolio project, the strategy is implementing table stakes thoroughly while adding 1-2 high-visibility differentiators that showcase production readiness.
+**v2.0 focuses on enhanced extraction capabilities and deployment modernization, not net-new end-user features.**
 
 **Must have (table stakes):**
-- **Multi-format document ingestion** — PDFs, DOCX, scanned images via Docling
-- **Structured data extraction** — BorrowerRecord schema with name, address, income, account numbers
-- **Source attribution/traceability** — Link each extracted field to page, section, text snippet
-- **Confidence scoring** — Flag uncertain extractions (PRD formula: 0.5 base + completeness bonuses)
-- **Document status tracking** — PENDING → PROCESSING → COMPLETED/FAILED lifecycle
-- **Search/query interface** — Find borrowers by name, account number, loan number
-- **Error handling & recovery** — Graceful failures, retry logic for LLM calls
-- **REST API with OpenAPI docs** — FastAPI auto-generates, demonstrates clean endpoint design
+- **Character-level offset tracking** — Core LangExtract value prop; extends SourceReference with char_start/char_end fields
+- **Few-shot example-based schema** — LangExtract enforces schemas via examples, not just Pydantic models
+- **Multi-pass extraction** — Configurable passes (2-5) for thorough extraction on long documents
+- **High-quality scanned document OCR** — Primary LightOnOCR use case; replaces Docling OCR for scanned docs
+- **Extraction method selection API** — Query param or request field: `extraction_method: "docling" | "langextract"`
+- **HTML visualization output** — LangExtract generates interactive visualizations for audit with highlighted source spans
 
-**Should have (competitive differentiators):**
-- **Architecture visualization in UI** — Interactive system diagram, pipeline flow (PRD bonus deliverable)
-- **Human-in-the-loop review workflow** — Flag low-confidence extractions (<0.7) for manual review
-- **Income trend visualization** — Recharts timeline showing income history
-- **Model selection intelligence** — Auto-route to Flash vs Pro based on document complexity
-- **Visual source linking** — Click extracted field to see highlighted source in document (high complexity, impressive when done)
+**Should have (competitive advantage):**
+- **Precise source grounding with visual audit** — Every field links to exact character range; click any value to see source
+- **End-to-end GPU OCR** — Single model vs traditional OCR + layout + parsing chain (no pipeline fragmentation)
+- **Auditability for regulated industries** — Character-level provenance enables compliance verification
+- **OCR cost efficiency** — <$0.01 per 1,000 pages vs $0.50-2.00 for proprietary OCR APIs
+- **Parallel chunk processing** — 10-20x throughput improvement for long documents via concurrent LLM calls
 
 **Defer (v2+):**
-- **Cross-document entity resolution** — Merge same borrower across documents (fuzzy matching complexity)
-- **Real-time streaming extraction** — WebSocket overhead not justified for demo
-- **Full PII encryption** — Use disclaimers for portfolio, note production requirements
-- **Multi-tenant architecture** — Single-tenant sufficient, document multi-tenant patterns
-- **Custom model fine-tuning** — Use well-crafted prompts with structured output instead
+- **Real-time character-level updates** — WebSocket complexity; LLM extraction is batch-oriented
+- **Bounding box extraction** — Requires LightOnOCR-2-1B-bbox variant and more memory
+- **Custom model fine-tuning** — LightOnOCR fine-tuning support "coming soon"; few-shot examples are the customization mechanism
+- **Extraction method comparison UI** — Start with explicit selection, add comparison mode later
 
-**Portfolio-specific insight:** Architecture visualization page has very high evaluator impact for low technical risk—mostly static content with Mermaid diagrams. Income timeline charts using Recharts look impressive but are straightforward to implement.
+**Anti-features (commonly requested but problematic):**
+- **Always use LangExtract** — Docling is faster/cheaper for simple docs; offer dual paths with selection
+- **Always use LightOnOCR** — Native PDFs don't need OCR; GPU cold start adds latency; auto-detect scanned vs digital
+- **Universal extraction schema** — Different loan doc types have different structures; use document-type-specific few-shot examples
 
 ### Architecture Approach
 
-Industry practice establishes a **modular, multi-stage pipeline architecture** separating ingestion, processing, extraction, validation, and storage. Hybrid architectures (LLM + deterministic validation) outperform purely AI-driven solutions. The key pattern is **async processing with status tracking**—upload returns immediately, processing happens via Cloud Tasks queue, client polls for results.
+**Dual extraction pipeline with API-based method selection.** Existing Docling + Gemini path continues to work unchanged. LangExtract path added as parallel alternative, selected via `?method=langextract` query parameter. Both paths store to the same PostgreSQL schema with extended SourceReference model (char_start/char_end nullable columns for backward compatibility). LightOnOCR deployed as separate Cloud Run GPU service, called only when `ocr_mode=auto` detects scanned document or `ocr_mode=force` is specified.
+
+**Integration flow:**
+1. Document upload with method selection (`docling` or `langextract`) and OCR mode (`auto`, `force`, `skip`)
+2. Cloud Tasks queue async processing with method/OCR params in payload
+3. If OCR needed: call LightOnOCR GPU service (separate Cloud Run instance with L4 GPU)
+4. Route to extraction method: DoclingProcessor (v1) or LangExtractProcessor (v2)
+5. Both methods produce BorrowerRecord with SourceReference, but LangExtract includes character offsets
+6. Store to PostgreSQL with extraction_method metadata
 
 **Major components:**
-1. **API Layer (FastAPI)** — HTTP endpoints, request validation, response formatting; thin layer with no business logic
-2. **Ingestion Service (Docling)** — Document intake, multi-format parsing, layout analysis; produces structured DoclingDocument
-3. **Extraction Service (Gemini)** — LLM orchestration with structured output, prompt management, complexity-based model routing
-4. **Validation Service** — Hybrid validation combining Pydantic schemas with deterministic regex checks for critical fields (SSN, loan numbers)
-5. **Storage Service (PostgreSQL)** — Repository pattern isolating database, stores borrowers/extractions/income_history/source_links
-6. **Query Service** — Borrower lookup, document search, source attribution resolution
+1. **ExtractionRouter** — Dispatches to Docling or LangExtract based on `?method` param
+2. **LangExtractProcessor** — Wrapper around LangExtract API with few-shot examples from `examples/` directory
+3. **LightOnOCR GPU Service** — Standalone FastAPI service with vLLM deployment, scales to zero when idle
+4. **LightOnOCRClient** — HTTP client in backend for GPU OCR service communication
+5. **Enhanced SourceReference** — Adds char_start/char_end nullable columns, maintains backward compatibility
+6. **CloudBuild Deployment** — cloudbuild.yaml configs for backend, frontend, OCR service with gcloud CLI commands
 
-**Data flow:** Client uploads → store in GCS → enqueue Cloud Task → Docling extracts text → complexity classifier routes to Flash/Pro → Gemini extracts with structured output → hybrid validation → persist with source links → client queries results.
-
-**Key architectural patterns from research:**
-- **Hybrid LLM + Deterministic Validation**: Combine semantic extraction with regex validation for critical fields
-- **Source Attribution Chain**: Every field links to document_id, page_number, bounding_box, text_snippet
-- **Dynamic Model Selection**: Route documents to Flash/Pro based on complexity classifier (cost optimization)
-- **Async Processing with Status Tracking**: Separate upload (sync) from processing (async) with polling
-
-**Anti-patterns to avoid:** Synchronous processing (causes timeouts), trusting LLM output without validation (hallucination), losing source attribution (breaks trust), monolithic prompts (hard to debug), ignoring document quality signals (poor OCR needs different handling).
+**Key architectural patterns:**
+- **Parallel paths, unified storage** — Different extraction methods converge at database layer
+- **Optional enhancement** — Character offsets are nullable; v1 records work without migration
+- **Smart routing** — Scanned document detection routes to GPU OCR only when needed
+- **Separation of concerns** — OCR service is completely independent, communicates via HTTP
+- **CloudBuild hybrid** — Application deployment via CloudBuild, infrastructure as one-time gcloud scripts
 
 ### Critical Pitfalls
 
-The most dangerous pitfalls cause project failure, data corruption, or complete rewrites. All must be addressed in Phases 1-2.
+**Top 5 pitfalls from research with prevention strategies:**
 
-1. **Using LLMs as OCR (The Faithfulness Trap)** — LLMs hallucinate plausible-looking data that doesn't exist. For $38M loan amounts, LLM might output $88M. **Prevention:** Use Docling for extraction, Gemini for reasoning. Never send raw PDFs to LLMs. Implement grounding validation linking every value to source text.
+1. **Character Offset Mismatch Between Docling and LangExtract** — LangExtract provides offsets relative to raw text, but Docling's markdown export transforms text (formatting, whitespace, reordering). Offsets won't map to original document. **Prevention:** Use Docling's raw text mode (not markdown), store dual offsets (Docling-relative and document-relative), build offset translation layer, verify with substring matching at reported positions. **Address in Phase 1.**
 
-2. **Source Attribution Theater (Fake Provenance)** — System claims to track sources but LLM invents page numbers and snippets. Research shows 50-90% of LLM citations are not fully supported. **Prevention:** Track which text chunk produced each extraction, verify snippets fuzzy-match actual document text, validate page numbers exist.
+2. **LangExtract Few-Shot Example Alignment Errors** — Extraction quality degrades if example `extraction_text` values aren't verbatim quotes from source or aren't in document order. Raises "Prompt alignment warnings." **Prevention:** Use exact verbatim text (never paraphrase), list extractions in document order, enable alignment warnings (don't suppress), test each example works independently. **Address in Phase 1.**
 
-3. **Structured Output Silent Failures** — Gemini returns `None` instead of structured output when response exceeds `max_output_tokens`. API returns 200 but `response.parsed` is `None`. No error raised—data silently lost. **Prevention:** Set generous max_output_tokens (8192+ for loan docs), explicit None checks, retry with chunking on None response.
+3. **GPU Service Cold Start Cost Explosion** — L4 GPU costs $0.67/hour when running. Scale-to-zero saves cost but has 5-19 second cold starts. Keeping min_instances=1 costs $485/month for sporadic usage. **Prevention:** Batch documents before spinning up GPU, disable zonal redundancy in dev/staging, route only scanned docs to GPU (native PDFs use Docling), implement scheduled warm-up before expected batches. **Address in Phase 2.**
 
-4. **Numeric Extraction Catastrophe** — Income figures, loan amounts, account numbers extracted incorrectly. OCR mistakes (0/O/D confusion), format ambiguity (1,234 vs 1.234), unit confusion (monthly vs annual). **Prevention:** Explicit format instructions in prompts, cross-validation rules (monthly × 12 ≈ annual), range checks, require unit specification, preserve original text.
+4. **Terraform State Orphaning During CloudBuild Migration** — Migrating to CloudBuild creates resources via gcloud CLI. Terraform state doesn't know about CLI-created resources. Running `terraform apply` after migration could destroy production infrastructure. **Prevention:** Never run terraform after migration begins (revoke service account permissions), export Terraform state as documentation, tag resources with creation method, incremental migration one resource at a time, archive state file read-only. **Address in Phase 3.**
 
-5. **"It Works on Test Docs" Trap** — Perfect on clean PDFs, fails on real loan packages with scanned images, stamps, handwriting, rotated pages. Docling can silently fail returning empty markdown. **Prevention:** Test with production-like documents on day 1, include ugly test cases, implement quality scoring, graceful degradation.
+5. **Dual Extraction Method Inconsistent Results** — Same document produces different borrower counts or field values from Docling vs LangExtract. Users ask "which is correct?" **Prevention:** Define single BorrowerRecord format for both methods, add normalization layer post-extraction, create canonical test suite (same docs expected same results both methods), record extraction_method metadata, consider confidence comparison (use higher-confidence result). **Address in Phase 1.**
 
-**Timeline-specific pitfall:** **Scope Creep Death Spiral** — adding features daily without removing others leads to incomplete extraction, incomplete UI, incomplete everything. 52% of projects experience scope creep with 43% significantly impacting success. **Prevention:** Write MVP scope first hour, maintain "Not in v1" list, time-box features to 2 hours max, daily checkpoint on day 3 ship readiness.
+**Additional high-severity pitfalls:**
+- **LightOnOCR Transformers Integration Immaturity** — Library only 4 months old, incomplete transformers support. Use vLLM deployment (official method) not direct transformers. Pin exact versions (vllm==0.11.1).
+- **GPU Quota Denial** — Default quota is 3 GPUs per region. Increase requests take 24-48 hours. Request quota in Phase 0 before development starts.
+- **SourceReference Schema Migration Complexity** — Adding char_start/char_end requires migration. Existing records don't have offsets. Use versioned schema (SourceReferenceV1 vs V2) or nullable fields with version metadata.
 
 ## Implications for Roadmap
 
-Based on component dependencies and pitfall mitigation requirements, I recommend a 5-phase roadmap structure:
+Based on research, the v2.0 milestone should be structured around risk mitigation and incremental enhancement:
 
-### Phase 1: Foundation & Document Ingestion
-**Rationale:** Establish core infrastructure before extraction logic. Docling integration must happen first to prevent LLM-as-OCR pitfall. Database schema with source attribution must be designed upfront—retrofitting provenance is painful.
+### Phase 1: LangExtract Integration with Character Offsets
+**Rationale:** Highest-risk component (offset alignment, few-shot examples). Must establish foundation before dependent features.
+**Delivers:** LangExtract extraction working with character-level source grounding, stored in database.
+**Addresses:**
+- Character-level offset tracking (FEATURES: table stakes)
+- Few-shot example-based schema (FEATURES: table stakes)
+- Enhanced SourceReference model with versioning
+**Avoids:**
+- Character offset mismatch (PITFALL #1) — offset translation layer
+- Few-shot example alignment errors (PITFALL #2) — validated example corpus
+- Dual method inconsistency (PITFALL #5) — normalization layer
+**Research flag:** SKIP detailed research — LangExtract API well-documented, focus on integration testing with real loan docs.
 
-**Delivers:** Working document upload → GCS storage → Docling processing pipeline with status tracking. Database schema with borrowers/extractions/source_links tables.
+### Phase 2: LightOnOCR GPU Service Deployment
+**Rationale:** Independent of LangExtract (can develop in parallel). High complexity due to GPU configuration and cost management.
+**Delivers:** Dedicated Cloud Run GPU service with LightOnOCR model, accessible via HTTP API.
+**Uses:**
+- LightOnOCR-2-1B model (STACK)
+- vLLM deployment pattern (STACK)
+- Cloud Run L4 GPU configuration (STACK)
+**Implements:**
+- Scanned document detection and routing logic
+- Image preprocessing pipeline (1540px normalization)
+- Cost monitoring and GPU scaling controls
+**Avoids:**
+- GPU cold start cost explosion (PITFALL #3) — smart routing, scanned-only
+- LightOnOCR immaturity (PITFALL #6) — vLLM deployment, not direct transformers
+- GPU quota denial (PITFALL #9) — quota request in Phase 0
+**Research flag:** SKIP detailed research — vLLM deployment well-documented in Cloud Run GPU codelabs.
 
-**Addresses features:**
-- Multi-format document ingestion (FEATURES.md table stakes)
-- Document status tracking lifecycle
-- Storage foundation for source attribution
+### Phase 3: CloudBuild Deployment Migration
+**Rationale:** Can proceed once services are working. Lower risk than LangExtract/OCR integration.
+**Delivers:** CloudBuild configs for all services, gcloud CLI deployment scripts, Terraform deprecation.
+**Uses:**
+- cloudbuild.yaml for backend, frontend, OCR service (STACK)
+- gcloud run deploy commands (STACK)
+- Artifact Registry, Secret Manager (STACK)
+**Implements:**
+- CloudBuild service account with minimal permissions
+- Deployment rollback capability
+- Incremental migration (one environment at a time)
+**Avoids:**
+- Terraform state orphaning (PITFALL #4) — explicit archival, revoke permissions
+- CloudBuild YAML type coercion (PITFALL #8) — validated template
+- Service account permission gaps (PITFALL #14) — permissions-first approach
+**Research flag:** SKIP detailed research — CloudBuild deployment to Cloud Run is standard pattern.
 
-**Avoids pitfalls:**
-- Pitfall 1 (LLM as OCR) — establishes Docling as extraction layer
-- Pitfall 11 (Docling silent failures) — add validation checks upfront
-- Pitfall 5 (test doc trap) — include real documents in integration tests
-
-**Research flag:** LOW — Docling and FastAPI are well-documented with clear patterns.
-
-### Phase 2: LLM Extraction Engine
-**Rationale:** Core value proposition depends on extraction working correctly. Build LLM client with all safety measures (None handling, rate limiting, retries) from day one. Complexity classifier enables cost optimization demo.
-
-**Delivers:** Gemini client with structured output, prompt templates for loan documents, complexity classifier routing to Flash/Pro, extraction orchestration connecting Docling → Gemini → results.
-
-**Uses stack:**
-- google-genai 1.60.0 with Pydantic structured output
-- tenacity for exponential backoff retries
-- Complexity classifier pattern from ARCHITECTURE.md
-
-**Implements:** Extraction Service component from architecture
-
-**Avoids pitfalls:**
-- Pitfall 3 (structured output None) — explicit None handling in client
-- Pitfall 6 (cost explosion) — development caching, model tiering
-- Pitfall 8 (rate limiting) — client-side rate limiting with jitter
-- Pitfall 7 (non-deterministic tests) — record/replay for integration tests
-
-**Research flag:** LOW — Gemini structured output is officially documented, patterns are established.
-
-### Phase 3: Validation & Source Attribution
-**Rationale:** Validation prevents bad data from reaching storage. Source attribution is the key portfolio differentiator—demonstrates production thinking and enables trust.
-
-**Delivers:** Hybrid validation service (Pydantic + regex), confidence scoring implementation, source links storage (page_number, text_snippet, bounding_box), field-level provenance tracking.
-
-**Addresses features:**
-- Source attribution/traceability (FEATURES.md table stakes, critical when done well)
-- Confidence scoring with PRD formula
-- Basic validation (SSN, phone, zip formats)
-
-**Implements:** Validation Service component, completes Storage Service with source_links
-
-**Avoids pitfalls:**
-- Pitfall 2 (source attribution theater) — verify snippets match document text
-- Pitfall 4 (numeric catastrophe) — cross-validation rules, range checks
-- Pitfall 9 (deduplication failures) — multi-signal matching (SSN definitive, name+address fuzzy)
-
-**Research flag:** MEDIUM — Source attribution verification requires careful design. Test thoroughly with real documents.
-
-### Phase 4: Query API & Search
-**Rationale:** Extraction is useless without query capabilities. REST API with OpenAPI docs demonstrates clean endpoint design. Search functionality is table stakes for document systems.
-
-**Delivers:** Borrower query endpoints, document search by name/account/loan number, source link resolution, pagination, filtering by confidence level.
-
-**Addresses features:**
-- Search/query interface (FEATURES.md table stakes)
-- REST API with OpenAPI docs
-- Error handling & recovery
-
-**Implements:** Query Service component, completes API Layer
-
-**Avoids pitfalls:**
-- Performance trap: Unbounded result sets — implement pagination from start
-
-**Research flag:** LOW — REST API patterns are standard, FastAPI documentation is comprehensive.
-
-### Phase 5: Frontend Dashboard & Architecture Visualization
-**Rationale:** Portfolio requires visible demo. Architecture visualization is PRD bonus deliverable with high evaluator impact for low technical risk.
-
-**Delivers:** Next.js dashboard with document/borrower lists, borrower detail view with source references, income timeline visualization (Recharts), architecture pages (system diagram, pipeline flow, scaling strategy), confidence badges, processing status indicators.
-
-**Addresses features:**
-- Architecture visualization in UI (FEATURES.md P1 for portfolio)
-- Income trend visualization (FEATURES.md P2, high impact)
-- Human-in-the-loop visual indicators (flag confidence <0.7)
-
-**Uses stack:**
-- Next.js 15 with App Router
-- shadcn/ui components
-- Recharts for income timeline
-- Mermaid diagrams for architecture
-
-**Avoids pitfalls:**
-- Pitfall 13 (premature infrastructure) — core extraction working before UI
-- Pitfall 12 (scope creep) — focus on MVP, defer complex features like visual source linking
-
-**Research flag:** LOW — Frontend patterns are well-established, shadcn/ui documentation is excellent.
+### Phase 4: API Enhancement and Method Selection
+**Rationale:** Builds on completed extraction methods. Lowest risk, highest user-facing value.
+**Delivers:** API parameters for method selection, validation, frontend integration.
+**Addresses:**
+- Extraction method selection API (FEATURES: table stakes)
+- HTML visualization generation (FEATURES: table stakes)
+- Method metadata in responses
+**Implements:**
+- Query param validation (`method` + `ocr` combinations)
+- Valid combination enforcement
+- Dashboard visualization viewer (embed LangExtract HTML)
+**Avoids:**
+- API method parameter conflicts (PITFALL #12) — explicit valid combination enum
+**Research flag:** SKIP detailed research — standard FastAPI parameter handling.
 
 ### Phase Ordering Rationale
 
-**Sequential dependencies dictate order:**
-1. Foundation must come first — database schema changes are expensive later (Pitfall 10: schema lock-in)
-2. Docling before LLM — prevents LLM-as-OCR anti-pattern, established in Phase 1
-3. Extraction before validation — nothing to validate without extraction
-4. Storage before query — nothing to query without persisted data
-5. Frontend last — requires stable API contracts, demonstrates working extraction
+**Why LangExtract first:** Highest technical risk due to offset alignment complexity and few-shot example quality dependency. Establishes foundation for dual-pipeline architecture. Must validate offset translation layer before building dependent features.
 
-**Groupings based on architecture patterns:**
-- Phases 1-2 form the **ingestion → extraction pipeline** (async processing pattern)
-- Phase 3 adds **quality assurance layer** (hybrid validation pattern)
-- Phase 4 exposes **data access layer** (repository pattern)
-- Phase 5 provides **presentation layer** (decoupled from backend)
+**Why LightOnOCR second:** Independent of LangExtract (parallel development possible), but GPU deployment complexity and cost management require dedicated focus. Can proceed in parallel with Phase 1 if resources allow.
 
-**Pitfall mitigation strategy:**
-- **Day 1 focus (Phases 1-2):** Avoid critical pitfalls (1, 3, 4, 5, 11) — core extraction working
-- **Day 2 focus (Phases 3-4):** Avoid quality pitfalls (2, 6, 7, 8) — validation and API
-- **Day 3 focus (Phase 5):** Avoid timeline pitfalls (12, 13) — polish and deploy
+**Why CloudBuild third:** Depends on services being functional (can't deploy what doesn't work). Lower risk than integration work. Migration requires careful Terraform state management but is procedural, not exploratory.
 
-**What to explicitly defer to v2:**
-- Visual source linking (high complexity, defer per FEATURES.md)
-- Cross-document entity resolution (complex fuzzy matching)
-- Batch upload processing
-- Real-time streaming updates
-- Comprehensive audit logging
-- Full PII encryption (use disclaimers, note production requirements)
+**Why API enhancement last:** User-facing feature that ties together backend capabilities. Requires completed extraction methods to be useful. Lowest technical risk, highest user-facing value.
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
-- **Phase 3 (Validation):** Source attribution verification patterns need careful design. Research how to efficiently verify text snippets match document content without re-processing. Consider fuzzy matching libraries.
+**Phases likely needing deeper research during planning:**
+- **None** — All phases involve well-documented technologies with official examples. LangExtract, vLLM, CloudBuild all have high-quality documentation and codelabs.
 
 **Phases with standard patterns (skip research-phase):**
-- **Phase 1 (Foundation):** Database schemas, FastAPI setup, Docling integration are well-documented
-- **Phase 2 (LLM Extraction):** Gemini structured output, retry patterns are officially documented
-- **Phase 4 (Query API):** REST API patterns, pagination, filtering are standard
-- **Phase 5 (Frontend):** Next.js, shadcn/ui, Recharts have comprehensive documentation
+- **Phase 1 (LangExtract):** Standard Python library integration; focus on testing with real loan docs
+- **Phase 2 (LightOnOCR):** Standard vLLM deployment pattern; focus on cost optimization
+- **Phase 3 (CloudBuild):** Standard CloudBuild to Cloud Run deployment; focus on Terraform migration safety
+- **Phase 4 (API Enhancement):** Standard FastAPI parameter handling; focus on UX
+
+**Phase 0 (Pre-Development Setup) required:**
+- Request GPU quota increase for Cloud Run L4 (24-48 hour turnaround)
+- Archive Terraform state and document current infrastructure
+- Validate LightOnOCR loads in vLLM locally
+- Create CloudBuild service account with permissions
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All recommendations from official documentation (Docling PyPI, Gemini API docs, FastAPI release notes). Versions verified as of Jan 2026. Python 3.10+ requirement confirmed. |
-| Features | HIGH | Based on analysis of production IDP platforms (Docsumo, Amazon Textract, Infrrd) and multiple industry sources. Table stakes vs differentiators validated across 10+ sources. Portfolio recommendations from recruiter expectation research. |
-| Architecture | HIGH | Patterns verified in official docs (Gemini structured output, FastAPI async, SQLAlchemy async). Pipeline architecture validated across multiple IDP implementation guides. Anti-patterns identified from real project failures. |
-| Pitfalls | HIGH | Critical pitfalls verified from academic research (SafePassage paper), official issue trackers (Gemini GitHub), and practitioner blog posts with specific failure examples. Timeline pitfalls from project management research (scope creep statistics). |
+| Stack | HIGH | All technologies verified with official sources; LangExtract (GitHub), LightOnOCR (HuggingFace), CloudBuild (Google Cloud docs) |
+| Features | HIGH | LangExtract capabilities documented in release announcement; LightOnOCR benchmarked on OlmOCR-Bench; CloudBuild patterns established |
+| Architecture | HIGH | Integration patterns validated in community examples (Docling + LangExtract integration blog, vLLM Cloud Run codelab) |
+| Pitfalls | MEDIUM | LangExtract only 4 months old with limited production experience reports; offset alignment warnings from integration blogs, not production postmortems |
 
 **Overall confidence:** HIGH
 
-Research is grounded in official documentation, verified with multiple authoritative sources, and cross-checked against real-world implementations. The recommended stack uses stable, production-proven technologies. Architecture patterns are established industry practice for document extraction systems.
+The research is based on official documentation and verified sources. The main limitation is LangExtract's newness (released July 2025) — fewer production war stories than mature libraries. However, it's from Google with active development and clear documentation. LightOnOCR is even newer (October 2025) but transformers integration issues are documented and vLLM deployment is the official workaround.
 
 ### Gaps to Address
 
-**During Phase 3 planning (Validation):**
-- **Source attribution verification performance** — Need to determine if fuzzy matching text snippets against full document is performant enough, or if we need to store chunk indices. Consider testing with RapidFuzz library for efficient fuzzy matching at scale.
+**Gaps identified during research:**
 
-**During Phase 2 implementation:**
-- **Complexity classifier calibration** — The heuristics in ARCHITECTURE.md (page count, tables, handwriting detection) are reasonable but may need tuning based on actual document corpus. Plan to instrument classifier decisions and analyze routing accuracy after first 50 documents processed.
+- **LangExtract offset behavior with Docling markdown** — Documentation shows examples with plain text, not with Docling's markdown export. The integration blog (dev.to) confirms offset alignment is a concern but doesn't provide complete solution. **Handling:** Validate offset translation layer with real loan docs in Phase 1 testing; may need to iterate on Docling text extraction mode.
 
-**During Phase 5 (Frontend):**
-- **Visual source linking scope** — Research marked this as high complexity (FEATURES.md). If time permits on day 3, explore lightweight implementation showing source snippets without full PDF highlight capability. Defer full visual linking to v2 if scope risk emerges.
+- **LightOnOCR cold start time variability** — Documentation gives 5-19 second range for cold starts, but factors affecting this range aren't fully documented. **Handling:** Benchmark in Phase 2 with different model sizes and configurations; establish SLO based on actual measurements.
 
-**Overall gap mitigation strategy:**
-- Accept research uncertainty in non-critical areas (classifier tuning, performance optimization)
-- Focus on critical path (extraction accuracy, source attribution correctness)
-- Build instrumentation early to validate research assumptions with real data
-- Plan fallbacks (simpler attribution if performance is issue, basic classifier if tuning needed)
+- **CloudBuild cost for large images** — Build time costs depend on image size and build frequency. Backend + OCR service images could be 2GB+. **Handling:** Monitor build costs in Phase 3; consider build caching strategies if costs exceed expectations.
+
+- **Few-shot example count requirements** — LangExtract documentation shows 2-5 examples but doesn't specify how to determine optimal count for loan document complexity. **Handling:** Start with 3 examples in Phase 1, measure extraction quality, iterate based on recall/precision metrics.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-
-**Stack research:**
-- [Docling PyPI](https://pypi.org/project/docling/) — v2.70.0 verified, Python 3.10+ requirement
-- [google-genai PyPI](https://pypi.org/project/google-genai/) — v1.60.0, replaces deprecated SDK
-- [Gemini API Structured Output](https://ai.google.dev/gemini-api/docs/structured-output) — Native Pydantic support
-- [FastAPI Documentation](https://fastapi.tiangolo.com/) — v0.128.0, async patterns
-- [SQLAlchemy Async Docs](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html) — asyncpg integration
-
-**Features research:**
-- [IDP Market Report 2025 - Docsumo](https://www.docsumo.com/blogs/intelligent-document-processing/intelligent-document-processing-market-report-2025)
-- [IDP in Lending - Docsumo](https://www.docsumo.com/blogs/intelligent-document-processing/lending-industry)
-- [Amazon Textract Lending Docs](https://docs.aws.amazon.com/textract/latest/dg/lending-document-classification-extraction.html)
-
-**Architecture research:**
-- [Docling GitHub Repository](https://github.com/docling-project/docling) — Architecture and processing pipeline
-- [Gemini API Documentation](https://ai.google.dev/gemini-api/docs/gemini-3) — Model capabilities
-- [FastAPI Background Tasks](https://fastapi.tiangolo.com/tutorial/background-tasks/) — Async processing
-
-**Pitfalls research:**
-- [Don't Use LLMs as OCR - Medium](https://medium.com/@martia_es/dont-use-llms-as-ocr-lessons-learned-from-extracting-complex-documents-db2d1fafcdfb)
-- [SafePassage: High-Fidelity Information Extraction](https://arxiv.org/html/2510.00276) — Academic research on LLM faithfulness
-- [SourceCheckup: Citation Assessment](https://www.nature.com/articles/s41467-025-58551-6) — LLM attribution accuracy
-- [Gemini Structured Output Issue](https://github.com/googleapis/python-genai/issues/1039) — None response behavior
+- [LangExtract GitHub](https://github.com/google/langextract) — v1.1.1, official API documentation, example code
+- [LangExtract PyPI](https://pypi.org/project/langextract/) — v1.1.1, Python >=3.10 requirement
+- [Google Developers Blog: Introducing LangExtract](https://developers.googleblog.com/introducing-langextract-a-gemini-powered-information-extraction-library/) — Feature overview, architecture
+- [LightOnOCR-2-1B HuggingFace](https://huggingface.co/lightonai/LightOnOCR-2-1B) — Model card, deployment instructions, benchmarks
+- [Cloud Run GPU Documentation](https://docs.cloud.google.com/run/docs/configuring/services/gpu) — L4 configuration, pricing, requirements
+- [CloudBuild Deploy to Cloud Run](https://docs.cloud.google.com/build/docs/deploying-builds/deploy-cloud-run) — Official deployment patterns
+- [vLLM Cloud Run Codelab](https://codelabs.developers.google.com/codelabs/how-to-run-inference-cloud-run-gpu-vllm) — GPU deployment with vLLM
 
 ### Secondary (MEDIUM confidence)
+- [Docling + LangExtract Integration](https://dev.to/_aparna_pradhan_/the-perfect-extraction-unlocking-unstructured-data-with-docling-langextract-1j3b) — Integration challenges, offset alignment
+- [LangExtract Critical Review](https://medium.com/@meghanaharishankara/googles-langextract-a-critical-review-from-the-trenches-e41fae3e03b0) — Real-world usage experience
+- [LightOnOCR Blog](https://www.lighton.ai/lighton-blogs/making-knowledge-machine-readable) — Performance details
+- [DataCamp LangExtract Tutorial](https://www.datacamp.com/tutorial/langextract) — Best practices for few-shot examples
+- [Cloud Run GPU GA Blog](https://cloud.google.com/blog/products/serverless/cloud-run-gpus-are-now-generally-available) — Cost optimization strategies
+- [Terraform Migration Guide](https://scalr.com/guides/platform-engineers-guide-to-migrating-off-terraform-cloud-enterprise) — State management best practices
 
-**Features research:**
-- [AI Mortgage Document Processing - Ascendix](https://ascendixtech.com/ai-mortgage-document-processing/)
-- [HITL for AI Document Processing - Unstract](https://unstract.com/blog/human-in-the-loop-hitl-for-ai-document-processing/)
-- [ML Portfolio Projects 2025 - Medium](https://medium.com/@santosh.rout.cr7/ml-engineer-portfolio-projects-that-will-get-you-hired-in-2025-d1f2e20d6c79)
-
-**Architecture research:**
-- [LLMs for PDF Extraction - Unstract](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/)
-- [Data Extraction in Lending - Docsumo](https://www.docsumo.com/blogs/data-extraction/lending-industry)
-
-**Pitfalls research:**
-- [LLM Cost Optimization 2025 - FutureAGI](https://futureagi.com/blogs/llm-cost-optimization-2025)
-- [Testing LLM Applications - Langfuse](https://langfuse.com/blog/2025-10-21-testing-llm-applications)
-- [Scope Creep in Software Projects - Medium](https://medium.com/@denismwg/navigating-scope-creep-in-software-projects-5-strategies-that-work-ec8a35684fdb)
-
-### Tertiary (LOW confidence - verify before use)
-
-- Specific token counts per document type — varies significantly by document characteristics
-- Exact accuracy comparisons between OCR methods — benchmarks show wide variance
-- Cost projections at scale — depends heavily on actual document complexity distribution
+### Tertiary (LOW confidence)
+- LightOnOCR GPU memory estimates for L4 (extrapolated from H100 benchmarks) — needs validation
+- Cold start times vary by model size and container configuration — needs measurement
+- vLLM optimization settings may need tuning for LightOnOCR specifically — needs experimentation
 
 ---
-*Research completed: 2026-01-23*
+*Research completed: 2026-01-24*
 *Ready for roadmap: yes*

@@ -1,664 +1,933 @@
-# Architecture Research: Loan Document Extraction System
+# Architecture Research: v2.0 LangExtract + LightOnOCR Integration
 
-**Domain:** LLM-powered document extraction for loan processing
-**Researched:** 2026-01-23
-**Confidence:** HIGH (verified with official documentation and multiple sources)
+**Domain:** Document extraction pipeline enhancement
+**Researched:** 2026-01-24
+**Confidence:** HIGH (verified with official docs and existing codebase)
+
+## Executive Summary
+
+This document details the architecture for integrating LangExtract and LightOnOCR into the existing loan document extraction system. The v2.0 milestone adds:
+
+1. **LangExtract** - Google's extraction library with character-level source grounding
+2. **LightOnOCR** - Dedicated GPU Cloud Run service for high-quality OCR
+3. **Dual extraction pipeline** - Docling and LangExtract coexisting with API selection
+4. **CloudBuild deployment** - Replacing Terraform with gcloud CLI scripts
+
+The architecture maintains backward compatibility while enabling enhanced extraction capabilities.
+
+---
 
 ## System Overview
 
-Production document extraction systems follow a **modular, multi-stage pipeline architecture** that separates concerns between ingestion, processing, extraction, validation, and storage. The key insight from industry practice is that **hybrid architectures outperform purely AI-driven solutions** - combining LLM semantic understanding with deterministic validation.
+### Current v1.0 Architecture (Reference)
 
 ```
-                            ┌─────────────────────────────────────────────────────────────┐
-                            │                      API Layer (FastAPI)                      │
-                            │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-                            │  │ Upload   │  │ Status   │  │ Borrower │  │ Document │     │
-                            │  │ Endpoint │  │ Endpoint │  │ Query    │  │ Query    │     │
-                            │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘     │
-                            └───────┼─────────────┼─────────────┼─────────────┼───────────┘
-                                    │             │             │             │
-┌───────────────────────────────────┼─────────────┼─────────────┼─────────────┼───────────┐
-│                            Processing Layer (Async)          │             │            │
-│  ┌────────────────────────────────┴─────────────┴────────────┴┐            │            │
-│  │                      Cloud Tasks Queue                      │            │            │
-│  └────────────────────────────────┬────────────────────────────┘            │            │
-│                                   │                                         │            │
-│  ┌────────────────────────────────▼────────────────────────────────────────┐│            │
-│  │                         Document Pipeline                                ││            │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ││            │
-│  │  │ Ingestion│→│ Docling  │→│ Classify │→│ Extract  │→│ Validate │  ││            │
-│  │  │ Service  │  │ Processor│  │ Complex. │  │ (Gemini) │  │ Results  │  ││            │
-│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘  ││            │
-│  └─────────────────────────────────────────────────────────────────────────┘│            │
-└─────────────────────────────────────────────────────────────────────────────┼────────────┘
-                                                                              │
-┌─────────────────────────────────────────────────────────────────────────────┼────────────┐
-│                              Storage Layer                                  │            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────────────────┴──────────┐ │
-│  │ Cloud Storage│  │ PostgreSQL   │  │              Query Service                      │ │
-│  │ (Documents)  │  │ (Structured) │  │  (Borrowers, Extractions, Source Links)         │ │
-│  └──────────────┘  └──────────────┘  └─────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
+                              Upload Request
+                                    |
+                                    v
++------------------------------------------------------------------+
+|                        Cloud Run Backend                          |
+|  +------------------+    +------------------+    +--------------+ |
+|  | /api/documents   |--->| DocumentService  |--->| GCS Client   | |
+|  | (upload endpoint)|    |                  |    | (upload)     | |
+|  +------------------+    +------------------+    +--------------+ |
+|                                    |                              |
+|                                    v                              |
+|                          +------------------+                     |
+|                          | Cloud Tasks      |                     |
+|                          | (queue task)     |                     |
+|                          +------------------+                     |
++------------------------------------------------------------------+
+                                    |
+                                    v
++------------------------------------------------------------------+
+|                   Cloud Tasks Handler (async)                     |
+|  +------------------+    +------------------+    +--------------+ |
+|  | /api/tasks/      |--->| DoclingProcessor |--->| Borrower     | |
+|  | process-document |    | (text extraction)|    | Extractor    | |
+|  +------------------+    +------------------+    | (LLM)        | |
+|                                                  +--------------+ |
+|                                                        |          |
+|                                                        v          |
+|                                                  +--------------+ |
+|                                                  | PostgreSQL   | |
+|                                                  | (persist)    | |
+|                                                  +--------------+ |
++------------------------------------------------------------------+
 ```
+
+### v2.0 Architecture (Dual Pipeline + OCR Service)
+
+```
+                              Upload Request
+                      ?method=docling|langextract
+                         ?ocr=auto|force|skip
+                                    |
+                                    v
++------------------------------------------------------------------+
+|                        Cloud Run Backend                          |
+|  +------------------+    +------------------+                     |
+|  | /api/documents   |--->| ExtractionRouter |----+                |
+|  | (upload endpoint)|    | (method select)  |    |                |
+|  +------------------+    +------------------+    |                |
+|                                    |             |                |
+|                                    v             v                |
+|                          +------------------+  +-------------+    |
+|                          | Cloud Tasks      |  | OCR Router  |    |
+|                          | (queue task)     |  | (ocr param) |    |
+|                          +------------------+  +-------------+    |
++------------------------------------------------------------------+
+           |                                            |
+           |                                            v
+           |                               +------------------------+
+           |                               | Cloud Run OCR Service  |
+           |                               | (L4 GPU - optional)    |
+           |                               | +--------------------+ |
+           |                               | | LightOnOCR-2-1B    | |
+           |                               | | (1B param model)   | |
+           |                               | +--------------------+ |
+           |                               +------------------------+
+           |                                            |
+           v                                            v
++------------------------------------------------------------------+
+|                   Cloud Tasks Handler (async)                     |
+|  +-----------------------------------------------------------------+
+|  |                    Extraction Method Router                     |
+|  +-----------------------------------------------------------------+
+|       |                                               |            |
+|       v                                               v            |
+|  +------------------+                    +------------------+      |
+|  | DOCLING PATH     |                    | LANGEXTRACT PATH |      |
+|  | DoclingProcessor |                    | LangExtract      |      |
+|  | + BorrowerExtract|                    | + Gemini 2.5     |      |
+|  | (page+snippet)   |                    | (char offsets)   |      |
+|  +------------------+                    +------------------+      |
+|       |                                               |            |
+|       v                                               v            |
+|  +------------------+                    +------------------+      |
+|  | SourceReference  |                    | SourceReference  |      |
+|  | - page_number    |                    | - page_number    |      |
+|  | - snippet        |                    | - snippet        |      |
+|  | - (no offsets)   |                    | - char_start     |      |
+|  +------------------+                    | - char_end       |      |
+|                                          +------------------+      |
+|                      |                              |              |
+|                      +-------------+----------------+              |
+|                                    |                               |
+|                                    v                               |
+|                          +------------------+                      |
+|                          | PostgreSQL       |                      |
+|                          | (unified storage)|                      |
+|                          +------------------+                      |
++------------------------------------------------------------------+
+```
+
+---
 
 ## Component Responsibilities
 
-| Component | Responsibility | Communicates With | Build Phase |
-|-----------|----------------|-------------------|-------------|
-| **API Layer** | HTTP endpoints, request validation, response formatting | Cloud Tasks, Query Service, PostgreSQL | Phase 1 |
-| **Upload Service** | Accept documents, store in GCS, enqueue processing | GCS, Cloud Tasks | Phase 1 |
-| **Cloud Tasks Queue** | Async job management, retries, ordering | Document Pipeline workers | Phase 1 |
-| **Ingestion Service** | Fetch documents from GCS, prepare for processing | GCS, Docling Processor | Phase 2 |
-| **Docling Processor** | Parse PDFs/DOCX to structured text with layout | Complexity Classifier | Phase 2 |
-| **Complexity Classifier** | Route simple vs complex documents to appropriate LLM | Extraction Service | Phase 3 |
-| **Extraction Service** | LLM orchestration, prompt management, structured output | Gemini API, Validation Service | Phase 3 |
-| **Validation Service** | Schema validation, confidence scoring, deterministic checks | Storage Service | Phase 3 |
-| **Storage Service** | Persist extractions with source attribution | PostgreSQL | Phase 2 |
-| **Query Service** | Borrower lookup, document search, traceability queries | PostgreSQL, API Layer | Phase 4 |
+### New Components
 
-## Recommended Project Structure
+| Component | Responsibility | Integration Point |
+|-----------|----------------|-------------------|
+| **ExtractionRouter** | Dispatch to Docling or LangExtract based on `?method` param | DocumentService |
+| **LangExtractProcessor** | LangExtract API wrapper with few-shot examples | Parallel to DoclingProcessor |
+| **OCRRouter** | Decide when to invoke LightOnOCR preprocessing | Before extraction |
+| **LightOnOCRClient** | HTTP client for GPU OCR service | Called by OCRRouter |
+| **LightOnOCR Service** | Standalone Cloud Run GPU service | Separate deployment |
 
-Based on the PRD and standard patterns for document extraction systems:
+### Modified Components
 
-```
-backend/
-├── src/
-│   ├── __init__.py
-│   ├── config.py                    # Environment, model configs
-│   ├── main.py                      # FastAPI app initialization
-│   │
-│   ├── api/                         # HTTP Layer
-│   │   ├── __init__.py
-│   │   ├── dependencies.py          # Dependency injection
-│   │   └── routes/
-│   │       ├── documents.py         # Upload, status endpoints
-│   │       ├── borrowers.py         # Borrower query endpoints
-│   │       └── health.py            # Health checks
-│   │
-│   ├── ingestion/                   # Document Intake
-│   │   ├── __init__.py
-│   │   ├── document_service.py      # Upload handling, GCS storage
-│   │   └── docling_processor.py     # Docling wrapper
-│   │
-│   ├── extraction/                  # LLM Extraction
-│   │   ├── __init__.py
-│   │   ├── llm_client.py            # Gemini API wrapper
-│   │   ├── complexity_classifier.py # Route to Pro vs Flash
-│   │   ├── prompts.py               # Prompt templates
-│   │   ├── extractor.py             # Main extraction orchestration
-│   │   ├── validation.py            # Schema + deterministic validation
-│   │   └── schemas.py               # Pydantic extraction schemas
-│   │
-│   ├── storage/                     # Persistence
-│   │   ├── __init__.py
-│   │   ├── models.py                # SQLAlchemy models
-│   │   ├── repositories.py          # Data access patterns
-│   │   └── gcs_client.py            # Cloud Storage client
-│   │
-│   └── models/                      # Domain Models
-│       ├── __init__.py
-│       ├── borrower.py              # Borrower domain model
-│       └── document.py              # Document domain model
-│
-├── tests/
-│   ├── unit/                        # Pure unit tests
-│   ├── integration/                 # DB + service tests
-│   └── e2e/                         # Full pipeline tests
-│
-└── pyproject.toml
-```
+| Component | Modification | Reason |
+|-----------|--------------|--------|
+| **DocumentService** | Add `extraction_method` and `ocr_mode` params | Support dual pipeline |
+| **SourceReference** | Add `char_start`, `char_end` nullable columns | Character offset storage |
+| **CloudTasksClient** | Add method/ocr params to task payload | Route in async handler |
+| **tasks.py** | Branch extraction logic by method | Dual pipeline execution |
+| **config.py** | Add OCR service URL config | Service discovery |
 
-### Structure Rationale
+### Unchanged Components
 
-- **api/**: Thin HTTP layer - validates input, calls services, formats output. No business logic.
-- **ingestion/**: Owns document intake. Docling is isolated here, making it swappable.
-- **extraction/**: The "brain" - LLM orchestration, prompting, validation. Most complex component.
-- **storage/**: Repository pattern isolates PostgreSQL details from business logic.
-- **models/**: Domain models shared across layers. Not tied to DB schema.
+| Component | Reason |
+|-----------|--------|
+| **DoclingProcessor** | Continues to work exactly as before |
+| **BorrowerExtractor** | Used by Docling path only |
+| **GCSClient** | Shared by both paths |
+| **PostgreSQL models** | Extended, not replaced |
 
-## Architectural Patterns
-
-### Pattern 1: Hybrid LLM + Deterministic Validation
-
-**What:** Combine LLM semantic extraction with regex/rule-based validation for critical fields.
-
-**When to use:** Always for production systems extracting structured data.
-
-**Trade-offs:**
-- Pro: Significantly higher accuracy, catches LLM hallucinations
-- Pro: Deterministic rules provide guardrails and auditability
-- Con: More code to maintain (prompts + rules)
-
-**Example:**
-```python
-# extraction/validation.py
-from typing import Literal
-from pydantic import BaseModel, field_validator
-import re
-
-class BorrowerExtraction(BaseModel):
-    """Schema for extracted borrower data with deterministic validation."""
-
-    name: str
-    ssn: str | None = None
-    address: str
-    income_amount: float | None = None
-    loan_number: str
-    confidence: float
-
-    @field_validator('ssn')
-    @classmethod
-    def validate_ssn(cls, v: str | None) -> str | None:
-        """Deterministic SSN format validation."""
-        if v is None:
-            return None
-        # Remove common separators and validate format
-        cleaned = re.sub(r'[-\s]', '', v)
-        if not re.match(r'^\d{9}$', cleaned):
-            return None  # Reject invalid SSN format
-        return f"{cleaned[:3]}-{cleaned[3:5]}-{cleaned[5:]}"
-
-    @field_validator('loan_number')
-    @classmethod
-    def validate_loan_number(cls, v: str) -> str:
-        """Validate loan number format (deterministic)."""
-        # Common loan number patterns
-        if not re.match(r'^[A-Z]{2,4}[-]?\d{6,12}$', v.upper()):
-            raise ValueError(f"Invalid loan number format: {v}")
-        return v.upper()
-```
-
-### Pattern 2: Source Attribution Chain
-
-**What:** Every extracted field links back to source document, page, and bounding box.
-
-**When to use:** Required for loan document systems - enables audit trails and trust.
-
-**Trade-offs:**
-- Pro: Full traceability, enables human review
-- Pro: Builds trust in extraction results
-- Con: Larger storage footprint
-- Con: More complex extraction prompts
-
-**Example:**
-```python
-# models/extraction.py
-from dataclasses import dataclass
-from typing import TypedDict
-
-class SourceLocation(TypedDict):
-    """Where an extraction came from."""
-    document_id: str
-    page_number: int
-    bounding_box: dict[str, float] | None  # {x, y, width, height}
-    text_snippet: str  # Actual text that was extracted from
-
-@dataclass
-class ExtractedField:
-    """A single extracted field with provenance."""
-    field_name: str
-    value: str | float | None
-    confidence: float
-    source: SourceLocation
-    extraction_method: Literal["llm", "deterministic", "hybrid"]
-```
-
-### Pattern 3: Dynamic Model Selection (Complexity Routing)
-
-**What:** Route documents to appropriate LLM based on complexity assessment.
-
-**When to use:** When you have cost/latency constraints and varying document complexity.
-
-**Trade-offs:**
-- Pro: Cost optimization (Flash is cheaper than Pro)
-- Pro: Latency optimization for simple documents
-- Con: Classification overhead
-- Con: Risk of misrouting complex documents
-
-**Example:**
-```python
-# extraction/complexity_classifier.py
-from enum import Enum
-from dataclasses import dataclass
-
-class DocumentComplexity(Enum):
-    SIMPLE = "simple"    # Single borrower, clear format -> Flash
-    STANDARD = "standard"  # Multiple sections, some ambiguity -> Flash
-    COMPLEX = "complex"   # Multiple borrowers, tables, poor quality -> Pro
-
-@dataclass
-class ClassificationResult:
-    complexity: DocumentComplexity
-    reasoning: str
-    recommended_model: str
-
-def classify_document_complexity(
-    page_count: int,
-    has_tables: bool,
-    has_handwriting: bool,
-    text_quality_score: float,  # 0-1, from Docling
-    detected_borrowers: int
-) -> ClassificationResult:
-    """Route document to appropriate model based on complexity."""
-
-    # Simple heuristics - can be enhanced with ML
-    if (page_count <= 3 and
-        not has_tables and
-        not has_handwriting and
-        text_quality_score > 0.8 and
-        detected_borrowers <= 1):
-        return ClassificationResult(
-            complexity=DocumentComplexity.SIMPLE,
-            reasoning="Single borrower, clear text, few pages",
-            recommended_model="gemini-2.5-flash-lite"
-        )
-
-    if (has_handwriting or
-        text_quality_score < 0.5 or
-        detected_borrowers > 2 or
-        page_count > 20):
-        return ClassificationResult(
-            complexity=DocumentComplexity.COMPLEX,
-            reasoning="Handwriting/poor quality/many borrowers",
-            recommended_model="gemini-3.0-pro-preview"
-        )
-
-    return ClassificationResult(
-        complexity=DocumentComplexity.STANDARD,
-        reasoning="Standard complexity document",
-        recommended_model="gemini-2.5-flash"
-    )
-```
-
-### Pattern 4: Async Processing with Status Tracking
-
-**What:** Separate upload (sync) from processing (async) with status polling.
-
-**When to use:** Always for document processing - extraction takes seconds to minutes.
-
-**Trade-offs:**
-- Pro: Immediate upload response, scalable processing
-- Pro: Natural retry/recovery semantics
-- Con: Client must poll for results
-- Con: More infrastructure (queue, workers)
-
-**Example:**
-```python
-# api/routes/documents.py
-from fastapi import APIRouter, UploadFile, BackgroundTasks
-from pydantic import BaseModel
-from typing import Literal
-import uuid
-
-router = APIRouter()
-
-class DocumentStatus(BaseModel):
-    document_id: str
-    status: Literal["pending", "processing", "completed", "failed"]
-    progress_percent: int
-    error_message: str | None = None
-
-class UploadResponse(BaseModel):
-    document_id: str
-    status_url: str
-    message: str
-
-@router.post("/documents/upload", response_model=UploadResponse)
-async def upload_document(
-    file: UploadFile,
-    document_service: DocumentService = Depends(get_document_service),
-    task_queue: TaskQueue = Depends(get_task_queue),
-) -> UploadResponse:
-    """Upload document, return immediately, process async."""
-
-    # 1. Store document in GCS
-    document_id = str(uuid.uuid4())
-    gcs_path = await document_service.store_document(document_id, file)
-
-    # 2. Create tracking record
-    await document_service.create_document_record(
-        document_id=document_id,
-        filename=file.filename,
-        gcs_path=gcs_path,
-        status="pending"
-    )
-
-    # 3. Enqueue processing task
-    await task_queue.enqueue(
-        task_type="process_document",
-        payload={"document_id": document_id, "gcs_path": gcs_path}
-    )
-
-    return UploadResponse(
-        document_id=document_id,
-        status_url=f"/documents/{document_id}/status",
-        message="Document uploaded, processing started"
-    )
-```
+---
 
 ## Data Flow
 
-### Primary Flow: Document Upload to Extraction
+### Flow 1: Docling Path (Default, Backward Compatible)
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           Upload Phase (Sync)                                 │
-│                                                                               │
-│  [Client] ──POST /upload──▶ [API] ──store──▶ [GCS]                           │
-│                               │                                               │
-│                               ├──create record──▶ [PostgreSQL]               │
-│                               │                                               │
-│                               └──enqueue──▶ [Cloud Tasks]                    │
-│                                                                               │
-│  Response: {document_id, status_url}                                         │
-└──────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                         Processing Phase (Async)                              │
-│                                                                               │
-│  [Cloud Tasks] ──invoke──▶ [Worker Endpoint]                                 │
-│                                  │                                            │
-│                                  ▼                                            │
-│  ┌─────────────────────────────────────────────────────────────────────────┐ │
-│  │  Pipeline Steps:                                                         │ │
-│  │                                                                          │ │
-│  │  1. [Fetch from GCS] ──raw bytes──▶ [Docling]                           │ │
-│  │                                         │                                │ │
-│  │  2. [Docling] ──DoclingDocument──▶ [Complexity Classifier]              │ │
-│  │                                         │                                │ │
-│  │  3. [Classifier] ──model selection──▶ [Extraction Service]              │ │
-│  │                                         │                                │ │
-│  │  4. [Extractor] ──prompt + schema──▶ [Gemini API]                       │ │
-│  │                                         │                                │ │
-│  │  5. [Gemini] ──structured JSON──▶ [Validation Service]                  │ │
-│  │                                         │                                │ │
-│  │  6. [Validator] ──validated data──▶ [Storage Service]                   │ │
-│  │                                         │                                │ │
-│  │  7. [Storage] ──persist──▶ [PostgreSQL]                                 │ │
-│  │                              (borrowers, extractions, source_links)      │ │
-│  └─────────────────────────────────────────────────────────────────────────┘ │
-│                                                                               │
-│  Update status: "completed" or "failed"                                      │
-└──────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           Query Phase (Sync)                                  │
-│                                                                               │
-│  [Client] ──GET /borrowers──▶ [API] ──query──▶ [PostgreSQL]                  │
-│                                 │                                             │
-│                                 └──▶ Response with source_links               │
-│                                      (each field traceable to document)       │
-└──────────────────────────────────────────────────────────────────────────────┘
+Request: POST /api/documents/?method=docling&ocr=skip
+                    |
+                    v
+1. DocumentService.upload()
+   - Validate file
+   - Hash check
+   - Upload to GCS
+   - Create Document record (PENDING)
+   - Queue Cloud Task with method=docling
+                    |
+                    v
+2. Cloud Task Handler (process_document)
+   - Download from GCS
+   - DoclingProcessor.process_bytes()
+   - BorrowerExtractor.extract()
+   - Persist borrowers with SourceReference
+     (page_number, snippet, no char offsets)
+   - Update Document status = COMPLETED
 ```
 
-### Docling Processing Flow (Detail)
+### Flow 2: LangExtract Path (New, Character Offsets)
 
 ```
-[PDF/DOCX Bytes]
-      │
-      ▼
-┌─────────────────────────────────────────────────────┐
-│              Docling Processing Pipeline             │
-│                                                      │
-│  1. Backend Selection (PDF, DOCX, Image, etc.)      │
-│                    │                                 │
-│                    ▼                                 │
-│  2. Text Extraction (programmatic + OCR fallback)   │
-│                    │                                 │
-│                    ▼                                 │
-│  3. Layout Analysis (DocLayNet model)               │
-│     - Headers, paragraphs, tables, figures          │
-│                    │                                 │
-│                    ▼                                 │
-│  4. Table Structure Recognition (TableFormer)       │
-│                    │                                 │
-│                    ▼                                 │
-│  5. Reading Order Detection                         │
-│                    │                                 │
-│                    ▼                                 │
-│  6. Document Assembly → DoclingDocument             │
-└─────────────────────────────────────────────────────┘
-      │
-      ▼
-[DoclingDocument: structured text with layout info]
-      │
-      ├──▶ export_to_markdown() → LLM input
-      │
-      └──▶ export_to_json() → Full structure with positions
+Request: POST /api/documents/?method=langextract&ocr=auto
+                    |
+                    v
+1. DocumentService.upload()
+   - Validate file
+   - Hash check
+   - Upload to GCS
+   - Create Document record (PENDING)
+   - Queue Cloud Task with method=langextract, ocr=auto
+                    |
+                    v
+2. Cloud Task Handler (process_document)
+   - Download from GCS
+   - IF ocr=auto or ocr=force:
+       - Check if scanned (image-based PDF)
+       - Call LightOnOCR service for text extraction
+       - Store OCR text as document_text
+   - LangExtractProcessor.extract()
+       - Build few-shot examples from examples/
+       - Call lx.extract() with Gemini 2.5 Flash
+       - Get extractions with character offsets
+   - Persist borrowers with SourceReference
+     (page_number, snippet, char_start, char_end)
+   - Update Document status = COMPLETED
 ```
 
-## Database Schema Design
+### Flow 3: OCR Preprocessing (Optional)
 
-### Core Tables for Source Attribution
+```
+Document Type Detection:
+                    |
+                    v
++-------------------+-------------------+
+| Scanned/Image PDF |   Native Text PDF |
++-------------------+-------------------+
+        |                    |
+        v                    v
+   Call OCR Service      Skip OCR
+   (LightOnOCR)          (use Docling/
+        |                 LangExtract directly)
+        v
+   Store OCR text
+   in document record
+        |
+        v
+   Continue to extraction
+```
+
+---
+
+## API Changes
+
+### Upload Endpoint Enhancement
+
+```python
+@router.post("/")
+async def upload_document(
+    file: UploadFile,
+    service: DocumentServiceDep,
+    method: Literal["docling", "langextract"] = Query(
+        default="docling",
+        description="Extraction method: docling (v1, page+snippet) or langextract (v2, char offsets)"
+    ),
+    ocr: Literal["auto", "force", "skip"] = Query(
+        default="skip",
+        description="OCR mode: auto (detect scanned), force (always OCR), skip (no OCR)"
+    ),
+) -> DocumentUploadResponse:
+    """Upload document with extraction method selection."""
+```
+
+### API Decision Logic
+
+| Parameter | Value | Behavior |
+|-----------|-------|----------|
+| `method=docling` | Default | Use Docling + BorrowerExtractor (v1 path) |
+| `method=langextract` | New | Use LangExtract + Gemini 2.5 (v2 path) |
+| `ocr=skip` | Default | No OCR preprocessing (faster) |
+| `ocr=auto` | New | Detect if scanned, OCR if needed |
+| `ocr=force` | New | Always preprocess with OCR |
+
+### Cloud Tasks Payload Enhancement
+
+```python
+class ProcessDocumentRequest(BaseModel):
+    document_id: UUID
+    filename: str
+    extraction_method: Literal["docling", "langextract"] = "docling"
+    ocr_mode: Literal["auto", "force", "skip"] = "skip"
+```
+
+---
+
+## Database Schema Changes
+
+### SourceReference Table Enhancement
 
 ```sql
--- Documents: Original uploads
-CREATE TABLE documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    filename VARCHAR(255) NOT NULL,
-    gcs_path VARCHAR(500) NOT NULL,
-    mime_type VARCHAR(100) NOT NULL,
-    page_count INTEGER,
-    status VARCHAR(50) NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    processed_at TIMESTAMPTZ,
-    error_message TEXT
-);
+-- Migration: Add character offset columns
+ALTER TABLE source_references
+ADD COLUMN char_start INTEGER NULL,
+ADD COLUMN char_end INTEGER NULL;
 
--- Borrowers: Extracted entities
-CREATE TABLE borrowers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
-    ssn_hash VARCHAR(64),  -- Hashed for security
-    address TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Extractions: Raw extraction results per document
-CREATE TABLE extractions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    document_id UUID NOT NULL REFERENCES documents(id),
-    borrower_id UUID REFERENCES borrowers(id),
-    extraction_data JSONB NOT NULL,  -- Full structured output
-    model_used VARCHAR(100) NOT NULL,
-    overall_confidence FLOAT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Source Links: Field-level provenance
-CREATE TABLE source_links (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    extraction_id UUID NOT NULL REFERENCES extractions(id),
-    field_name VARCHAR(100) NOT NULL,
-    field_value TEXT,
-    confidence FLOAT NOT NULL,
-    page_number INTEGER NOT NULL,
-    bounding_box JSONB,  -- {x, y, width, height}
-    text_snippet TEXT NOT NULL,  -- Actual source text
-    extraction_method VARCHAR(50) NOT NULL  -- 'llm', 'deterministic', 'hybrid'
-);
-
--- Income History: Structured income records
-CREATE TABLE income_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    borrower_id UUID NOT NULL REFERENCES borrowers(id),
-    extraction_id UUID NOT NULL REFERENCES extractions(id),
-    employer_name VARCHAR(255),
-    income_amount DECIMAL(12, 2),
-    income_period VARCHAR(50),  -- 'annual', 'monthly', 'biweekly'
-    start_date DATE,
-    end_date DATE,
-    confidence FLOAT NOT NULL
-);
-
--- Indexes for common queries
-CREATE INDEX idx_documents_status ON documents(status);
-CREATE INDEX idx_extractions_document ON extractions(document_id);
-CREATE INDEX idx_extractions_borrower ON extractions(borrower_id);
-CREATE INDEX idx_source_links_extraction ON source_links(extraction_id);
-CREATE INDEX idx_source_links_field ON source_links(field_name);
-CREATE INDEX idx_income_borrower ON income_history(borrower_id);
+-- Index for offset-based queries
+CREATE INDEX ix_source_references_char_range
+ON source_references (document_id, char_start, char_end)
+WHERE char_start IS NOT NULL;
 ```
 
-### Schema Rationale
+### SQLAlchemy Model Update
 
-- **documents**: Tracks upload lifecycle, links to GCS storage
-- **borrowers**: Deduplicated borrower entities (may span multiple documents)
-- **extractions**: One-to-many with documents, stores full extraction per processing run
-- **source_links**: Field-level provenance - enables "show me where this came from"
-- **income_history**: Normalized income records for structured queries
+```python
+class SourceReference(Base):
+    __tablename__ = "source_references"
+
+    # ... existing columns ...
+
+    # NEW: Character-level offset for precise grounding
+    char_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    char_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
+```
+
+### Document Table Enhancement
+
+```sql
+-- Track extraction method used
+ALTER TABLE documents
+ADD COLUMN extraction_method VARCHAR(20) DEFAULT 'docling',
+ADD COLUMN ocr_processed BOOLEAN DEFAULT FALSE;
+```
+
+---
+
+## LangExtract Integration Pattern
+
+### LangExtractProcessor Class
+
+```python
+# src/extraction/langextract_processor.py
+import langextract as lx
+from pathlib import Path
+from uuid import UUID
+
+class LangExtractProcessor:
+    """LangExtract-based borrower extraction with character offsets."""
+
+    def __init__(
+        self,
+        examples_dir: Path = Path("examples/loan_extraction"),
+        model_id: str = "gemini-2.5-flash",
+    ):
+        self.model_id = model_id
+        self.examples = self._load_examples(examples_dir)
+        self.prompt = self._build_prompt()
+
+    def _load_examples(self, examples_dir: Path) -> list[lx.data.ExampleData]:
+        """Load few-shot examples from examples directory."""
+        examples = []
+        for example_file in examples_dir.glob("*.json"):
+            # Load example text and expected extractions
+            # Format: {"text": "...", "extractions": [...]}
+            ...
+        return examples
+
+    def _build_prompt(self) -> str:
+        return """
+        Extract borrower information from loan documents.
+        For each borrower, extract:
+        - Full name
+        - SSN (if present)
+        - Phone number
+        - Email
+        - Address (street, city, state, zip)
+        - Income records (amount, period, year, source, employer)
+        - Account numbers
+        - Loan numbers
+
+        Map each extraction to its exact location in the source text.
+        """
+
+    def extract(
+        self,
+        text: str,
+        document_id: UUID,
+        document_name: str,
+    ) -> ExtractionResult:
+        """Extract borrowers with character-level offsets."""
+        result = lx.extract(
+            text_or_documents=text,
+            prompt_description=self.prompt,
+            examples=self.examples,
+            model_id=self.model_id,
+            max_char_buffer=2000,  # Context window around extractions
+            extraction_passes=2,   # Multiple passes for recall
+        )
+
+        # Convert LangExtract result to BorrowerRecord
+        borrowers = []
+        for extraction in result.extractions:
+            borrower = self._convert_extraction(
+                extraction,
+                document_id,
+                document_name,
+            )
+            borrowers.append(borrower)
+
+        return ExtractionResult(
+            borrowers=borrowers,
+            extraction_method="langextract",
+        )
+
+    def _convert_extraction(
+        self,
+        extraction: lx.data.Extraction,
+        document_id: UUID,
+        document_name: str,
+    ) -> BorrowerRecord:
+        """Convert LangExtract extraction to BorrowerRecord with offsets."""
+        # LangExtract provides char_start, char_end for each field
+        sources = [
+            SourceReference(
+                document_id=document_id,
+                document_name=document_name,
+                page_number=self._offset_to_page(extraction.char_start),
+                snippet=extraction.source_text[:200],
+                char_start=extraction.char_start,
+                char_end=extraction.char_end,
+            )
+        ]
+
+        return BorrowerRecord(
+            name=extraction.fields.get("name"),
+            # ... map other fields ...
+            sources=sources,
+        )
+```
+
+### Few-Shot Example Structure
+
+```json
+// examples/loan_extraction/example_001.json
+{
+  "text": "BORROWER INFORMATION\n\nName: John Michael Smith\nSSN: 123-45-6789\nAddress: 456 Oak Street, Austin, TX 78701\n\nEMPLOYMENT\nEmployer: TechCorp Inc.\nAnnual Salary: $85,000",
+  "extractions": [
+    {
+      "type": "borrower",
+      "fields": {
+        "name": "John Michael Smith",
+        "ssn": "123-45-6789",
+        "address": {
+          "street": "456 Oak Street",
+          "city": "Austin",
+          "state": "TX",
+          "zip": "78701"
+        },
+        "income": {
+          "amount": 85000,
+          "period": "annual",
+          "employer": "TechCorp Inc."
+        }
+      },
+      "char_start": 24,
+      "char_end": 53
+    }
+  ]
+}
+```
+
+---
+
+## LightOnOCR Service Architecture
+
+### Standalone GPU Service
+
+```yaml
+# cloud-run-ocr-service.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: loan-ocr-service
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+    spec:
+      containerConcurrency: 1  # OCR is memory-intensive
+      timeoutSeconds: 300
+      containers:
+        - image: us-central1-docker.pkg.dev/PROJECT/loan-repo/ocr-service:latest
+          resources:
+            limits:
+              cpu: "8"
+              memory: "32Gi"
+              nvidia.com/gpu: "1"
+          env:
+            - name: MODEL_ID
+              value: "lightonai/LightOnOCR-2-1B"
+      nodeSelector:
+        run.googleapis.com/accelerator: nvidia-l4
+```
+
+### OCR Service API
+
+```python
+# ocr_service/main.py
+from fastapi import FastAPI, UploadFile
+from transformers import LightOnOcrForConditionalGeneration, LightOnOcrProcessor
+import torch
+
+app = FastAPI(title="LightOnOCR Service")
+
+# Load model at startup (cold start ~5s with pre-installed drivers)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+dtype = torch.bfloat16 if device == "cuda" else torch.float32
+
+model = LightOnOcrForConditionalGeneration.from_pretrained(
+    "lightonai/LightOnOCR-2-1B",
+    torch_dtype=dtype,
+).to(device)
+processor = LightOnOcrProcessor.from_pretrained("lightonai/LightOnOCR-2-1B")
+
+@app.post("/ocr")
+async def ocr_document(file: UploadFile) -> dict:
+    """Process document with LightOnOCR."""
+    content = await file.read()
+
+    # Convert PDF pages to images
+    images = convert_pdf_to_images(content, max_dimension=1540)
+
+    # Process each page
+    pages = []
+    for i, image in enumerate(images):
+        text = process_image(image)
+        pages.append({"page_number": i + 1, "text": text})
+
+    return {
+        "pages": pages,
+        "full_text": "\n\n".join(p["text"] for p in pages),
+    }
+
+def process_image(image) -> str:
+    """OCR a single image."""
+    conversation = [{"role": "user", "content": [{"type": "image", "image": image}]}]
+    inputs = processor.apply_chat_template(
+        conversation,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+    )
+    inputs = {k: v.to(device=device, dtype=dtype) if v.is_floating_point() else v.to(device)
+              for k, v in inputs.items()}
+
+    output_ids = model.generate(**inputs, max_new_tokens=4096)
+    generated_ids = output_ids[0, inputs["input_ids"].shape[1]:]
+    return processor.decode(generated_ids, skip_special_tokens=True)
+```
+
+### OCR Client in Backend
+
+```python
+# src/ingestion/ocr_client.py
+import httpx
+from pydantic import BaseModel
+
+class OCRResult(BaseModel):
+    pages: list[dict]
+    full_text: str
+
+class LightOnOCRClient:
+    """Client for LightOnOCR GPU service."""
+
+    def __init__(self, service_url: str, timeout: float = 300.0):
+        self.service_url = service_url
+        self.timeout = timeout
+
+    async def ocr_document(self, content: bytes, filename: str) -> OCRResult:
+        """Send document to OCR service."""
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            files = {"file": (filename, content)}
+            response = await client.post(
+                f"{self.service_url}/ocr",
+                files=files,
+            )
+            response.raise_for_status()
+            return OCRResult(**response.json())
+
+    async def is_scanned_document(self, content: bytes) -> bool:
+        """Detect if document needs OCR (image-based PDF)."""
+        # Quick heuristic: check for text layer in PDF
+        # Or call OCR service's detection endpoint
+        ...
+```
+
+---
+
+## CloudBuild Deployment Pattern
+
+### Project Structure
+
+```
+infrastructure/
++-- terraform/           # DEPRECATED - kept for reference
+|   +-- ...
++-- cloudbuild/          # NEW - CloudBuild configs
+|   +-- backend.yaml
+|   +-- frontend.yaml
+|   +-- ocr-service.yaml
+|   +-- deploy-all.yaml
++-- scripts/             # NEW - gcloud CLI scripts
+    +-- deploy-backend.sh
+    +-- deploy-frontend.sh
+    +-- deploy-ocr.sh
+    +-- setup-infrastructure.sh
+```
+
+### Backend CloudBuild Config
+
+```yaml
+# infrastructure/cloudbuild/backend.yaml
+steps:
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:latest'
+      - '-f'
+      - 'backend/Dockerfile'
+      - 'backend/'
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'loan-backend-${_ENVIRONMENT}'
+      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--set-secrets=DATABASE_URL=database-url:latest,GEMINI_API_KEY=gemini-api-key:latest'
+      - '--set-env-vars=GCS_BUCKET=${_GCS_BUCKET},CLOUD_TASKS_QUEUE=${_CLOUD_TASKS_QUEUE}'
+      - '--vpc-egress=private-ranges-only'
+      - '--network=${_VPC_NETWORK}'
+      - '--subnet=${_SUBNET}'
+      - '--allow-unauthenticated'
+
+substitutions:
+  _REGION: 'us-central1'
+  _ENVIRONMENT: 'prod'
+  _GCS_BUCKET: ''
+  _CLOUD_TASKS_QUEUE: ''
+  _VPC_NETWORK: ''
+  _SUBNET: ''
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+```
+
+### OCR Service CloudBuild Config
+
+```yaml
+# infrastructure/cloudbuild/ocr-service.yaml
+steps:
+  # Build OCR service image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/ocr-service:${SHORT_SHA}'
+      - '-f'
+      - 'ocr_service/Dockerfile'
+      - 'ocr_service/'
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/ocr-service:${SHORT_SHA}']
+
+  # Deploy GPU service to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'loan-ocr-${_ENVIRONMENT}'
+      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/ocr-service:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--memory=32Gi'
+      - '--cpu=8'
+      - '--gpu=1'
+      - '--gpu-type=nvidia-l4'
+      - '--min-instances=0'
+      - '--max-instances=3'
+      - '--concurrency=1'
+      - '--timeout=300'
+      - '--no-allow-unauthenticated'  # Internal only
+
+substitutions:
+  _REGION: 'us-central1'
+  _ENVIRONMENT: 'prod'
+```
+
+### Deploy All Script
+
+```bash
+#!/bin/bash
+# infrastructure/scripts/deploy-all.sh
+
+set -euo pipefail
+
+PROJECT_ID="${PROJECT_ID:?Set PROJECT_ID}"
+REGION="${REGION:-us-central1}"
+ENVIRONMENT="${ENVIRONMENT:-prod}"
+
+echo "=== Deploying Loan Extraction System v2.0 ==="
+
+# 1. Deploy OCR service first (backend depends on its URL)
+echo "Deploying OCR service..."
+gcloud builds submit \
+  --config=infrastructure/cloudbuild/ocr-service.yaml \
+  --substitutions="_REGION=${REGION},_ENVIRONMENT=${ENVIRONMENT}"
+
+# Get OCR service URL
+OCR_URL=$(gcloud run services describe "loan-ocr-${ENVIRONMENT}" \
+  --region="${REGION}" --format='value(status.url)')
+
+# 2. Deploy backend with OCR service URL
+echo "Deploying backend..."
+gcloud builds submit \
+  --config=infrastructure/cloudbuild/backend.yaml \
+  --substitutions="_REGION=${REGION},_ENVIRONMENT=${ENVIRONMENT},_OCR_SERVICE_URL=${OCR_URL}"
+
+# Get backend URL
+BACKEND_URL=$(gcloud run services describe "loan-backend-${ENVIRONMENT}" \
+  --region="${REGION}" --format='value(status.url)')
+
+# 3. Deploy frontend with backend URL
+echo "Deploying frontend..."
+gcloud builds submit \
+  --config=infrastructure/cloudbuild/frontend.yaml \
+  --substitutions="_REGION=${REGION},_ENVIRONMENT=${ENVIRONMENT},_BACKEND_URL=${BACKEND_URL}"
+
+echo "=== Deployment complete ==="
+```
+
+---
+
+## Build Order & Dependencies
+
+### Phase Sequencing
+
+```
+Phase 1: Database Schema Migration
++-- Add char_start, char_end to source_references
++-- Add extraction_method, ocr_processed to documents
++-- Create indexes
+    |
+    v
+Phase 2: LangExtract Integration
++-- Create LangExtractProcessor
++-- Create few-shot examples
++-- Unit tests for extraction
++-- Integration with Gemini 2.5 Flash
+    |
+    v
+Phase 3: OCR Service
++-- Create ocr_service/ directory
++-- LightOnOCR model wrapper
++-- FastAPI service
++-- Dockerfile with CUDA
++-- Local testing
+    |
+    v
+Phase 4: Dual Pipeline Wiring
++-- ExtractionRouter in DocumentService
++-- OCRRouter logic
++-- LightOnOCRClient
++-- Cloud Tasks payload update
++-- Task handler branching
++-- E2E tests
+    |
+    v
+Phase 5: API Enhancement
++-- Add ?method and ?ocr query params
++-- Response model updates
++-- OpenAPI documentation
++-- Frontend integration
+    |
+    v
+Phase 6: CloudBuild Migration
++-- Create cloudbuild/ configs
++-- Create deploy scripts
++-- IAM permissions
++-- Deprecate Terraform
+```
+
+### Dependency Graph
+
+```
+                    +-------------------+
+                    | Schema Migration  |
+                    +-------------------+
+                            |
+              +-------------+-------------+
+              |                           |
+              v                           v
+    +-------------------+       +-------------------+
+    | LangExtract       |       | OCR Service       |
+    | Integration       |       | (independent)     |
+    +-------------------+       +-------------------+
+              |                           |
+              +-------------+-------------+
+                            |
+                            v
+                  +-------------------+
+                  | Dual Pipeline     |
+                  | Wiring            |
+                  +-------------------+
+                            |
+                            v
+                  +-------------------+
+                  | API Enhancement   |
+                  +-------------------+
+                            |
+                            v
+                  +-------------------+
+                  | CloudBuild        |
+                  | Migration         |
+                  +-------------------+
+```
+
+---
 
 ## Scaling Considerations
 
-| Scale | Documents/Day | Architecture Adjustments |
-|-------|---------------|--------------------------|
-| 0-100 | ~100 | Single Cloud Run instance, direct Gemini calls |
-| 100-1K | ~1,000 | Cloud Tasks for async, connection pooling, basic caching |
-| 1K-10K | ~10,000 | Multiple workers, batched Gemini calls, read replicas |
-| 10K+ | ~100,000+ | Dedicated extraction service, model caching, sharded storage |
+| Scale | Backend | OCR Service | Notes |
+|-------|---------|-------------|-------|
+| 0-100 docs/day | min=0, max=3 | min=0, max=1 | Scale to zero saves cost |
+| 100-1000 docs/day | min=1, max=5 | min=0, max=2 | Keep backend warm |
+| 1000+ docs/day | min=2, max=10 | min=1, max=3 | OCR warm reduces latency |
 
-### First Bottleneck: LLM API Rate Limits
+### GPU Cost Management
 
-**What breaks:** Gemini API has rate limits per minute/day. At scale, you'll hit them.
+- **Instance-based billing**: GPU charged for entire instance lifecycle
+- **Scale to zero**: Saves cost when not processing
+- **Cold start**: ~5 seconds with pre-installed drivers
+- **Concurrency=1**: OCR is memory-intensive, process one at a time
+- **Consider**: Batch multiple pages in single request to amortize cold start
 
-**How to fix:**
-- Implement exponential backoff with jitter
-- Batch documents in Cloud Tasks with rate limiting
-- Consider dedicated quota or enterprise agreement
-- Cache extraction results for duplicate documents (hash-based)
+### Cloud Run GPU Requirements
 
-### Second Bottleneck: Docling Processing Time
+From official documentation:
+- **GPU Type**: NVIDIA L4 (24 GB VRAM)
+- **Minimum CPU**: 4 (8 recommended)
+- **Minimum Memory**: 16 GiB (32 GiB recommended)
+- **Billing**: Instance-based (charged for entire lifecycle)
+- **Cold Start**: ~5 seconds with pre-installed drivers
 
-**What breaks:** Docling's AI models (layout, table extraction) are CPU-intensive.
+### Supported GPU Regions
 
-**How to fix:**
-- Run Docling workers on GPU-enabled instances
-- Pre-process common document types
-- Consider docling-serve for distributed processing
-- Cache DoclingDocument results for re-processing
+- us-central1 (Iowa)
+- us-east4 (Northern Virginia)
+- europe-west1 (Belgium)
+- europe-west4 (Netherlands)
+- asia-southeast1 (Singapore)
+
+---
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Synchronous Document Processing
+### Anti-Pattern 1: Tight Coupling Extraction Methods
 
-**What people do:** Process documents in the upload request handler.
+**What people do:** Share code between Docling and LangExtract paths
+**Why it's wrong:** Different data models (page-based vs char-offset-based)
+**Do this instead:** Keep paths separate, unify only at storage layer
 
-**Why it's wrong:** Document processing takes 5-60+ seconds. HTTP timeouts, client frustration, no recovery on failure.
+### Anti-Pattern 2: Synchronous OCR Calls
 
-**Do this instead:** Accept upload, store in GCS, enqueue for async processing, return document_id immediately.
+**What people do:** Call OCR service in upload request handler
+**Why it's wrong:** OCR takes 10-30 seconds, HTTP timeout risk
+**Do this instead:** Always queue OCR via Cloud Tasks
 
-### Anti-Pattern 2: Trusting LLM Output Without Validation
+### Anti-Pattern 3: GPU Service in Backend
 
-**What people do:** Take LLM JSON output and store directly.
+**What people do:** Include LightOnOCR model in backend container
+**Why it's wrong:** 2GB+ model, slow cold starts, high memory
+**Do this instead:** Separate GPU service, call via HTTP
 
-**Why it's wrong:** LLMs hallucinate. SSNs, loan numbers, amounts can be fabricated or malformed.
+### Anti-Pattern 4: Blocking on OCR Detection
 
-**Do this instead:** Hybrid validation - Pydantic schema validation + deterministic regex checks for critical fields. Set to null if validation fails rather than storing wrong data.
+**What people do:** Detect if scanned before queueing task
+**Why it's wrong:** Detection itself requires parsing, slows upload
+**Do this instead:** Pass ocr=auto, let task handler decide
 
-### Anti-Pattern 3: Losing Source Attribution
+---
 
-**What people do:** Extract data, store only the values without provenance.
+## Integration Points Summary
 
-**Why it's wrong:** Users ask "where did this number come from?" and you can't answer. Breaks trust, makes debugging impossible.
+| From | To | Method | Purpose |
+|------|-----|--------|---------|
+| DocumentService | Cloud Tasks | Queue | Async processing |
+| Task Handler | LightOnOCR Service | HTTP POST | OCR preprocessing |
+| Task Handler | LangExtractProcessor | Direct call | Text extraction |
+| Task Handler | DoclingProcessor | Direct call | Text extraction (v1) |
+| LangExtractProcessor | Gemini 2.5 API | HTTP | LLM extraction |
+| All Extractors | PostgreSQL | SQLAlchemy | Persist results |
 
-**Do this instead:** Store source_links for every extracted field - document_id, page_number, text_snippet, bounding_box.
-
-### Anti-Pattern 4: Monolithic Prompt Engineering
-
-**What people do:** One giant prompt that extracts everything at once.
-
-**Why it's wrong:** Hard to debug, hard to improve incrementally, higher token costs on failures.
-
-**Do this instead:** Modular extraction - separate prompts for borrower info, income history, loan details. Compose results.
-
-### Anti-Pattern 5: Ignoring Document Quality Signals
-
-**What people do:** Process all documents identically regardless of quality.
-
-**Why it's wrong:** Scanned documents with poor OCR quality need different handling than digital PDFs.
-
-**Do this instead:** Classify document quality upfront. Route poor-quality docs to more capable (expensive) models. Flag very low quality for human review.
-
-## Integration Points
-
-### External Services
-
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Gemini API | REST via google-generativeai SDK | Use structured output with Pydantic schemas |
-| Cloud Storage | google-cloud-storage SDK | Store raw documents, use signed URLs for downloads |
-| Cloud Tasks | google-cloud-tasks SDK or fastapi-cloud-tasks | HTTP callbacks to worker endpoints |
-| Cloud SQL | SQLAlchemy async with asyncpg | Connection pooling essential |
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| API -> Ingestion | Direct function call | Same process, sync for upload |
-| Ingestion -> Extraction | Via Cloud Tasks | Async, decoupled |
-| Extraction -> Storage | Direct function call | Same worker process |
-| API -> Query | Direct function call | Sync database queries |
-
-## Build Order Dependencies
-
-Based on component dependencies, recommended build order:
-
-```
-Phase 1: Foundation
-├── Project setup, config management
-├── PostgreSQL schema + SQLAlchemy models
-├── GCS client for document storage
-├── Basic FastAPI app with health endpoint
-└── Cloud Tasks queue setup
-
-Phase 2: Ingestion Pipeline
-├── Document upload endpoint
-├── Docling integration
-├── DoclingDocument handling
-└── Status tracking
-
-Phase 3: Extraction Core
-├── Gemini client with structured output
-├── Extraction prompts for loan documents
-├── Complexity classifier
-├── Validation service (hybrid)
-└── Source attribution storage
-
-Phase 4: Query Layer
-├── Borrower query endpoints
-├── Document search
-├── Source link resolution
-└── Export capabilities
-
-Phase 5: Polish
-├── Error handling improvements
-├── Retry logic refinement
-├── Performance optimization
-└── Monitoring/observability
-```
+---
 
 ## Sources
 
-### Official Documentation (HIGH confidence)
-- [Docling GitHub Repository](https://github.com/docling-project/docling) - Core architecture and features
-- [Gemini API Structured Output](https://ai.google.dev/gemini-api/docs/structured-output) - Schema definition and best practices
-- [FastAPI Background Tasks](https://fastapi.tiangolo.com/tutorial/background-tasks/) - Async processing patterns
+### LangExtract
+- [GitHub - google/langextract](https://github.com/google/langextract) - Official repository with API documentation
+- [Google Developers Blog - Introducing LangExtract](https://developers.googleblog.com/en/introducing-langextract-a-gemini-powered-information-extraction-library/) - Feature overview and architecture
 
-### Industry Practice (MEDIUM confidence)
-- [Designing an LLM-Based Document Extraction System](https://medium.com/@dikshithraj03/turning-messy-documents-into-structured-data-with-llms-d8a6242a31cc) - Hybrid architecture patterns
-- [LLMs for Structured Data Extraction from PDFs](https://unstract.com/blog/comparing-approaches-for-using-llms-for-structured-data-extraction-from-pdfs/) - Pipeline approaches
-- [Data Extraction in Lending](https://www.docsumo.com/blogs/data-extraction/lending-industry) - Loan-specific patterns
-- [Extraction Schema Best Practices](https://landing.ai/developers/extraction-schema-best-practices-get-clean-structured-data-from-your-documents) - Schema design
+### LightOnOCR
+- [Hugging Face - LightOnOCR-2-1B](https://huggingface.co/lightonai/LightOnOCR-2-1B) - Model card with inference examples
+- [LightOn Blog - Making Knowledge Machine-Readable](https://www.lighton.ai/lighton-blogs/making-knowledge-machine-readable) - Performance benchmarks
 
-### Architecture Patterns (MEDIUM confidence)
-- [Google Developers Blog - Multi-Agent Patterns](https://developers.googleblog.com/developers-guide-to-multi-agent-patterns-in-adk/) - Sequential and generator-critic patterns
-- [AWS IDP Explanation](https://aws.amazon.com/what-is/intelligent-document-processing/) - IDP component architecture
-- [FastAPI and Celery Architecture](https://testdriven.io/blog/fastapi-and-celery/) - Async processing patterns
-- [fastapi-cloud-tasks](https://github.com/Adori/fastapi-cloud-tasks) - Cloud Tasks integration
+### Cloud Run GPU
+- [Cloud Run GPU Support](https://docs.cloud.google.com/run/docs/configuring/services/gpu) - Configuration and requirements
+
+### CloudBuild
+- [Deploying to Cloud Run using Cloud Build](https://docs.cloud.google.com/build/docs/deploying-builds/deploy-cloud-run) - Deployment patterns
 
 ---
-*Architecture research for: Loan Document Extraction System*
-*Researched: 2026-01-23*
+*Architecture research for: v2.0 LangExtract + LightOnOCR Integration*
+*Researched: 2026-01-24*

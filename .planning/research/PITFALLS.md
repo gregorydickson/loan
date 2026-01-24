@@ -1,438 +1,442 @@
-# Pitfalls Research: LLM-Based Loan Document Extraction
+# Pitfalls Research: v2.0 LangExtract, LightOnOCR, and CloudBuild Migration
 
-**Domain:** AI-powered document extraction (loans/mortgage documents)
-**Researched:** 2026-01-23
-**Confidence:** HIGH (verified across multiple authoritative sources)
+**Domain:** Document extraction system enhancement — adding LangExtract, GPU OCR, and IaC migration
+**Researched:** 2026-01-24
+**Confidence:** MEDIUM (LangExtract is new library with limited production experience reports)
 
 ---
 
 ## Critical Pitfalls (Severity: CRITICAL)
 
-These cause project failure, data corruption, or complete rewrites. Address in Phase 1-2.
+These cause project failure, data corruption, or complete rewrites. Must address in early phases.
 
 ---
 
-### Pitfall 1: Using LLMs as OCR (The Faithfulness Trap)
+### Pitfall 1: Character Offset Mismatch Between Docling and LangExtract
 
 **What goes wrong:**
-LLMs "understand" documents rather than faithfully extracting what's there. They hallucinate plausible-looking data that doesn't exist in the source document. For loan documents containing financial figures like $38,000,000, an LLM might output $88,000,000 - a single digit error that's catastrophic in lending.
+LangExtract provides character offsets (`char_interval`) relative to the raw text it receives. But Docling's markdown export transforms the document text — adding markdown formatting, removing whitespace, reordering elements. The character offsets from LangExtract don't map back to the original document or to Docling's page boundaries.
 
 **Why it happens:**
-Developers assume LLMs can do everything. LLMs are trained to generate plausible text, not to be faithful extractors. They fill in gaps with "reasonable" values rather than admitting uncertainty.
+- Docling's `export_to_markdown()` produces formatted text, not verbatim extraction
+- LangExtract offsets are relative to its input string, not the source document
+- Current `SourceReference` model tracks page numbers, not character offsets
+- No intermediate representation preserves both structure and original positions
 
 **How to avoid:**
-- **Use Docling for extraction, Gemini for reasoning** - Docling extracts raw text/tables faithfully; Gemini structures and interprets
-- **Never ask the LLM to "read" the document** - Pass pre-extracted text, not the raw document
-- **Implement grounding validation** - Every extracted value must trace to exact source text
+- **Use Docling's raw text mode** — Extract unformatted text with position tracking
+- **Store dual offsets** — Both Docling-relative and original-document-relative positions
+- **Build offset translation layer** — Map LangExtract offsets back through Docling's transformations
+- **Verify with substring matching** — Extracted text must exactly match source at reported offset
 
 **Warning signs:**
-- Extracted numbers that "look right" but differ from source
-- LLM adding context that wasn't in the document
-- Consistent formatting in output even when source format varies
-- Test with documents containing uncommon values (unusual numbers, rare names)
+- Character offset points to middle of a word
+- Extracted snippet doesn't match text at reported position
+- Offsets exceed document length
+- Same offset reported for extractions from different pages
 
-**Phase to address:** Phase 1 (Document Ingestion) - Establish Docling as the extraction layer before LLM touches anything
+**Phase to address:** Phase 1 (LangExtract Integration) — Design offset tracking architecture before any extraction code
 
 **Sources:**
-- [Don't Use LLMs as OCR: Lessons Learned](https://medium.com/@martia_es/dont-use-llms-as-ocr-lessons-learned-from-extracting-complex-documents-db2d1fafcdfb)
-- [SafePassage: High-Fidelity Information Extraction](https://arxiv.org/html/2510.00276)
+- [LangExtract GitHub](https://github.com/google/langextract) — char_interval documentation
+- [Docling + LangExtract Integration](https://dev.to/_aparna_pradhan_/the-perfect-extraction-unlocking-unstructured-data-with-docling-langextract-1j3b) — Integration challenges
 
 ---
 
-### Pitfall 2: Source Attribution Theater (Fake Provenance)
+### Pitfall 2: LangExtract Few-Shot Example Alignment Errors
 
 **What goes wrong:**
-System claims to track where data came from, but the attribution is invented. LLM generates page numbers, section references, or snippets that don't correspond to actual document locations. Research shows 50-90% of LLM responses are not fully supported by cited sources.
+LangExtract's extraction quality depends heavily on few-shot examples. If `extraction_text` values in examples don't appear verbatim in the example's source text, or aren't listed in order of appearance, LangExtract raises "Prompt alignment warnings" and extraction quality degrades dramatically.
 
 **Why it happens:**
-LLMs are helpful - when asked for a source, they'll provide one. They don't distinguish between "remembering" where they saw something vs. generating a plausible-sounding citation. Without verification, fake provenance looks identical to real provenance.
+- Examples use paraphrased text instead of verbatim quotes
+- Extraction order in examples doesn't match document order
+- Example text edited for readability breaks alignment
+- Copy-paste errors in example construction
 
 **How to avoid:**
-- **Chunk-level tracking** - When extracting, track which exact text chunk produced each extraction
-- **String matching verification** - Every source snippet must fuzzy-match to actual document text
-- **Page/section validation** - Verify cited page numbers exist and contain relevant content
-- **Implement SafePassage pattern** - Extract, then verify extraction against original text
+- **Use exact verbatim text from examples** — Copy directly from source, never paraphrase
+- **List extractions in document order** — First extraction in text = first in example
+- **Enable alignment warnings** — Don't suppress `Prompt alignment warnings`
+- **Test examples against real extraction** — Each example should work as both training and test
 
 **Warning signs:**
-- Source references to page numbers beyond document length
-- Identical snippets cited for very different extractions
-- Source text doesn't mention the extracted value
-- Clean, well-formatted citations (real documents are messy)
+- "Prompt alignment warnings" in console output
+- Good extraction on simple docs, poor on complex docs
+- Extraction order doesn't match document order
+- Missing fields that are clearly present in document
 
-**Phase to address:** Phase 2 (Extraction Engine) - Build attribution into the extraction pipeline, not as an afterthought
+**Phase to address:** Phase 1 (LangExtract Integration) — Create validated example corpus before production use
 
 **Sources:**
-- [SourceCheckup: Automated Framework for LLM Citation Assessment](https://www.nature.com/articles/s41467-025-58551-6)
-- [Awesome LLM Attributions Survey](https://github.com/HITsz-TMG/awesome-llm-attributions)
+- [LangExtract Documentation](https://github.com/google/langextract) — Example alignment requirements
+- [DataCamp LangExtract Tutorial](https://www.datacamp.com/tutorial/langextract) — Best practices for examples
 
 ---
 
-### Pitfall 3: Structured Output Silent Failures
+### Pitfall 3: GPU Service Cold Start Cost Explosion
 
 **What goes wrong:**
-Gemini returns `None` instead of structured output when response exceeds `max_output_tokens`. API returns success (200), but `response.text` and `response.parsed` are both `None`. No error raised - data silently lost.
+LightOnOCR GPU service on Cloud Run L4 costs $0.67/hour when running. With `min_instances=0` for cost savings, cold starts take 5-19 seconds. But keeping `min_instances=1` for latency costs $485/month ($0.67 x 24 x 30) for a service that might only process 100 documents/month.
 
 **Why it happens:**
-Structured output mode has different failure semantics than text mode. When output truncation would produce invalid JSON, the API returns nothing rather than partial results. Complex loan documents with multiple borrowers can exceed token limits unexpectedly.
+- GPU pricing is per-instance-lifetime, not per-request
+- Cloud Run GPU instances have 10-minute idle timeout (vs 15 minutes for CPU)
+- Cold starts include GPU driver loading + model loading + inference warmup
+- No granular scaling between 0 and 1 instance
 
 **How to avoid:**
-- **Set generous max_output_tokens** - 8192 minimum for loan documents
-- **Explicit None checks** - Always check `if response.parsed is None` before proceeding
-- **Implement retry with chunking** - On None response, split input and retry
-- **Monitor token usage** - Track actual vs. expected output tokens
+- **Batch documents before OCR** — Collect 5-10 documents, then spin up GPU
+- **Disable zonal redundancy** — Cuts GPU cost from $0.0002909/sec to $0.0001867/sec
+- **Use GPU only for scanned documents** — Route digital PDFs to Docling's CPU OCR
+- **Scheduled warm-up** — Ping GPU service before expected batch processing
+- **Time-based min_instances** — 1 during business hours, 0 overnight
 
 **Warning signs:**
-- Processing "succeeds" but produces no borrowers
-- Works on simple test docs, fails on production docs
-- Intermittent "no data extracted" without errors
-- Token usage near limits in monitoring
+- GPU costs exceeding document processing costs
+- 99th percentile latency >20 seconds
+- GPU idle time >80% in metrics
+- All documents routed to GPU regardless of type
 
-**Phase to address:** Phase 2 (LLM Client) - Build None-handling into the client from day one
+**Phase to address:** Phase 2 (LightOnOCR Service) — Design routing logic before deployment
 
 **Sources:**
-- [Structured Output Returns None When max_output_tokens Exceeded](https://github.com/googleapis/python-genai/issues/1039)
-- [Gemini API Structured Output Documentation](https://ai.google.dev/gemini-api/docs/structured-output)
+- [Cloud Run GPU Pricing](https://cloud.google.com/run/docs/configuring/services/gpu) — L4 GPU costs
+- [Cloud Run GPU Best Practices](https://cloud.google.com/blog/products/serverless/cloud-run-gpus-are-now-generally-available) — Cost optimization
 
 ---
 
-### Pitfall 4: Numeric Extraction Catastrophe
+### Pitfall 4: Terraform State Orphaning During CloudBuild Migration
 
 **What goes wrong:**
-Income figures, loan amounts, and account numbers extracted incorrectly. These errors compound - wrong income affects DTI calculations, wrong loan amounts affect everything. In lending, a 10% error rate means 10% of loans have materially wrong data.
+Existing infrastructure is managed by Terraform with remote state. Migrating to CloudBuild + gcloud CLI creates new resources without importing Terraform state. Result: duplicate resources, orphaned state, or — worst case — Terraform thinks resources are deleted and destroys production infrastructure on next `terraform apply`.
 
 **Why it happens:**
-- OCR mistakes: 0/O/D confusion, 1/l/I confusion, 8/B confusion
-- Format ambiguity: Is "1,234" one thousand or one-point-two-three-four?
-- Unit confusion: Monthly vs. annual income, thousands vs. actual amounts
-- Missing negatives: Deductions extracted as positive numbers
+- CloudBuild scripts create resources directly via gcloud CLI
+- Terraform state doesn't know about CLI-created resources
+- Someone runs `terraform apply` after CLI migration, causing drift
+- State file not explicitly retired, team confusion
 
 **How to avoid:**
-- **Explicit format instructions** - Tell Gemini the expected numeric formats in prompts
-- **Cross-validation rules** - Monthly income x 12 should approximately equal annual
-- **Range checks** - Loan amounts should be reasonable for document type
-- **Require unit specification** - Force extraction of units alongside values
-- **Original text preservation** - Store the exact source text for every number
+- **Never run terraform after migration begins** — Revoke Terraform service account permissions
+- **Export Terraform state as documentation** — `terraform state list` and `terraform show`
+- **Tag all resources with creation method** — `created_by: cloudbuild` vs `created_by: terraform`
+- **Incremental migration** — Migrate one resource type at a time, verify, proceed
+- **State file archival** — Move state to read-only archive, not delete
 
 **Warning signs:**
-- Income values that don't multiply correctly across periods
-- Account numbers with unusual lengths
-- Values that seem "too round" or "too precise"
-- Inconsistent decimal separators
+- Resources exist in both Terraform state and CloudBuild scripts
+- Terraform plan shows "will destroy" for resources you need
+- Duplicate resources (e.g., two Cloud Run services)
+- "Resource already exists" errors from CloudBuild
 
-**Phase to address:** Phase 2 (Validation Service) - Build numeric validation as a required post-extraction step
+**Phase to address:** Phase 3 (CloudBuild Migration) — Create explicit migration plan before any infrastructure changes
 
 **Sources:**
-- [Designing an LLM-Based Document Extraction System](https://medium.com/@dikshithraj03/turning-messy-documents-into-structured-data-with-llms-d8a6242a31cc)
-- [LLMs for Financial Document Analysis](https://intuitionlabs.ai/articles/llm-financial-document-analysis)
+- [Terraform State Migration Guide](https://scalr.com/guides/platform-engineers-guide-to-migrating-off-terraform-cloud-enterprise) — Migration best practices
+- [Terraform Rollback Guide](https://scalr.com/learning-center/terraform-rollback-guide/) — Recovery from state issues
+
+---
+
+### Pitfall 5: Dual Extraction Method Inconsistent Results
+
+**What goes wrong:**
+Same document produces different borrower counts, different field values, or different confidence scores when processed by Docling+Gemini vs LangExtract. Users lose trust: "Which result is correct?" Testing becomes impossible: which method is the source of truth?
+
+**Why it happens:**
+- Different chunking strategies produce different context windows
+- Gemini structured output vs LangExtract few-shot prompting yield different results
+- Docling page-based attribution vs LangExtract character-offset attribution are incompatible
+- No normalization layer between extraction methods
+
+**How to avoid:**
+- **Single result format** — Both methods produce identical `BorrowerRecord` structure
+- **Normalization layer** — Post-extraction step that standardizes outputs
+- **Canonical test suite** — Same documents, expected same results, both methods
+- **Method metadata** — Every extraction records which method produced it
+- **Confidence comparison** — Run both methods, use higher-confidence result
+
+**Warning signs:**
+- Same document yields 2 borrowers with one method, 3 with another
+- Field values differ by more than formatting
+- Page numbers from LangExtract don't match Docling pages
+- Test passing for one method, failing for other
+
+**Phase to address:** Phase 1 (LangExtract Integration) — Define normalization interface before implementing LangExtract extractor
+
+**Sources:**
+- [Docling + LangExtract Integration](https://dev.to/_aparna_pradhan_/the-perfect-extraction-unlocking-unstructured-data-with-docling-langextract-1j3b) — Integration architecture
 
 ---
 
 ## High Pitfalls (Severity: HIGH)
 
-These cause significant delays, quality issues, or technical debt. Address in Phase 2-3.
+These cause significant delays, quality issues, or technical debt. Address early in development.
 
 ---
 
-### Pitfall 5: The "It Works on Test Docs" Trap
+### Pitfall 6: LightOnOCR Transformers Integration Immaturity
 
 **What goes wrong:**
-System works perfectly on clean sample documents but fails on real loan packages. Real packages contain: scanned PDFs with varying quality, multiple documents merged into single PDFs, handwritten annotations, stamps/watermarks, and rotated pages.
+LightOnOCR (released October 2025) has incomplete transformers integration. Auto-configuration fails with "Config not found for lightonocr". Training and fine-tuning interfaces are "coming soon". Production deployment requires manual workarounds.
 
 **Why it happens:**
-Test documents are usually clean digital PDFs. Real loan packages are messy. Docling's OCR has known issues with image-heavy PDFs and can silently fail, returning empty markdown.
+- Library is only 4 months old
+- Transformers PR for LightOnOCR still has open issues
+- Documentation assumes vLLM deployment, not direct Python usage
+- Model architecture conflicts between Pixtral vision encoder and Qwen3 text decoder
 
 **How to avoid:**
-- **Test with production-like documents early** - Day 1, not day 3
-- **Include "ugly" test cases** - Scanned docs, rotated pages, mixed formats
-- **Implement quality scoring** - Detect when extraction confidence is low
-- **Graceful degradation** - Return partial results with flags, not failures
+- **Use vLLM deployment** — Official supported method, avoid direct transformers usage
+- **Pin exact versions** — `vllm==0.11.1` is officially supported, newer versions may break
+- **Test inference before building service** — Verify model loads and runs correctly
+- **Fallback to Docling OCR** — Don't make LightOnOCR required for MVP
 
 **Warning signs:**
-- High success rate on unit tests, low success on integration tests
-- "Works locally, fails in Kubernetes" (Docling image processing issues)
-- Empty extractions without errors
-- Very fast processing times (nothing was actually extracted)
+- "Config not found" errors at import time
+- Attention mask warnings in inference
+- Model loading works but inference fails
+- Different results between local and deployed versions
 
-**Phase to address:** Phase 1 (Integration Tests) - Include real document samples in test suite
+**Phase to address:** Phase 2 (LightOnOCR Service) — Spike vLLM deployment before committing to architecture
 
 **Sources:**
-- [Docling PDF Extraction Issues](https://github.com/docling-project/docling/issues/564)
-- [PDF Data Extraction Benchmark 2025](https://procycons.com/en/blogs/pdf-data-extraction-benchmark/)
+- [LightOnOCR Transformers PR](https://github.com/huggingface/transformers/pull/41621) — Integration status
+- [LightOnOCR HuggingFace](https://huggingface.co/lightonai/LightOnOCR-1B-1025) — Deployment requirements
 
 ---
 
-### Pitfall 6: LLM Cost Explosion
+### Pitfall 7: LangExtract Multi-Pass Overlap Conflicts
 
 **What goes wrong:**
-Development testing burns through API budget. A single large loan package (500+ pages) costs $5-10 in API calls during iterative development. With the 3-day timeline, uncontrolled testing can exhaust budget before shipping.
+LangExtract uses `extraction_passes > 1` to improve recall on long documents. Multiple passes find the same entity, creating duplicates. The "first-pass wins" strategy for overlapping character spans can discard higher-quality later extractions.
 
 **Why it happens:**
-- Re-running full extraction on every code change
-- Not implementing caching during development
-- Using Pro model for everything (vs. Flash for simple docs)
-- Not truncating/sampling during development
+- Multi-pass designed for recall, not precision
+- Same borrower mentioned multiple times in document
+- Different passes chunk document differently
+- No intelligent merge strategy beyond character overlap
 
 **How to avoid:**
-- **Development mode caching** - Cache Gemini responses keyed by (prompt_hash, document_hash)
-- **Model tiering from day one** - Use Flash for standard docs, Pro only for complex
-- **Token budgets per environment** - Dev: $10/day, staging: $50/day
-- **Sample mode** - Extract from first 10 pages only during development
-- **Mock mode for unit tests** - Never hit real API in unit tests
+- **Start with single pass** — Add passes only if recall is a problem
+- **Post-extraction deduplication** — Use existing BorrowerDeduplicator after LangExtract
+- **Tune chunk size before adding passes** — Larger chunks often better than multiple passes
+- **Monitor duplicate rate** — Track how many extractions are duplicates
 
 **Warning signs:**
-- Daily API costs exceeding $20
-- Same document processed multiple times in logs
-- Pro model used for all documents
-- No difference in cost between dev and production
+- Same borrower extracted multiple times with slight variations
+- Extraction count higher than expected borrower count
+- Different confidence scores for same entity
+- Processing time scales quadratically with passes
 
-**Phase to address:** Phase 2 (LLM Client) - Build cost controls into client architecture
+**Phase to address:** Phase 1 (LangExtract Integration) — Configure single-pass first, add multi-pass only if needed
 
 **Sources:**
-- [LLM Cost Optimization Guide 2025](https://futureagi.com/blogs/llm-cost-optimization-2025)
-- [Taming the Beast: Cost Optimization for LLM API Calls](https://medium.com/@ajayverma23/taming-the-beast-cost-optimization-strategies-for-llm-api-calls-in-production-11f16dbe2c39)
+- [LangExtract Documentation](https://github.com/google/langextract) — Multi-pass extraction behavior
 
 ---
 
-### Pitfall 7: Non-Deterministic Test Failures
+### Pitfall 8: CloudBuild YAML Type Coercion Errors
 
 **What goes wrong:**
-Tests pass, then fail, then pass again. Same input produces different outputs. CI becomes unreliable. Team loses trust in test suite and starts ignoring failures.
+CloudBuild config fails with "json: cannot unmarshal number into Go value of type string". Values that look correct in YAML are parsed incorrectly. Build fails before any actual deployment.
 
 **Why it happens:**
-LLMs are inherently non-deterministic. Even with temperature=0, responses can vary. Traditional unit test assertions (`assertEqual`) don't work for LLM outputs.
+- YAML type inference differs from CloudBuild expectations
+- Numeric values without quotes become numbers
+- Environment variable substitutions have type requirements
+- Different behavior between local YAML parsing and CloudBuild
 
 **How to avoid:**
-- **Separate deterministic and non-deterministic tests** - Unit tests should be deterministic (mock LLM)
-- **Use semantic similarity for LLM outputs** - "Paris" matches "The capital is Paris"
-- **Record/replay for integration tests** - Use VCR pattern to record API responses
-- **Threshold-based assertions** - "Confidence > 0.7" not "confidence == 0.85"
-- **Run non-deterministic tests multiple times** - Pass if 8/10 runs succeed
+- **Quote all string values** — Even if they look like strings, quote them
+- **Use explicit substitution syntax** — `${_VAR}` not `$_VAR`
+- **Validate locally first** — `gcloud builds submit --dry-run`
+- **Test minimal config** — Start with hello-world, add complexity incrementally
 
 **Warning signs:**
-- Flaky tests in CI
-- Tests that pass locally but fail in CI
-- Exact string matching on LLM outputs
-- Engineers skipping test runs
+- "cannot unmarshal" errors
+- Builds fail immediately without running steps
+- Works locally, fails in CloudBuild
+- Substitution variables not expanded
 
-**Phase to address:** Phase 2 (Test Infrastructure) - Design test architecture for non-determinism
+**Phase to address:** Phase 3 (CloudBuild Migration) — Create validated cloudbuild.yaml template
 
 **Sources:**
-- [Testing LLM Applications: A Practical Guide](https://langfuse.com/blog/2025-10-21-testing-llm-applications)
-- [Beyond Traditional Testing: Non-Deterministic Software](https://dev.to/aws/beyond-traditional-testing-addressing-the-challenges-of-non-deterministic-software-583a)
+- [Cloud Build Terraform Integration](https://medium.com/google-cloud/integrating-our-application-ci-cd-pipelines-and-terraform-gitops-with-cloud-build-35e8d38b8468) — YAML gotchas
 
 ---
 
-### Pitfall 8: Rate Limiting Surprises
+### Pitfall 9: GPU Quota Denial Blocking Deployment
 
 **What goes wrong:**
-System works in development, crashes in production under load. Gemini API has per-minute rate limits. Batch processing of 100 documents triggers 429 errors and cascading failures.
+Cloud Run GPU deployment fails: "Quota exceeded for nvidia-l4 GPUs". Default quota is 3 GPUs per region. Quota increase requests take 24-48 hours to process, blocking the entire OCR feature.
 
 **Why it happens:**
-- Development tests one document at a time
-- Rate limits are per-project, not per-request
-- Exponential backoff without jitter causes thundering herd
-- No circuit breaker means repeated failures
+- Projects using GPUs for first time get only 3 GPU quota
+- Quota is per-region, spreading load across regions doesn't help
+- Zonal redundancy doubles effective GPU usage
+- Quota increases are manual review, not automatic
 
 **How to avoid:**
-- **Implement rate limiting client-side** - Don't rely on API rejections
-- **Use leaky bucket algorithm** - Smooth traffic, don't burst
-- **Add jitter to retries** - Randomize backoff timing
-- **Queue with Cloud Tasks** - Decouple ingestion from processing
-- **Monitor rate limit headers** - Track remaining quota
+- **Request quota early** — Submit increase request before development starts
+- **Disable zonal redundancy** — Use 1 GPU instead of 2 for dev/staging
+- **Start in one region** — Expand to multi-region after quota approved
+- **Have CPU fallback ready** — Docling OCR as backup when GPU unavailable
 
 **Warning signs:**
-- 429 errors in logs
-- Processing time variance (fast, then slow, then fast)
-- Successful small batches, failed large batches
-- Retries without backoff in code
+- Deployment succeeds but pod never starts
+- "Quota exceeded" in Cloud Run logs
+- Works in one environment but not another
+- Intermittent deployment failures (quota race conditions)
 
-**Phase to address:** Phase 2 (LLM Client) - Build rate limiting into client, Phase 4 (API) - Add Cloud Tasks queue
+**Phase to address:** Phase 0 (Setup) — Request GPU quota before any LightOnOCR development
 
 **Sources:**
-- [API Rate Limits Best Practices 2025](https://orq.ai/blog/api-rate-limit)
-- [Apigee LLM Token Policies](https://docs.cloud.google.com/apigee/docs/api-platform/tutorials/using-ai-token-policies)
+- [Cloud Run GPU Documentation](https://docs.google.com/run/docs/configuring/services/gpu) — Quota limitations
+
+---
+
+### Pitfall 10: SourceReference Schema Migration Complexity
+
+**What goes wrong:**
+Current `SourceReference` model has `page_number` and `snippet`. Adding `char_start` and `char_end` for LangExtract requires database migration. But existing records don't have character offsets, and Docling-extracted records will never have them. Schema becomes inconsistent.
+
+**Why it happens:**
+- Two extraction methods have different capabilities
+- Cannot backfill character offsets for existing records
+- Nullable fields create optional handling throughout codebase
+- API consumers don't know which method produced which record
+
+**How to avoid:**
+- **Version the source reference** — `SourceReferenceV1` (page-based) vs `SourceReferenceV2` (character-based)
+- **Use union type** — `source: PageSource | CharacterSource`
+- **Add extraction_method field** — Record which method produced each extraction
+- **Migrate incrementally** — New extractions get new schema, old records unchanged
+
+**Warning signs:**
+- Frequent "is not None" checks in code
+- Different code paths for different source types
+- API response format varies by record
+- Test coverage gaps on older records
+
+**Phase to address:** Phase 1 (LangExtract Integration) — Design schema evolution before any database changes
 
 ---
 
 ## Medium Pitfalls (Severity: MEDIUM)
 
-These cause friction and quality issues. Address in Phase 3-4.
+These cause friction and quality issues. Address during implementation.
 
 ---
 
-### Pitfall 9: Multi-Borrower Deduplication Failures
+### Pitfall 11: LightOnOCR Image Preprocessing Mismatches
 
 **What goes wrong:**
-Same borrower appears multiple times in output. Or worse, two different borrowers get merged. Loan documents often mention the same person multiple times across different documents (application, verification letters, tax forms).
+LightOnOCR expects images rendered at 1540px longest dimension with maintained aspect ratio. PDF pages rendered at different resolutions or cropped produce degraded OCR quality. Scanned documents at 300 DPI vs 72 DPI behave differently.
 
 **Why it happens:**
-- Name variations: "John Smith", "John Q. Smith", "J. Smith"
-- Address variations: "123 Main St" vs "123 Main Street, Apt 4B"
-- Insufficient matching signals after extraction
-- LLM extracts each mention as separate person
+- Model trained on specific image characteristics
+- Different PDF renderers produce different pixel dimensions
+- Existing Docling pipeline may resize images differently
+- No validation that images meet requirements
 
 **How to avoid:**
-- **Multi-signal matching** - SSN match is definitive; name+address is fuzzy
-- **Fuzzy name matching** - Use phonetic matching (Soundex) + edit distance
-- **Address normalization** - Standardize before comparison
-- **Confidence-weighted merging** - Higher confidence extractions win conflicts
-- **Human review queue** - Low-confidence merges get flagged
+- **Standardize preprocessing** — All PDF pages through same rendering pipeline
+- **Validate dimensions before OCR** — Reject/resize images that don't meet requirements
+- **Test with actual scanned documents** — Not just clean digital PDFs
+- **Compare against Docling OCR quality** — Baseline for quality regression
 
 **Warning signs:**
-- More borrowers extracted than documents suggest
-- Borrowers with very similar names
-- Same SSN appearing in multiple borrower records
-- Address variations for same apparent person
+- OCR quality varies between documents of similar visual quality
+- Some pages have excellent OCR, others are garbage
+- Processing time varies wildly for similar page counts
+- Different results for same PDF rendered different ways
 
-**Phase to address:** Phase 2 (Extractor) - Build deduplication into extraction pipeline
+**Phase to address:** Phase 2 (LightOnOCR Service) — Implement preprocessing pipeline before production deployment
 
 ---
 
-### Pitfall 10: Schema Evolution Lock-in
+### Pitfall 12: API Method Selection Parameter Conflicts
 
 **What goes wrong:**
-Initial schema doesn't capture all needed fields. Adding new fields requires database migrations, API changes, frontend updates, and re-extraction of all documents. The 3-day timeline doesn't allow for schema pivots.
+API accepts `extraction_method` and `ocr_method` parameters. Users specify conflicting combinations (e.g., LangExtract method with Docling OCR but LangExtract expects LightOnOCR). Invalid combinations cause confusing errors.
 
 **Why it happens:**
-- Rushing to implement without analyzing full document corpus
-- Treating loan docs as homogeneous when they vary significantly
-- Not planning for fields discovered late in development
+- Method dependencies not encoded in API schema
+- Frontend doesn't validate combinations
+- Error messages don't explain valid combinations
+- Testing covers happy paths, not conflict cases
 
 **How to avoid:**
-- **Spend 2-4 hours on corpus analysis first** - What fields actually appear?
-- **Use JSONB for flexible fields** - Core fields in columns, extras in JSON
-- **Design for extension** - `metadata: dict` field for unknown fields
-- **Version your schemas** - Allow old and new extractions to coexist
+- **Define valid combinations explicitly** — Enum of supported configurations
+- **Validate at API boundary** — Reject invalid combinations with helpful error
+- **Default to recommended combination** — Smart defaults reduce user error
+- **Document compatibility matrix** — Which methods work with which OCR options
 
 **Warning signs:**
-- Discovering new field types on day 2
-- Frequent Alembic migrations
-- "We didn't think about X" conversations
-- Hard-coded field lists
+- User bug reports about "it doesn't work"
+- Same document succeeds with one combination, fails with another
+- Error messages don't mention parameter conflicts
+- Tests pass because they only use valid combinations
 
-**Phase to address:** Phase 0 (Planning) - Analyze corpus before defining schemas
+**Phase to address:** Phase 4 (API Enhancement) — Define valid method combinations in schema
 
 ---
 
-### Pitfall 11: Docling Silent Failures
+### Pitfall 13: LangExtract Rate Limit Differences from Gemini Direct
 
 **What goes wrong:**
-Docling returns empty results without raising errors. Processing appears to succeed but no content is extracted. This is particularly common with certain image types embedded in PDFs.
+LangExtract uses Gemini API internally but has its own rate limiting behavior. Existing rate limiting code designed for direct Gemini calls doesn't account for LangExtract's multi-call patterns (chunking, multiple passes). Rate limits hit unexpectedly.
 
 **Why it happens:**
-- Specific image formats trigger processing failures
-- OCR pipeline silently skips problematic pages
-- Kubernetes deployment missing required system dependencies
-- Memory limits exceeded on large documents
+- LangExtract makes multiple Gemini calls per document
+- Chunking multiplies API calls
+- Multi-pass extraction multiplies again
+- Existing rate limiter counts documents, not underlying API calls
 
 **How to avoid:**
-- **Validate extraction results** - Check content length, not just success status
-- **Page-by-page processing with validation** - Detect which pages failed
-- **System dependency checklist** - Ensure all OCR dependencies installed
-- **Memory monitoring** - Track memory usage during processing
-- **Fallback extraction method** - PyPDF2 as backup for text-only PDFs
+- **Request Tier 2 quota** — LangExtract recommends this for production
+- **Configure chunk size for rate limits** — Larger chunks = fewer API calls
+- **Monitor actual API call count** — Not just document count
+- **Add buffer for LangExtract overhead** — 3-5x more calls than direct Gemini
 
 **Warning signs:**
-- Empty markdown output without errors
-- Very fast processing (nothing was processed)
-- Works locally, fails in container
-- Inconsistent results across documents
+- Rate limiting at lower document throughput than expected
+- Works fine for single documents, fails for batches
+- Gemini quota dashboard shows higher usage than expected
+- Inconsistent failures at batch boundaries
 
-**Phase to address:** Phase 1 (Docling Processor) - Add validation and fallback handling
+**Phase to address:** Phase 1 (LangExtract Integration) — Configure rate limiting based on actual API call patterns
 
 **Sources:**
-- [Docling Empty Markdown Issue](https://github.com/docling-project/docling/issues/2311)
-- [Docling PDF with OCR Extraction Issues](https://github.com/docling-project/docling/discussions/2182)
+- [LangExtract Documentation](https://github.com/google/langextract) — Tier 2 quota recommendation
 
 ---
 
-## Timeline-Specific Pitfalls (3-Day Deadline)
-
----
-
-### Pitfall 12: Scope Creep Death Spiral
+### Pitfall 14: CloudBuild Service Account Permission Gaps
 
 **What goes wrong:**
-Day 1: "Let's also add confidence scoring!" Day 2: "We need a dashboard!" Day 3: Incomplete extraction, incomplete UI, incomplete everything. 52% of projects experience scope creep, with 43% significantly impacting success.
+CloudBuild can't deploy to Cloud Run, access Secret Manager, or push to Artifact Registry. Build fails with permission denied. Permissions that worked for Terraform don't automatically work for CloudBuild.
 
 **Why it happens:**
-- Good ideas emerge during implementation
-- Stakeholder requests seem small ("just add...")
-- No clear definition of "done"
-- Fear of shipping "incomplete" product
+- CloudBuild uses different service account than Terraform
+- IAM permissions are method-specific (API vs gcloud)
+- Secret Manager requires explicit accessor permission
+- Artifact Registry push needs repository-level permissions
 
 **How to avoid:**
-- **Write down MVP scope in first hour** - What ships on day 3?
-- **"Not in v1" list** - Explicitly list what you're NOT building
-- **Time-box features** - If it takes >2 hours, defer it
-- **Daily checkpoint** - Are we on track for day 3 ship?
-- **Say "Yes, in v2"** - Acknowledge good ideas without committing
+- **Use dedicated CloudBuild service account** — Not default compute service account
+- **Grant minimal required permissions** — Run invoker, secret accessor, artifact registry writer
+- **Test permissions before full migration** — Deploy hello-world first
+- **Document IAM configuration** — Part of migration runbook
 
 **Warning signs:**
-- "While we're at it..." conversations
-- Features added without removing others
-- End of day 1 with no working extraction
-- Working on UI before extraction works
+- "Permission denied" at different build steps
+- Works for some resources, fails for others
+- Same commands work locally but fail in CloudBuild
+- Intermittent failures (IAM propagation delays)
 
-**Phase to address:** Phase 0 (Planning) - Lock scope before coding starts
-
-**Sources:**
-- [Navigating Scope Creep in Software Projects](https://medium.com/@denismwg/navigating-scope-creep-in-software-projects-5-strategies-that-work-ec8a35684fdb)
-- [What Is Scope Creep - Asana 2025](https://asana.com/resources/what-is-scope-creep)
-
----
-
-### Pitfall 13: Premature Infrastructure Investment
-
-**What goes wrong:**
-Day 1 spent on Terraform, Docker, CI/CD. Day 2 realizes extraction doesn't work. Day 3 scrambling to fix core functionality with no time for integration.
-
-**Why it happens:**
-- "Do it right the first time" mindset
-- Infrastructure feels productive (things are being created!)
-- Fear of "doing it wrong" without proper setup
-- Following PRD phases in strict order
-
-**How to avoid:**
-- **Core functionality first** - Extraction working locally before any infra
-- **Infrastructure on day 2.5** - After core is proven
-- **Use managed services** - Cloud Run, Cloud SQL require minimal config
-- **Script, don't Terraform** - Manual deploy scripts are fine for day 3
-
-**Warning signs:**
-- Terraform files before Python files
-- Docker builds before extraction runs
-- CI/CD setup before tests exist
-- More time in GCP console than VSCode
-
-**Phase to address:** Phase 0 (Planning) - Prioritize core functionality over infrastructure
-
----
-
-### Pitfall 14: Over-Testing Before Working
-
-**What goes wrong:**
-Extensive test suite for code that doesn't work yet. Tests become maintenance burden as implementation changes. TDD is good, but not when exploring unknowns.
-
-**Why it happens:**
-- PRD specifies TDD workflow
-- Testing feels like progress
-- Fear of shipping untested code
-- Misunderstanding TDD granularity
-
-**How to avoid:**
-- **Spike first, test second** - For unknowns, prototype without tests
-- **Test interfaces, not implementations** - Tests for stable boundaries
-- **Integration tests over unit tests initially** - Verify end-to-end works
-- **80% coverage target is for day 3** - Not day 1
-
-**Warning signs:**
-- More test code than implementation code on day 1
-- Frequent test rewrites due to implementation changes
-- High coverage but extraction doesn't work
-- "Tests pass but I don't know if it works"
-
-**Phase to address:** Phase 1-2 - Test critical paths, defer comprehensive testing
+**Phase to address:** Phase 3 (CloudBuild Migration) — Configure service account permissions first
 
 ---
 
@@ -442,27 +446,27 @@ Shortcuts that seem reasonable but create long-term problems.
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Hardcoded prompts | Fast iteration | Prompt changes require code deploy | MVP only, extract to config immediately after |
-| Synchronous extraction | Simple architecture | Can't handle large documents | Never for production |
-| No retry logic | Simpler code | Any API hiccup causes failure | Never |
-| Global error handling | Quick error recovery | Masks root causes | Never |
-| String concatenation for prompts | Easy to write | Injection vulnerabilities | Never |
-| Single model for all docs | No complexity classifier needed | 3-5x cost on simple docs | MVP acceptable if budget allows |
+| Skip character offset storage | Faster implementation | Can't do character-level highlighting | Never for LangExtract integration |
+| Single extraction method | Simpler code | Stuck if method has issues | MVP only, add flexibility immediately after |
+| GPU always-on | No cold starts | $485/month baseline cost | Only if processing >1000 docs/month |
+| CloudBuild without Terraform | Simpler deployment | No drift detection | If team commits to no Terraform forever |
+| Same schema for both methods | Less migration work | Nullable fields everywhere | Never — use versioned schemas |
+| Skip OCR method routing | All docs use GPU | Wasted GPU on digital PDFs | Never for production |
 
 ---
 
 ## Integration Gotchas
 
-Common mistakes when connecting to external services.
+Common mistakes when connecting new components to existing system.
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Gemini API | Using chat format for extraction | Use structured output with response_mime_type |
-| Gemini API | Assuming temperature=0 is deterministic | Still varies; design for non-determinism |
-| Docling | Assuming PDF = text | Many PDFs are image-only, require OCR |
-| Cloud Storage | Signed URLs without expiration | Always set reasonable expiration (15 min) |
-| Cloud SQL | Synchronous connections in async code | Use asyncpg with connection pooling |
-| Cloud Tasks | Assuming at-most-once delivery | Design for at-least-once (idempotency) |
+| LangExtract + Docling | Pass markdown to LangExtract | Pass raw text to preserve offset accuracy |
+| LangExtract + Existing Extractor | Replace BorrowerExtractor | Add LangExtractExtractor as alternative |
+| LightOnOCR + DoclingProcessor | Replace Docling OCR | Route scanned docs to LightOnOCR, keep Docling for rest |
+| CloudBuild + Secrets | Hardcode secrets in yaml | Use Secret Manager substitutions |
+| New schema + Old data | Force migration of all records | Coexist with version field |
+| GPU service + Existing API | New endpoint | New parameter on existing endpoint |
 
 ---
 
@@ -472,25 +476,11 @@ Patterns that work at small scale but fail as usage grows.
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Loading full document into memory | Works fine locally | Stream processing, chunk-based extraction | Documents >100MB |
-| Sequential page processing | Simple code flow | Parallel page extraction with asyncio.gather | Documents >50 pages |
-| No caching of Docling results | Works, just slow | Cache extracted text keyed by document hash | >10 documents/batch |
-| LLM call per page | Fine for small docs | Batch pages into chunks, single LLM call | >20 pages |
-| Unbounded result sets | Fast on test data | Pagination with default limit=50 | >1000 borrowers |
-
----
-
-## Security Mistakes
-
-Domain-specific security issues for loan document processing.
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Logging extracted PII | SSNs, income in logs exposed | Structured logging with PII redaction |
-| Storing raw documents indefinitely | Data breach exposure | Retention policy, encrypted at rest |
-| LLM prompts containing PII | PII sent to third-party API | Anonymize identifiers before LLM call |
-| No input validation on upload | Malicious files processed | File type validation, size limits, virus scan |
-| GCS buckets with public access | Documents publicly accessible | Private buckets, signed URLs only |
+| LangExtract on every document | Works for testing | Route only complex docs to LangExtract | >50 docs/day |
+| GPU service for all OCR | Fast processing | Route only scanned docs to GPU | >$100/month GPU cost |
+| Single-threaded LangExtract | Works fine | Use parallel chunk processing | Documents >20 pages |
+| Synchronous OCR routing | Simple code | Async decision with caching | Latency >5 seconds |
+| No LangExtract result caching | Fresh results | Cache by (doc_hash, example_hash) | Reprocessing same docs |
 
 ---
 
@@ -498,14 +488,14 @@ Domain-specific security issues for loan document processing.
 
 Things that appear complete but are missing critical pieces.
 
-- [ ] **Extraction works:** Often missing error handling for malformed documents - verify with corrupted PDF
-- [ ] **Source attribution:** Often missing verification that citations are accurate - verify snippets exist in source
-- [ ] **API returns data:** Often missing pagination - verify with 100+ borrowers
-- [ ] **Tests pass:** Often missing integration tests - verify full flow works, not just units
-- [ ] **Deployment works:** Often missing health checks - verify Cloud Run restarts on failure
-- [ ] **Database stores data:** Often missing indices - verify query performance at scale
-- [ ] **Frontend displays:** Often missing error states - verify behavior when API fails
-- [ ] **Confidence scoring:** Often missing calibration - verify scores correlate with actual accuracy
+- [ ] **LangExtract integration:** Often missing character offset storage — verify offsets saved to database
+- [ ] **LightOnOCR service:** Often missing image preprocessing — verify images meet 1540px requirement
+- [ ] **CloudBuild pipeline:** Often missing rollback capability — verify can deploy previous version
+- [ ] **Dual extraction:** Often missing method comparison — verify same doc produces comparable results
+- [ ] **GPU routing:** Often missing cost monitoring — verify GPU usage tracked in dashboard
+- [ ] **Schema migration:** Often missing backward compatibility — verify old records still work
+- [ ] **API method selection:** Often missing validation — verify invalid combinations rejected
+- [ ] **Few-shot examples:** Often missing alignment verification — verify no prompt warnings
 
 ---
 
@@ -515,12 +505,16 @@ When pitfalls occur despite prevention, how to recover.
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Hallucinated data in production | HIGH | Flag all records from affected period, re-extract with validation, manual review |
-| Source attribution broken | MEDIUM | Add verification layer, re-process recent extractions, backfill provenance |
-| Rate limit exhaustion | LOW | Implement backoff, wait for quota reset, request limit increase |
-| Silent Docling failures | MEDIUM | Add validation checks, reprocess failed documents with fallback method |
-| Schema needs new field | MEDIUM | Add JSONB column for flexibility, migrate incrementally |
-| Test suite unreliable | MEDIUM | Separate deterministic/non-deterministic tests, implement recording/replay |
+| Character offset mismatch | MEDIUM | Add offset translation layer, reprocess recent documents |
+| Few-shot example misalignment | LOW | Fix examples, rerun affected extractions |
+| GPU cost overrun | LOW | Add routing logic, reduce min_instances to 0 |
+| Terraform state orphaning | HIGH | Manually import resources or recreate with new names |
+| Dual method inconsistency | MEDIUM | Pick primary method, deprecate secondary |
+| LightOnOCR integration failure | MEDIUM | Fall back to Docling OCR, defer GPU service |
+| CloudBuild permission failure | LOW | Grant missing permissions, retry |
+| GPU quota denial | MEDIUM | Use CPU fallback, escalate quota request |
+| Schema migration issues | HIGH | Add version field, maintain dual schema |
+| Rate limit exhaustion | LOW | Request quota increase, add backoff |
 
 ---
 
@@ -530,90 +524,94 @@ How roadmap phases should address these pitfalls.
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| LLMs as OCR | Phase 1 (Ingestion) | Docling extracts, LLM receives text |
-| Source attribution theater | Phase 2 (Extraction) | Every extraction has verifiable source |
-| Structured output None | Phase 2 (LLM Client) | None handling in client code |
-| Numeric catastrophe | Phase 2 (Validation) | Cross-validation rules pass |
-| "Works on test docs" | Phase 1 (Integration) | Real document samples in test suite |
-| Cost explosion | Phase 2 (LLM Client) | Cost tracking and caching in place |
-| Non-deterministic tests | Phase 2 (Tests) | Flaky test rate <5% |
-| Rate limiting | Phase 2 (LLM Client) | Client-side rate limiting active |
-| Deduplication failures | Phase 2 (Extractor) | Dedup logic with tests |
-| Schema lock-in | Phase 0 (Planning) | Flexible schema with JSONB |
-| Docling silent failures | Phase 1 (Processor) | Validation checks in place |
-| Scope creep | Phase 0 (Planning) | Written MVP scope document |
-| Premature infrastructure | Phase 0 (Planning) | Core working before infra |
+| Character offset mismatch | Phase 1 (LangExtract) | Offset points to correct text |
+| Few-shot example alignment | Phase 1 (LangExtract) | No prompt warnings in logs |
+| GPU cold start cost | Phase 2 (LightOnOCR) | Routing logic in place |
+| Terraform state orphaning | Phase 3 (CloudBuild) | State archived, permissions revoked |
+| Dual method inconsistency | Phase 1 (LangExtract) | Normalization layer exists |
+| LightOnOCR immaturity | Phase 2 (LightOnOCR) | vLLM deployment working |
+| Multi-pass overlap | Phase 1 (LangExtract) | Deduplication integrated |
+| CloudBuild YAML errors | Phase 3 (CloudBuild) | Validated template exists |
+| GPU quota denial | Phase 0 (Setup) | Quota request submitted |
+| Schema migration | Phase 1 (LangExtract) | Versioned schema in place |
 
 ---
 
-## 3-Day Execution Strategy
+## v2.0 Execution Strategy
 
 Based on pitfall analysis, recommended approach:
 
-### Day 1: Core Extraction (Pitfalls 1, 4, 5, 11)
-- Morning: Docling processor with real document samples
-- Afternoon: Gemini client with structured output + None handling
-- Evening: Basic extraction working end-to-end
+### Phase 0: Pre-Development Setup (Before Coding)
+- Request GPU quota increase for Cloud Run L4
+- Archive Terraform state, document current infrastructure
+- Create CloudBuild service account with permissions
+- Validate LightOnOCR loads in vLLM locally
 
-### Day 2: Quality & Integration (Pitfalls 2, 3, 6, 7)
-- Morning: Source attribution with verification
-- Afternoon: Validation service for numerics
-- Evening: API endpoints with error handling
+### Phase 1: LangExtract Integration (Highest Risk)
+- Design character offset storage schema with versioning
+- Create validated few-shot example corpus from real loan docs
+- Build LangExtract extractor parallel to existing BorrowerExtractor
+- Implement offset translation layer between Docling and LangExtract
+- Test with same documents as existing Docling pipeline
 
-### Day 3: Polish & Ship (Pitfalls 12, 13)
-- Morning: Integration tests, fix issues
-- Afternoon: Minimal viable frontend
-- Evening: Deploy to Cloud Run, documentation
+### Phase 2: LightOnOCR Service (Second Highest Risk)
+- Spike vLLM deployment on Cloud Run with GPU
+- Implement image preprocessing pipeline (1540px normalization)
+- Create OCR routing logic (scanned vs digital documents)
+- Add cost monitoring and alerts
+- Test cold start latency, optimize as needed
+
+### Phase 3: CloudBuild Migration (Lower Risk)
+- Create cloudbuild.yaml from Terraform configuration
+- Test deployment of each component individually
+- Implement rollback capability
+- Migrate one environment at a time (dev -> staging -> prod)
+- Revoke Terraform service account permissions after migration
+
+### Phase 4: API Enhancement (Lowest Risk)
+- Add method selection parameters with validation
+- Implement valid combination enforcement
+- Add method metadata to responses
+- Update frontend to expose method selection
+- Add comparison mode for testing
 
 **What to explicitly defer:**
-- Complex deduplication logic (use simple exact-match)
-- Comprehensive confidence scoring (use simple heuristics)
-- Terraform (manual GCP setup is fine)
-- >80% test coverage (focus on critical paths)
+- Fine-tuning LightOnOCR for loan documents (library support "coming soon")
+- Multi-region GPU deployment (start single-region, expand later)
+- Advanced LangExtract features like multi-pass (start single-pass)
+- Automatic method selection (start with explicit selection)
 
 ---
 
 ## Sources
 
-### LLM Extraction and Hallucination
-- [Don't Use LLMs as OCR](https://medium.com/@martia_es/dont-use-llms-as-ocr-lessons-learned-from-extracting-complex-documents-db2d1fafcdfb)
-- [SafePassage: High-Fidelity Information Extraction](https://arxiv.org/html/2510.00276)
-- [Challenges in Structured Document Data Extraction at Scale](https://zilliz.com/blog/challenges-in-structured-document-data-extraction-at-scale-llms)
-- [Document Data Extraction 2026: LLMs vs OCRs](https://www.vellum.ai/blog/document-data-extraction-llms-vs-ocrs)
+### LangExtract
+- [LangExtract GitHub](https://github.com/google/langextract) — Official repository and documentation
+- [Google Developers Blog: Introducing LangExtract](https://developers.googleblog.com/introducing-langextract-a-gemini-powered-information-extraction-library/) — Launch announcement
+- [DataCamp LangExtract Tutorial](https://www.datacamp.com/tutorial/langextract) — Configuration best practices
+- [Docling + LangExtract Integration](https://dev.to/_aparna_pradhan_/the-perfect-extraction-unlocking-unstructured-data-with-docling-langextract-1j3b) — Integration architecture
 
-### Gemini API Specifics
-- [Gemini Structured Output Documentation](https://ai.google.dev/gemini-api/docs/structured-output)
-- [Structured Output Returns None Issue](https://github.com/googleapis/python-genai/issues/1039)
-- [Improving Structured Outputs in Gemini API](https://blog.google/technology/developers/gemini-api-structured-outputs/)
+### LightOnOCR
+- [LightOnOCR HuggingFace](https://huggingface.co/lightonai/LightOnOCR-1B-1025) — Model card and requirements
+- [LightOnOCR Blog](https://www.lighton.ai/lighton-blogs/making-knowledge-machine-readable) — Architecture and capabilities
+- [LightOnOCR Transformers PR](https://github.com/huggingface/transformers/pull/41621) — Integration status
 
-### Docling Issues
-- [PDF Extraction Benchmark 2025](https://procycons.com/en/blogs/pdf-data-extraction-benchmark/)
-- [Docling vs Graphlit Comparison](https://www.graphlit.com/vs/docling)
-- [Docling GitHub Issues](https://github.com/docling-project/docling/issues)
+### Cloud Run GPU
+- [Cloud Run GPU Documentation](https://docs.google.com/run/docs/configuring/services/gpu) — Configuration and requirements
+- [Cloud Run GPUs GA Announcement](https://cloud.google.com/blog/products/serverless/cloud-run-gpus-are-now-generally-available) — Best practices
+- [NVIDIA Cloud Run Blog](https://developer.nvidia.com/blog/google-cloud-run-adds-support-for-nvidia-l4-gpus-nvidia-nim-and-serverless-ai-inference-deployments-at-scale/) — L4 GPU deployment
 
-### Source Attribution
-- [SourceCheckup: Automated Citation Assessment](https://www.nature.com/articles/s41467-025-58551-6)
-- [Awesome LLM Attributions](https://github.com/HITsz-TMG/awesome-llm-attributions)
+### CloudBuild Migration
+- [Terraform to CloudBuild Integration](https://medium.com/google-cloud/integrating-our-application-ci-cd-pipelines-and-terraform-gitops-with-cloud-build-35e8d38b8468) — GitOps patterns
+- [Terraform Migration Guide](https://scalr.com/guides/platform-engineers-guide-to-migrating-off-terraform-cloud-enterprise) — State management
+- [Terraform Rollback Guide](https://scalr.com/learning-center/terraform-rollback-guide/) — Recovery strategies
 
-### Cost Management
-- [LLM Cost Optimization Guide 2025](https://futureagi.com/blogs/llm-cost-optimization-2025)
-- [Token Optimization Strategies](https://www.glukhov.org/post/2025/11/cost-effective-llm-applications/)
-
-### Testing LLM Applications
-- [Testing LLM Applications: Practical Guide](https://langfuse.com/blog/2025-10-21-testing-llm-applications)
-- [LLM Testing in 2025](https://orq.ai/blog/llm-testing)
-- [Beyond Traditional Testing](https://dev.to/aws/beyond-traditional-testing-addressing-the-challenges-of-non-deterministic-software-583a)
-
-### Loan Document Processing
-- [Mortgage Document Processing](https://unstract.com/blog/mortgage-document-processing-and-automation-with-unstract/)
-- [Data Extraction in Lending](https://www.docsumo.com/blogs/data-extraction/lending-industry)
-
-### Project Management
-- [Scope Creep in Software Projects](https://medium.com/@denismwg/navigating-scope-creep-in-software-projects-5-strategies-that-work-ec8a35684fdb)
-- [What Is Scope Creep - Asana](https://asana.com/resources/what-is-scope-creep)
+### Zero-Downtime Deployment
+- [Zero Downtime with Terraform](https://www.hashicorp.com/en/blog/zero-downtime-updates-with-terraform) — Deployment patterns
+- [Cloud Deployment Best Practices 2025](https://octopus.com/devops/cloud-deployment/) — Modern deployment strategies
 
 ---
 
-*Pitfalls research for: LLM-Based Loan Document Extraction System*
-*Researched: 2026-01-23*
-*Confidence: HIGH*
+*Pitfalls research for: v2.0 LangExtract, LightOnOCR, and CloudBuild Migration*
+*Researched: 2026-01-24*
+*Confidence: MEDIUM (LangExtract is new, limited production experience reports)*
