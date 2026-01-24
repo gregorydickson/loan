@@ -129,7 +129,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 06-01-PLAN.md - Terraform foundation (providers, variables, VPC, IAM)
+- [x] 06-01-PLAN.md - Terraform foundation (providers, variables, VPC, IAM)
 - [ ] 06-02-PLAN.md - Dockerfiles and deployment scripts
 - [ ] 06-03-PLAN.md - GCP managed services (Cloud SQL, Cloud Storage, Cloud Tasks)
 - [ ] 06-04-PLAN.md - Cloud Run services and outputs
@@ -164,9 +164,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. LLM Extraction & Validation | 5/5 | Complete | 2026-01-24 |
 | 4. Data Storage & REST API | 3/3 | Complete | 2026-01-24 |
 | 5. Frontend Dashboard | 5/5 | Complete | 2026-01-24 |
-| 6. GCP Infrastructure | 0/4 | Not started | - |
+| 6. GCP Infrastructure | 1/4 | In progress | - |
 | 7. Documentation & Testing | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Phase 6 planned)*
+*Last updated: 2026-01-24 (06-01 complete)*
