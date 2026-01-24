@@ -96,7 +96,7 @@ Plans:
 - [x] 04-02-PLAN.md - CORS middleware, exception handlers, document status endpoint
 - [x] 04-03-PLAN.md - Borrower API endpoints with search and pagination
 
-### Phase 5: Frontend Dashboard
+### Phase 5: Frontend Dashboard ✅
 **Goal**: Provide a visual interface for document upload, borrower browsing, and architecture documentation
 **Depends on**: Phase 4
 **Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09, UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-17, UI-18, UI-19, UI-20, UI-21, UI-22, UI-23, UI-24, UI-25, UI-26, UI-27, UI-28, UI-29, UI-30, UI-31, UI-32, UI-33, UI-34, UI-35, UI-36, UI-37
@@ -126,12 +126,13 @@ Plans:
   3. Frontend Cloud Run service serves the dashboard at deployed URL
   4. Document uploads flow through the complete pipeline to extracted borrowers
   5. Deployment scripts automate the full deploy process
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 06-01: Terraform configuration for GCP resources
-- [ ] 06-02: Dockerfiles for backend and frontend
-- [ ] 06-03: Deployment scripts and CI/CD setup
+- [ ] 06-01-PLAN.md - Terraform foundation (providers, variables, VPC, IAM)
+- [ ] 06-02-PLAN.md - Dockerfiles and deployment scripts
+- [ ] 06-03-PLAN.md - GCP managed services (Cloud SQL, Cloud Storage, Cloud Tasks)
+- [ ] 06-04-PLAN.md - Cloud Run services and outputs
 
 ### Phase 7: Documentation & Testing
 **Goal**: Complete system documentation and achieve >80% test coverage with type safety
@@ -163,9 +164,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. LLM Extraction & Validation | 5/5 | Complete | 2026-01-24 |
 | 4. Data Storage & REST API | 3/3 | Complete | 2026-01-24 |
 | 5. Frontend Dashboard | 5/5 | Complete | 2026-01-24 |
-| 6. GCP Infrastructure | 0/3 | Not started | - |
+| 6. GCP Infrastructure | 0/4 | Not started | - |
 | 7. Documentation & Testing | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Phase 5 gap closure planned)*
+*Last updated: 2026-01-24 (Phase 6 planned)*
