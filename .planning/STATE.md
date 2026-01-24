@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 4 of 7 (Data Storage & REST API)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-01-24 - Phase 3 verified complete (6/6 criteria)
+Plan: 2 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-24 - Completed 04-02-PLAN.md (CORS, Exception Handlers, Status Endpoint)
 
-Progress: [████████████] 43%
+Progress: [██████████████░░░░░░░░░░░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 7.9 min
-- Total execution time: 1.58 hours
+- Total execution time: 1.72 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [████████████] 43%
 | 01-foundation | 3 | 17 min | 5.7 min |
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
+| 04-data-storage-rest-api | 1 | 8 min | 8.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min, 5 min, 10 min, 14 min, 14 min
-- Trend: Increasing (more complex work)
+- Last 5 plans: 5 min, 10 min, 14 min, 14 min, 8 min
+- Trend: Stabilizing around 10 min
 
 *Updated after each plan completion*
 
@@ -118,6 +119,12 @@ Recent decisions affecting current work:
 - Consistency runs AFTER deduplication (flags review items, doesn't resolve)
 - Cross-document checks use normalized names for matching
 
+**Phase 04-01 Decisions:**
+- selectinload() for all relationship loading to prevent N+1 queries
+- Chained selectinload for nested document relationship on SourceReference
+- search_by_name loads only income_records (list view optimization)
+- search_by_account uses unique() to prevent duplicate borrowers from joins
+
 ### Pending Todos
 
 None yet.
@@ -128,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 04:30 UTC
-Stopped at: Completed Phase 3 (LLM Extraction & Validation) - 5/5 plans executed and verified
+Last session: 2026-01-24 05:18 UTC
+Stopped at: Completed 04-01-PLAN.md (BorrowerRepository)
 Resume file: None
