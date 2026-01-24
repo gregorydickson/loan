@@ -6,9 +6,9 @@ Uses Application Default Credentials (ADC) for authentication:
 """
 
 from datetime import timedelta
-from typing import BinaryIO
+from typing import BinaryIO, cast
 
-from google.cloud import storage
+from google.cloud import storage  # type: ignore[attr-defined]
 from google.cloud.exceptions import NotFound
 
 
@@ -124,7 +124,7 @@ class GCSClient:
         """
         try:
             blob = self.bucket.blob(path)
-            return blob.download_as_bytes()
+            return cast(bytes, blob.download_as_bytes())
         except NotFound as e:
             raise GCSDownloadError(f"File not found: {path}") from e
         except Exception as e:
@@ -159,7 +159,7 @@ class GCSClient:
             True if file exists, False otherwise
         """
         blob = self.bucket.blob(path)
-        return blob.exists()
+        return cast(bool, blob.exists())
 
     def delete(self, path: str) -> None:
         """Delete a file from storage.
@@ -199,10 +199,13 @@ class GCSClient:
             On Cloud Run, uses impersonated credentials automatically.
         """
         blob = self.bucket.blob(path)
-        return blob.generate_signed_url(
-            version="v4",
-            expiration=timedelta(minutes=expiration_minutes),
-            method=method,
+        return cast(
+            str,
+            blob.generate_signed_url(
+                version="v4",
+                expiration=timedelta(minutes=expiration_minutes),
+                method=method,
+            ),
         )
 
     def parse_gcs_uri(self, uri: str) -> tuple[str, str]:

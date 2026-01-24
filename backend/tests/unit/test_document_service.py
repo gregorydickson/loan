@@ -394,6 +394,7 @@ class TestDocumentServiceProcessing:
             page_count=5,
         )
 
+        assert result is not None
         assert result.status == DocumentStatus.COMPLETED
         mock_repository.update_status.assert_called_once_with(
             updated_doc.id,
@@ -429,6 +430,7 @@ class TestDocumentServiceProcessing:
             error_message="OCR failed",
         )
 
+        assert result is not None
         assert result.status == DocumentStatus.FAILED
         mock_repository.update_status.assert_called_once_with(
             doc_id,

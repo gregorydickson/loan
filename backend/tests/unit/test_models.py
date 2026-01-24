@@ -396,6 +396,7 @@ class TestModelJsonRoundtrip:
         assert restored.name == original.name
         assert restored.confidence_score == original.confidence_score
         assert restored.id == original.id
+        assert original.address is not None
         assert restored.address is not None
         assert restored.address.street == original.address.street
         assert restored.address.city == original.address.city
@@ -545,13 +546,22 @@ class TestDocumentMetadataStatus:
                 file_hash="abc123",
                 file_type="pdf",
                 file_size_bytes=1024,
-                status="unknown",  # Invalid
+                status="unknown",  # type: ignore[arg-type]  # Intentional invalid value
             )
         assert "status" in str(exc_info.value)
 
     def test_valid_file_types(self) -> None:
         """All valid file types pass validation."""
-        for file_type in ["pdf", "docx", "png", "jpg", "jpeg"]:
+        from typing import Literal
+
+        file_types: list[Literal["pdf", "docx", "png", "jpg", "jpeg"]] = [
+            "pdf",
+            "docx",
+            "png",
+            "jpg",
+            "jpeg",
+        ]
+        for file_type in file_types:
             doc = DocumentMetadata(
                 filename=f"test.{file_type}",
                 file_hash="abc123",
@@ -566,7 +576,7 @@ class TestDocumentMetadataStatus:
             DocumentMetadata(
                 filename="test.txt",
                 file_hash="abc123",
-                file_type="txt",  # Invalid
+                file_type="txt",  # type: ignore[arg-type]  # Intentional invalid value
                 file_size_bytes=1024,
             )
         assert "file_type" in str(exc_info.value)

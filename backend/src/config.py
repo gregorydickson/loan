@@ -3,7 +3,7 @@
 Uses pydantic-settings for type-safe configuration with .env file support.
 """
 
-from pydantic import Field, PostgresDsn, RedisDsn
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,16 +16,16 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    # Database
-    database_url: PostgresDsn = Field(
+    # Database - use str instead of PostgresDsn for simpler default handling
+    database_url: str = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/loan_extraction",
         description="Async PostgreSQL connection URL",
     )
     db_pool_size: int = Field(default=20, ge=1, le=100)
     db_max_overflow: int = Field(default=10, ge=0, le=50)
 
-    # Redis
-    redis_url: RedisDsn = Field(
+    # Redis - use str instead of RedisDsn for simpler default handling
+    redis_url: str = Field(
         default="redis://localhost:6379/0",
         description="Redis connection URL",
     )

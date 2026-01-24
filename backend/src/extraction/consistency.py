@@ -12,6 +12,7 @@ VALID-07, VALID-08, VALID-09: Conflicts are reported for review, not silently re
 """
 
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
 from src.models.borrower import BorrowerRecord
@@ -34,7 +35,7 @@ class ConsistencyWarning:
     borrower_id: UUID
     field: str
     message: str
-    details: dict
+    details: dict[str, Any]
 
 
 class ConsistencyValidator:

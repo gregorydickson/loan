@@ -319,6 +319,7 @@ class TestGeminiClientAsync:
 
         assert isinstance(response, LLMResponse)
         assert response.parsed is not None
+        assert isinstance(response.parsed, SampleBorrower)
         assert response.parsed.name == "Async Test"
         assert response.parsed.age == 42
         assert response.input_tokens == 200

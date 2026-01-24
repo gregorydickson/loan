@@ -36,10 +36,10 @@ class TestSampleDocumentExtraction:
         if not sample_pdf:
             pytest.skip("No sample PDF found in fixtures directory")
 
-        with open(sample_pdf, "rb") as f:
+        with open(sample_pdf, "rb") as file_handle:
             response = await client.post(
                 "/api/documents/",
-                files={"file": (sample_pdf.name, f, "application/pdf")},
+                files={"file": (sample_pdf.name, file_handle, "application/pdf")},
             )
 
         assert response.status_code == 201

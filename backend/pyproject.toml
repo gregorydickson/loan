@@ -59,7 +59,13 @@ markers = [
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-exclude = ["tests/", "alembic/"]
+exclude = ["alembic/"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+disallow_incomplete_defs = false
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

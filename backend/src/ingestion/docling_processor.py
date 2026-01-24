@@ -12,7 +12,7 @@ from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 # Docling imports
-from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.document_converter import DocumentConverter, FormatOption, PdfFormatOption
 from pydantic import BaseModel, Field
 
 
@@ -81,7 +81,7 @@ class DoclingProcessor:
         pipeline_options.do_ocr = self.enable_ocr
         pipeline_options.do_table_structure = self.enable_tables
 
-        format_options = {
+        format_options: dict[InputFormat, FormatOption] = {
             InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
         }
 

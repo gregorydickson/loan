@@ -204,7 +204,9 @@ class DocumentService:
                 page_count=result.page_count,
             )
             # Refresh document to get updated status
-            document = await self.repository.get_by_id(document_id)
+            refreshed = await self.repository.get_by_id(document_id)
+            if refreshed is not None:
+                document = refreshed
         except DocumentProcessingError as e:
             await self.update_processing_result(
                 document_id,
@@ -212,7 +214,9 @@ class DocumentService:
                 error_message=f"Document processing failed: {e.message}",
             )
             # Refresh document to get updated status
-            document = await self.repository.get_by_id(document_id)
+            refreshed = await self.repository.get_by_id(document_id)
+            if refreshed is not None:
+                document = refreshed
 
         return document
 
