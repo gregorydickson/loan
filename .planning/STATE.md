@@ -149,6 +149,14 @@ Recent decisions affecting current work:
 - Upload zone shows truncated document ID in success message for verification
 - Detail page polls status only when document is pending/processing
 
+**Phase 05-03 Decisions:**
+- Search uses useDeferredValue with ref tracking to avoid effect state updates
+- Pagination only shown in list mode, not search mode
+- Confidence badge colors: default (green) >= 0.7, secondary (yellow) >= 0.5, destructive (red) < 0.5
+- Income timeline sorted descending by year (newest first)
+- Source references grouped by document_id to reduce visual clutter
+- Detail page uses two-column layout on desktop (lg:grid-cols-2), stacked on mobile
+
 **Phase 05-04 Decisions:**
 - Mermaid initialized in useEffect to avoid SSR errors
 - Error boundary shows raw chart on render failure for debugging
