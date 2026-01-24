@@ -9,7 +9,7 @@ from src.ingestion.docling_processor import DoclingProcessor
 from src.ingestion.document_service import DocumentService
 from src.storage.database import DBSession
 from src.storage.gcs_client import GCSClient
-from src.storage.repositories import DocumentRepository
+from src.storage.repositories import BorrowerRepository, DocumentRepository
 
 # GCS Client dependency
 _gcs_client: GCSClient | None = None
@@ -78,6 +78,14 @@ def get_document_repository(session: DBSession) -> DocumentRepository:
 DocumentRepoDep = Annotated[DocumentRepository, Depends(get_document_repository)]
 
 
+def get_borrower_repository(session: DBSession) -> BorrowerRepository:
+    """Get borrower repository with session."""
+    return BorrowerRepository(session)
+
+
+BorrowerRepoDep = Annotated[BorrowerRepository, Depends(get_borrower_repository)]
+
+
 def get_document_service(
     repository: DocumentRepoDep,
     gcs_client: GCSClientDep,
@@ -102,5 +110,7 @@ __all__ = [
     "DoclingProcessorDep",
     "DocumentRepoDep",
     "DocumentServiceDep",
+    "BorrowerRepoDep",
     "EntityNotFoundError",
+    "get_borrower_repository",
 ]
