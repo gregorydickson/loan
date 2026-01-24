@@ -19,9 +19,9 @@ Progress: [██████████████░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 7.9 min
-- Total execution time: 1.72 hours
+- Total plans completed: 14
+- Average duration: 7.7 min
+- Total execution time: 1.80 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [██████████████░░░░░░░░░
 | 01-foundation | 3 | 17 min | 5.7 min |
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
-| 04-data-storage-rest-api | 1 | 8 min | 8.0 min |
+| 04-data-storage-rest-api | 2 | 13 min | 6.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min, 10 min, 14 min, 14 min, 8 min
-- Trend: Stabilizing around 10 min
+- Last 5 plans: 10 min, 14 min, 14 min, 8 min, 5 min
+- Trend: Fast for API plans
 
 *Updated after each plan completion*
 
@@ -125,6 +125,12 @@ Recent decisions affecting current work:
 - search_by_name loads only income_records (list view optimization)
 - search_by_account uses unique() to prevent duplicate borrowers from joins
 
+**Phase 04-02 Decisions:**
+- CORS origins include localhost:3000, localhost:5173, and 127.0.0.1 variants
+- CORS middleware added FIRST before exception handlers and routers
+- Status endpoint placed BEFORE /{document_id} to avoid route conflicts
+- EntityNotFoundError re-exported from dependencies.py for API convenience
+
 ### Pending Todos
 
 None yet.
@@ -135,6 +141,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 05:18 UTC
-Stopped at: Completed 04-01-PLAN.md (BorrowerRepository)
+Last session: 2026-01-24 13:50 UTC
+Stopped at: Completed 04-02-PLAN.md (CORS, Exception Handlers, Status Endpoint)
 Resume file: None
