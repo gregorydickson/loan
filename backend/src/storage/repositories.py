@@ -8,10 +8,18 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from src.storage.models import Document, DocumentStatus
+from src.storage.models import (
+    AccountNumber,
+    Borrower,
+    Document,
+    DocumentStatus,
+    IncomeRecord,
+    SourceReference,
+)
 
 
 class DocumentRepository:
@@ -136,3 +144,162 @@ class DocumentRepository:
             .limit(limit)
         )
         return result.scalars().all()
+
+
+class BorrowerRepository:
+    """Repository for Borrower database operations.
+
+    Provides async CRUD operations with eager loading of relationships
+    (income_records, account_numbers, source_references).
+    Uses flush() to get generated values without committing (caller controls transaction).
+    """
+
+    def __init__(self, session: AsyncSession) -> None:
+        """Initialize repository with async session.
+
+        Args:
+            session: SQLAlchemy async session for database operations
+        """
+        self.session = session
+
+    async def create(
+        self,
+        borrower: Borrower,
+        income_records: list[IncomeRecord],
+        account_numbers: list[AccountNumber],
+        source_references: list[SourceReference],
+    ) -> Borrower:
+        """Create a borrower with all related entities.
+
+        Args:
+            borrower: Borrower instance to persist
+            income_records: List of income records to associate
+            account_numbers: List of account numbers to associate
+            source_references: List of source references to associate
+
+        Returns:
+            The persisted borrower with all relationships
+        """
+        self.session.add(borrower)
+        await self.session.flush()
+
+        # Set borrower_id on all related entities and add them
+        for income in income_records:
+            income.borrower_id = borrower.id
+            self.session.add(income)
+
+        for account in account_numbers:
+            account.borrower_id = borrower.id
+            self.session.add(account)
+
+        for source in source_references:
+            source.borrower_id = borrower.id
+            self.session.add(source)
+
+        await self.session.flush()
+        await self.session.refresh(borrower)
+        return borrower
+
+    async def get_by_id(self, borrower_id: UUID) -> Borrower | None:
+        """Get borrower by ID with all relationships eagerly loaded.
+
+        Args:
+            borrower_id: UUID of the borrower to retrieve
+
+        Returns:
+            Borrower if found, None otherwise
+        """
+        result = await self.session.execute(
+            select(Borrower)
+            .where(Borrower.id == borrower_id)
+            .options(
+                selectinload(Borrower.income_records),
+                selectinload(Borrower.account_numbers),
+                selectinload(Borrower.source_references).selectinload(
+                    SourceReference.document
+                ),
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def search_by_name(
+        self, name: str, limit: int = 100, offset: int = 0
+    ) -> Sequence[Borrower]:
+        """Search borrowers by name (case-insensitive partial match).
+
+        Args:
+            name: Name or partial name to search for
+            limit: Maximum number of borrowers to return
+            offset: Number of borrowers to skip
+
+        Returns:
+            Sequence of matching borrowers ordered by name
+        """
+        result = await self.session.execute(
+            select(Borrower)
+            .where(Borrower.name.ilike(f"%{name}%"))
+            .options(selectinload(Borrower.income_records))
+            .order_by(Borrower.name)
+            .offset(offset)
+            .limit(limit)
+        )
+        return result.scalars().all()
+
+    async def search_by_account(
+        self, account_number: str, limit: int = 100, offset: int = 0
+    ) -> Sequence[Borrower]:
+        """Search borrowers by account number (case-insensitive partial match).
+
+        Args:
+            account_number: Account number or partial to search for
+            limit: Maximum number of borrowers to return
+            offset: Number of borrowers to skip
+
+        Returns:
+            Sequence of matching borrowers with income_records and account_numbers loaded
+        """
+        result = await self.session.execute(
+            select(Borrower)
+            .join(AccountNumber)
+            .where(AccountNumber.number.ilike(f"%{account_number}%"))
+            .options(
+                selectinload(Borrower.income_records),
+                selectinload(Borrower.account_numbers),
+            )
+            .order_by(Borrower.name)
+            .offset(offset)
+            .limit(limit)
+        )
+        return result.unique().scalars().all()
+
+    async def list_borrowers(
+        self, limit: int = 100, offset: int = 0
+    ) -> Sequence[Borrower]:
+        """List borrowers with pagination.
+
+        Args:
+            limit: Maximum number of borrowers to return
+            offset: Number of borrowers to skip
+
+        Returns:
+            Sequence of borrowers ordered by created_at descending
+        """
+        result = await self.session.execute(
+            select(Borrower)
+            .options(selectinload(Borrower.income_records))
+            .order_by(Borrower.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return result.scalars().all()
+
+    async def count(self) -> int:
+        """Count total number of borrowers.
+
+        Returns:
+            Total count of borrowers in database
+        """
+        result = await self.session.execute(
+            select(func.count()).select_from(Borrower)
+        )
+        return result.scalar() or 0
