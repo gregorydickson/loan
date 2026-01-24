@@ -1,18 +1,37 @@
 # Product Requirements Document
 ## Loan Document Data Extraction System
-### Optimized for Claude Code CLI Agent
+### Optimized for Parallel Subagent Execution
 
 ---
 
 | Field | Value |
 |-------|-------|
-| **Version** | 3.0 |
+| **Version** | 4.0 |
 | **Date** | January 2026 |
 | **Methodology** | Test-Driven Development (TDD) |
 | **Target Corpus** | Loan Documents |
-| **Agent** | Claude Code CLI |
+| **Agent** | Claude Code CLI with Parallel Subagents |
 | **Document Processing** | Docling |
 | **Deployment** | Google Cloud Platform |
+
+---
+
+## Parallel Execution Strategy
+
+This PRD is optimized for **parallel subagent execution**. Tasks are organized with:
+- ✅ **Explicit dependencies** - Tasks list what they depend on
+- ✅ **Parallelization markers** - Clear indicators of what can run concurrently
+- ✅ **Atomic boundaries** - Each task is self-contained with clear inputs/outputs
+- ✅ **Blocking relationships** - Prerequisites are explicitly marked
+
+### Agent Coordination Pattern
+```
+1. SPAWN     → Launch multiple subagents in parallel for independent tasks
+2. IMPLEMENT → Each agent writes tests first (TDD), then implementation
+3. SIMPLIFY  → Run code-simplifier plugin on modified files
+4. VERIFY    → Run pytest and mypy to confirm passing
+5. SYNC      → Wait for dependencies before proceeding to next phase
+```
 
 ---
 
@@ -23,7 +42,7 @@ Build an unstructured data extraction system using a provided document corpus. T
 
 ### Timeline
 - **Deadline:** 7 days from receipt
-- **Expected effort:** 4–8 hours
+- **Expected effort:** 4–8 hours (with parallel execution)
 
 ### Problem Description
 The provided folder contains a corpus of documents with variable formatting, mixed file types, and structured data embedded within unstructured text. The goal is to design and implement a system that extracts meaningful, structured data from these documents.
@@ -41,55 +60,28 @@ The solution includes logic for parsing unstructured data as well as an API inte
 ### Required Deliverables
 
 #### 1. System Design Document (Markdown)
-- ✅ Architecture overview, including component diagram
-- ✅ Data pipeline design covering ingestion, processing, storage, and retrieval
-- ✅ AI/LLM integration strategy and model selection rationale
-- ✅ Approach for handling document format variability
-- ✅ Scaling considerations for 10x and 100x document volume
-- ✅ Key technical trade-offs and reasoning
-- ✅ Error handling strategy and data quality validation approach
+- [ ] Architecture overview, including component diagram
+- [ ] Data pipeline design covering ingestion, processing, storage, and retrieval
+- [ ] AI/LLM integration strategy and model selection rationale
+- [ ] Approach for handling document format variability
+- [ ] Scaling considerations for 10x and 100x document volume
+- [ ] Key technical trade-offs and reasoning
+- [ ] Error handling strategy and data quality validation approach
 
 #### 2. Working Implementation
-- ✅ Document ingestion pipeline
-- ✅ Extraction logic using AI/LLM tooling (Gemini 3.0)
-- ✅ Structured output generation (PostgreSQL database-backed)
-- ✅ Basic query or retrieval interface (FastAPI REST API)
-- ✅ Test coverage for critical paths (>80% target)
+- [ ] Document ingestion pipeline
+- [ ] Extraction logic using AI/LLM tooling (Gemini 3.0)
+- [ ] Structured output generation (PostgreSQL database-backed)
+- [ ] Basic query or retrieval interface (FastAPI REST API)
+- [ ] Test coverage for critical paths (>80% target)
 
 #### 3. README
-- ✅ Setup and run instructions
-- ✅ Summary of architectural and implementation decisions
+- [ ] Setup and run instructions
+- [ ] Summary of architectural and implementation decisions
 
 ### Bonus
-- ✅ GCP deployment infrastructure with Terraform
-- ✅ High-fidelity frontend UI for data visualization
-
----
-
-## Agent Execution Instructions
-
-This PRD is designed for autonomous execution by Claude Code CLI. Every task follows this pattern:
-
-```
-1. IMPLEMENT  → Write tests first (TDD), then implementation
-2. SIMPLIFY   → Run code-simplifier plugin on modified files
-3. REVIEW     → Run automated code review checks
-4. FIX        → Address issues found in review
-5. VERIFY     → Run pytest and mypy to confirm all passing
-```
-
-**All tasks are agent-executable. No manual intervention required.**
-
-**Code-Simplifier Plugin Usage:**
-```
-Use the code-simplifier plugin on <file_or_directory>
-```
-
-**Verification Commands:**
-```bash
-pytest tests/ -v --cov=src                    # Test suite
-mypy src/ --strict                            # Type checking
-```
+- [ ] GCP deployment infrastructure with Terraform
+- [ ] High-fidelity frontend UI for data visualization
 
 ---
 
@@ -205,16 +197,25 @@ loan-extraction-system/
 
 ## Phase 0: Project Setup
 
+**⚡ PARALLELIZATION:** All tasks in this phase can run in parallel
+
+### Dependencies
+- None (initial setup)
+
 ### Tasks
 
 #### Task 0.1: Create Project Structure
+**Can run in parallel with:** 0.2, 0.3
 
 - [ ] **0.1.1 IMPLEMENT**: Create directory structure
   ```bash
   mkdir -p loan-extraction-system/{backend/{src/{ingestion,extraction,storage,api/routes,models},tests/{unit,integration,e2e}},frontend/{src/{app/{documents,borrowers,architecture/{decisions,pipeline,scaling},api},components/{ui,documents,borrowers,architecture},lib}},infrastructure/{terraform,scripts},docs}
   ```
 
-- [ ] **0.1.2 IMPLEMENT**: Create backend pyproject.toml
+#### Task 0.2: Backend Configuration
+**Can run in parallel with:** 0.1, 0.3
+
+- [ ] **0.2.1 IMPLEMENT**: Create backend pyproject.toml
   ```toml
   [project]
   name = "loan-extraction-backend"
@@ -258,7 +259,16 @@ loan-extraction-system/
   strict = true
   ```
 
-- [ ] **0.1.3 IMPLEMENT**: Create frontend package.json
+- [ ] **0.2.2 IMPLEMENT**: Create backend config
+  - Create `backend/src/config.py` with Pydantic Settings
+  - Create `backend/.env.example` with required variables
+
+- [ ] **0.2.3 SIMPLIFY**: Run code-simplifier plugin on `backend/src/config.py`
+
+#### Task 0.3: Frontend Configuration
+**Can run in parallel with:** 0.1, 0.2
+
+- [ ] **0.3.1 IMPLEMENT**: Create frontend package.json
   ```json
   {
     "name": "loan-extraction-frontend",
@@ -294,14 +304,13 @@ loan-extraction-system/
   }
   ```
 
-- [ ] **0.1.4 IMPLEMENT**: Create configuration files
-  - Create `backend/src/config.py` with Pydantic Settings
-  - Create `backend/.env.example` with required variables
+- [ ] **0.3.2 IMPLEMENT**: Create frontend config
   - Create `frontend/.env.example` with API URL
 
-- [ ] **0.1.5 SIMPLIFY**: Run code-simplifier plugin on `backend/src/config.py`
+#### Task 0.4: Verify Setup
+**Depends on:** 0.1, 0.2, 0.3
 
-- [ ] **0.1.6 VERIFY**: Install dependencies and verify setup
+- [ ] **0.4.1 VERIFY**: Install dependencies and verify setup
   ```bash
   cd backend && pip install -e ".[dev]"
   cd frontend && npm install
@@ -309,13 +318,22 @@ loan-extraction-system/
   mypy src/ --strict
   ```
 
+### ✅ PHASE 0 SIGN-OFF
+- [ ] All tasks completed
+- [ ] Dependencies installed
+- [ ] Project structure created
+
 ---
 
 ## Phase 1: Document Ingestion with Docling
 
-### Phase Overview
+**⚡ PARALLELIZATION:** Tasks 1.1, 1.2, 1.3 can run in parallel. Task 1.4 depends on all three.
 
+### Phase Overview
 Use Docling for document processing. Docling handles PDF, DOCX, images, and more with layout understanding and table extraction built-in.
+
+### Dependencies
+- Phase 0 complete
 
 ### Acceptance Criteria
 - Docling processes PDF, DOCX, PNG/JPG documents
@@ -326,13 +344,15 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
 ---
 
 #### Task 1.1: Docling Processor
+**Can run in parallel with:** 1.2, 1.3
+**Dependencies:** None
 
 ##### 1.1.1 IMPLEMENT: Docling Wrapper Tests
 - [ ] Create `backend/tests/unit/test_docling_processor.py`
   ```python
   """
   Tests for Docling document processor wrapper.
-  
+
   Test cases:
   - test_process_pdf_returns_structured_content
   - test_process_docx_returns_structured_content
@@ -349,18 +369,18 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
   ```python
   """
   Docling-based document processor.
-  
+
   Classes:
   - DoclingProcessor: Wraps Docling for document conversion
     - process(file_path: Path) -> DocumentContent
     - process_bytes(data: bytes, filename: str) -> DocumentContent
-  
+
   - DocumentContent(BaseModel):
     - text: str
     - tables: list[TableData]
     - pages: list[PageContent]
     - metadata: DocumentMetadata
-  
+
   Uses docling.document_converter.DocumentConverter
   Configures pipeline for OCR when needed
   """
@@ -368,26 +388,22 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
 
 ##### 1.1.3 SIMPLIFY: Run code-simplifier plugin on `backend/src/ingestion/docling_processor.py`
 
-##### 1.1.4 REVIEW: Run automated checks
-- [ ] Run `mypy backend/src/ingestion/docling_processor.py --strict`
-- [ ] Verify all functions have type hints and docstrings
-
-##### 1.1.5 FIX: Address any mypy errors or missing type hints
-
-##### 1.1.6 VERIFY: Run tests
+##### 1.1.4 VERIFY: Run tests
 - [ ] Run `pytest backend/tests/unit/test_docling_processor.py -v` — ALL PASS
-- [ ] Run `mypy backend/src/ingestion/ --strict` — NO ERRORS
+- [ ] Run `mypy backend/src/ingestion/docling_processor.py --strict` — NO ERRORS
 
 ---
 
 #### Task 1.2: Document Service
+**Can run in parallel with:** 1.1, 1.3
+**Dependencies:** None (mocks GCS and Docling for unit tests)
 
 ##### 1.2.1 IMPLEMENT: Document Service Tests
 - [ ] Create `backend/tests/unit/test_document_service.py`
   ```python
   """
   Tests for document service orchestration.
-  
+
   Test cases:
   - test_upload_document_stores_in_gcs
   - test_upload_document_creates_db_record
@@ -404,13 +420,13 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
   ```python
   """
   Document ingestion orchestration service.
-  
+
   Classes:
   - DocumentService:
     - upload(file: UploadFile) -> DocumentRecord
     - process(document_id: UUID) -> ProcessingResult
     - get_status(document_id: UUID) -> ProcessingStatus
-    
+
   Coordinates:
   - GCS upload
   - Database record creation
@@ -421,24 +437,22 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
 
 ##### 1.2.3 SIMPLIFY: Run code-simplifier plugin on `backend/src/ingestion/document_service.py`
 
-##### 1.2.4 REVIEW: Run automated checks
-- [ ] Run `mypy backend/src/ingestion/document_service.py --strict`
-
-##### 1.2.5 FIX: Address any issues
-
-##### 1.2.6 VERIFY: Run tests
+##### 1.2.4 VERIFY: Run tests
 - [ ] Run `pytest backend/tests/unit/test_document_service.py -v` — ALL PASS
+- [ ] Run `mypy backend/src/ingestion/document_service.py --strict` — NO ERRORS
 
 ---
 
 #### Task 1.3: GCS Storage Client
+**Can run in parallel with:** 1.1, 1.2
+**Dependencies:** None
 
 ##### 1.3.1 IMPLEMENT: GCS Client Tests
 - [ ] Create `backend/tests/unit/test_gcs_client.py`
   ```python
   """
   Tests for Google Cloud Storage client.
-  
+
   Test cases:
   - test_upload_file_returns_gcs_uri
   - test_download_file_returns_bytes
@@ -454,7 +468,7 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
   ```python
   """
   Google Cloud Storage client wrapper.
-  
+
   Classes:
   - GCSClient:
     - upload(data: bytes, path: str) -> str (returns gs:// URI)
@@ -467,23 +481,21 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
 
 ##### 1.3.3 SIMPLIFY: Run code-simplifier plugin on `backend/src/storage/gcs_client.py`
 
-##### 1.3.4 REVIEW: Run `mypy backend/src/storage/gcs_client.py --strict`
-
-##### 1.3.5 FIX: Address any issues
-
-##### 1.3.6 VERIFY: Run tests
+##### 1.3.4 VERIFY: Run tests
 - [ ] Run `pytest backend/tests/unit/test_gcs_client.py -v` — ALL PASS
+- [ ] Run `mypy backend/src/storage/gcs_client.py --strict` — NO ERRORS
 
 ---
 
 #### Task 1.4: Phase 1 Integration
+**Depends on:** 1.1, 1.2, 1.3
 
 ##### 1.4.1 IMPLEMENT: Integration tests
 - [ ] Create `backend/tests/integration/test_ingestion_pipeline.py`
   ```python
   """
   Integration tests for document ingestion pipeline.
-  
+
   Test cases:
   - test_full_pdf_ingestion_flow
   - test_full_docx_ingestion_flow
@@ -506,9 +518,13 @@ Use Docling for document processing. Docling handles PDF, DOCX, images, and more
 
 ## Phase 2: LLM Extraction Engine
 
-### Phase Overview
+**⚡ PARALLELIZATION:** Tasks 2.1-2.6 can largely run in parallel. Task 2.7 depends on all previous tasks.
 
+### Phase Overview
 Build the extraction engine using Gemini 3.0 Pro Preview to extract structured borrower data from processed documents.
+
+### Dependencies
+- Phase 0 complete (for project structure)
 
 ### Acceptance Criteria
 - LLM client handles Gemini API with retries
@@ -519,6 +535,8 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
 ---
 
 #### Task 2.1: Pydantic Models
+**Can run in parallel with:** 2.2, 2.3, 2.4
+**Dependencies:** None
 
 ##### 2.1.1 IMPLEMENT: Borrower Models Tests
 - [ ] Create `backend/tests/unit/test_borrower_models.py`
@@ -539,12 +557,12 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
   ```python
   """
   Pydantic models for borrower data.
-  
+
   Models:
   - Address: street, city, state, zip_code, country
   - IncomeRecord: amount, period, year, source_type, employer
   - SourceReference: document_id, document_name, page_number, section, snippet
-  - BorrowerRecord: id, name, address, income_history, account_numbers, 
+  - BorrowerRecord: id, name, address, income_history, account_numbers,
                     loan_numbers, sources, confidence_score, extracted_at
   """
   ```
@@ -558,6 +576,8 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
 ---
 
 #### Task 2.2: Gemini LLM Client
+**Can run in parallel with:** 2.1, 2.3, 2.4
+**Dependencies:** None
 
 ##### 2.2.1 IMPLEMENT: LLM Client Tests
 - [ ] Create `backend/tests/unit/test_llm_client.py`
@@ -616,52 +636,20 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
   - Max output tokens: 8192
   - Response MIME type: application/json
   - Response schema: Pydantic model for structured output
-
-  Example Usage:
-  ```python
-  from google import genai
-  from google.genai import types
-
-  client = genai.Client(api_key=settings.gemini_api_key)
-
-  # Use Pro for complex extraction
-  response = client.models.generate_content(
-      model='gemini-3-pro-preview',
-      contents=complex_document_text,
-      config=types.GenerateContentConfig(
-          response_mime_type='application/json',
-          response_schema=BorrowerRecord,
-          temperature=0.1,
-      ),
-  )
-  parsed_result = response.parsed  # Returns Pydantic object
-
-  # Use Flash for standard documents
-  response = client.models.generate_content(
-      model='gemini-3-flash-preview',
-      contents=standard_document_text,
-      config=types.GenerateContentConfig(
-          response_mime_type='application/json',
-          response_schema=BorrowerRecord,
-          temperature=0.1,
-      ),
-  )
-  ```
   """
   ```
 
 ##### 2.2.3 SIMPLIFY: Run code-simplifier plugin on `backend/src/extraction/llm_client.py`
 
-##### 2.2.4 REVIEW: Run `mypy backend/src/extraction/llm_client.py --strict`
-
-##### 2.2.5 FIX: Address any issues
-
-##### 2.2.6 VERIFY: Run tests
+##### 2.2.4 VERIFY: Run tests
 - [ ] Run `pytest backend/tests/unit/test_llm_client.py -v` — ALL PASS
+- [ ] Run `mypy backend/src/extraction/llm_client.py --strict` — NO ERRORS
 
 ---
 
 #### Task 2.3: Document Complexity Classifier
+**Can run in parallel with:** 2.1, 2.2, 2.4
+**Dependencies:** None
 
 ##### 2.3.1 IMPLEMENT: Complexity Classifier Tests
 - [ ] Create `backend/tests/unit/test_complexity_classifier.py`
@@ -716,6 +704,8 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
 ---
 
 #### Task 2.4: Extraction Prompts
+**Can run in parallel with:** 2.1, 2.2, 2.3
+**Dependencies:** None
 
 ##### 2.4.1 IMPLEMENT: Prompt Templates Tests
 - [ ] Create `backend/tests/unit/test_prompts.py`
@@ -733,11 +723,11 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
   ```python
   """
   Extraction prompt templates.
-  
+
   Constants:
   - BORROWER_EXTRACTION_SYSTEM_PROMPT
   - BORROWER_EXTRACTION_USER_PROMPT_TEMPLATE
-  
+
   Functions:
   - build_extraction_prompt(document_text: str, schema: dict) -> tuple[str, str]
   """
@@ -751,6 +741,8 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
 ---
 
 #### Task 2.5: Extraction Orchestrator
+**Depends on:** 2.1 (uses BorrowerRecord), 2.2 (uses LLM client), 2.3 (uses classifier)
+**Can run in parallel with:** 2.6
 
 ##### 2.5.1 IMPLEMENT: Extractor Tests
 - [ ] Create `backend/tests/unit/test_extractor.py`
@@ -810,16 +802,15 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
 
 ##### 2.5.3 SIMPLIFY: Run code-simplifier plugin on `backend/src/extraction/extractor.py`
 
-##### 2.5.4 REVIEW: Run `mypy backend/src/extraction/extractor.py --strict`
-
-##### 2.5.5 FIX: Address any issues
-
-##### 2.5.6 VERIFY: Run tests
+##### 2.5.4 VERIFY: Run tests
 - [ ] Run `pytest backend/tests/unit/test_extractor.py -v` — ALL PASS
+- [ ] Run `mypy backend/src/extraction/extractor.py --strict` — NO ERRORS
 
 ---
 
 #### Task 2.6: Data Quality Validation
+**Depends on:** 2.1 (validates BorrowerRecord)
+**Can run in parallel with:** 2.5
 
 ##### 2.6.1 IMPLEMENT: Validation Rules Tests
 - [ ] Create `backend/tests/unit/test_validation.py`
@@ -876,6 +867,7 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
 ---
 
 #### Task 2.7: Phase 2 Integration
+**Depends on:** 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 
 ##### 2.7.1 IMPLEMENT: Integration tests
 - [ ] Create `backend/tests/integration/test_extraction_pipeline.py`
@@ -905,23 +897,40 @@ Build the extraction engine using Gemini 3.0 Pro Preview to extract structured b
 
 ## Phase 3: Database & Storage Layer
 
-### Phase Overview
+**⚡ PARALLELIZATION:** Tasks 3.1 and 3.2 can run in parallel. Task 3.3 depends on 3.1.
 
+### Phase Overview
 Implement PostgreSQL database models and repositories for storing extracted data.
+
+### Dependencies
+- Phase 0 complete
 
 ---
 
 #### Task 3.1: SQLAlchemy Models
+**Can run in parallel with:** 3.2
+**Dependencies:** None
 
 ##### 3.1.1 IMPLEMENT: Database Models Tests
 - [ ] Create `backend/tests/unit/test_db_models.py`
+  ```python
+  """
+  Test cases:
+  - test_document_model_creation
+  - test_borrower_model_creation
+  - test_income_record_relationship
+  - test_account_number_relationship
+  - test_source_reference_relationship
+  - test_json_serialization
+  """
+  ```
 
 ##### 3.1.2 IMPLEMENT: Database Models
 - [ ] Create `backend/src/storage/models.py`
   ```python
   """
   SQLAlchemy ORM models.
-  
+
   Models:
   - Document: id, filename, file_hash, gcs_uri, status, created_at, processed_at
   - Borrower: id, name, address_json, confidence_score, created_at
@@ -940,16 +949,30 @@ Implement PostgreSQL database models and repositories for storing extracted data
 ---
 
 #### Task 3.2: Repositories
+**Can run in parallel with:** 3.1
+**Dependencies:** None (mocks DB for unit tests)
 
 ##### 3.2.1 IMPLEMENT: Repository Tests
 - [ ] Create `backend/tests/unit/test_repositories.py`
+  ```python
+  """
+  Test cases:
+  - test_document_repository_create
+  - test_document_repository_get_by_id
+  - test_document_repository_get_by_hash
+  - test_borrower_repository_create
+  - test_borrower_repository_search
+  - test_borrower_repository_pagination
+  - test_transaction_rollback_on_error
+  """
+  ```
 
 ##### 3.2.2 IMPLEMENT: Repositories
 - [ ] Create `backend/src/storage/repositories.py`
   ```python
   """
   Data access layer with async SQLAlchemy.
-  
+
   Classes:
   - DocumentRepository: create, get_by_id, get_by_hash, update_status, list
   - BorrowerRepository: create, get_by_id, search, list_with_pagination
@@ -965,6 +988,7 @@ Implement PostgreSQL database models and repositories for storing extracted data
 ---
 
 #### Task 3.3: Database Migrations
+**Depends on:** 3.1
 
 ##### 3.3.1 IMPLEMENT: Alembic Setup
 - [ ] Initialize Alembic: `alembic init alembic`
@@ -982,20 +1006,28 @@ Implement PostgreSQL database models and repositories for storing extracted data
 
 ## Phase 4: REST API
 
-### Phase Overview
+**⚡ PARALLELIZATION:** Tasks 4.2 and 4.3 can run in parallel. Task 4.4 depends on all previous tasks.
 
+### Phase Overview
 Build FastAPI endpoints for document upload and borrower querying.
+
+### Dependencies
+- Phase 1 (document service)
+- Phase 2 (extraction models)
+- Phase 3 (database repositories)
 
 ---
 
 #### Task 4.1: API Setup
+**Dependencies:** Phase 3
+**Must complete before:** 4.2, 4.3
 
 ##### 4.1.1 IMPLEMENT: FastAPI App
 - [ ] Create `backend/src/main.py`
   ```python
   """
   FastAPI application entry point.
-  
+
   - CORS middleware configured
   - Exception handlers for custom errors
   - OpenAPI documentation
@@ -1009,7 +1041,7 @@ Build FastAPI endpoints for document upload and borrower querying.
   ```python
   """
   FastAPI dependency injection.
-  
+
   Dependencies:
   - get_db_session: Async SQLAlchemy session
   - get_document_service: DocumentService instance
@@ -1024,6 +1056,8 @@ Build FastAPI endpoints for document upload and borrower querying.
 ---
 
 #### Task 4.2: Document Endpoints
+**Can run in parallel with:** 4.3
+**Depends on:** 4.1
 
 ##### 4.2.1 IMPLEMENT: Document Routes Tests
 - [ ] Create `backend/tests/unit/test_document_routes.py`
@@ -1043,7 +1077,7 @@ Build FastAPI endpoints for document upload and borrower querying.
   ```python
   """
   Document API endpoints.
-  
+
   Endpoints:
   - POST /api/documents - Upload document for processing
   - GET /api/documents/{id} - Get document details
@@ -1060,6 +1094,8 @@ Build FastAPI endpoints for document upload and borrower querying.
 ---
 
 #### Task 4.3: Borrower Endpoints
+**Can run in parallel with:** 4.2
+**Depends on:** 4.1
 
 ##### 4.3.1 IMPLEMENT: Borrower Routes Tests
 - [ ] Create `backend/tests/unit/test_borrower_routes.py`
@@ -1080,7 +1116,7 @@ Build FastAPI endpoints for document upload and borrower querying.
   ```python
   """
   Borrower API endpoints.
-  
+
   Endpoints:
   - GET /api/borrowers - List borrowers with pagination
   - GET /api/borrowers/{id} - Get borrower details
@@ -1097,13 +1133,14 @@ Build FastAPI endpoints for document upload and borrower querying.
 ---
 
 #### Task 4.4: Phase 4 Integration
+**Depends on:** 4.1, 4.2, 4.3
 
 ##### 4.4.1 IMPLEMENT: E2E API Tests
 - [ ] Create `backend/tests/e2e/test_api.py`
   ```python
   """
   End-to-end API tests.
-  
+
   Test cases:
   - test_full_upload_to_query_flow
   - test_upload_process_and_search
@@ -1124,13 +1161,19 @@ Build FastAPI endpoints for document upload and borrower querying.
 
 ## Phase 5: Frontend UI
 
-### Phase Overview
+**⚡ PARALLELIZATION:** Tasks 5.2, 5.3, 5.4, 5.5 can all run in parallel after 5.1 completes.
 
+### Phase Overview
 Build a high-fidelity Next.js frontend with pages for document management, borrower viewing, and architecture documentation.
+
+### Dependencies
+- Phase 0 complete
+- Phase 4 complete (API endpoints available)
 
 ---
 
 #### Task 5.1: Project Setup
+**Must complete before:** 5.2, 5.3, 5.4, 5.5
 
 ##### 5.1.1 IMPLEMENT: Next.js Configuration
 - [ ] Create `frontend/next.config.js` with API proxy configuration
@@ -1146,7 +1189,7 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
   ```typescript
   /**
    * Type-safe API client using fetch.
-   * 
+   *
    * Functions:
    * - uploadDocument(file: File): Promise<DocumentResponse>
    * - getDocumentStatus(id: string): Promise<StatusResponse>
@@ -1161,13 +1204,15 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 ---
 
 #### Task 5.2: Document Management Pages
+**Can run in parallel with:** 5.3, 5.4, 5.5
+**Depends on:** 5.1
 
 ##### 5.2.1 IMPLEMENT: Document Upload Page
 - [ ] Create `frontend/src/app/documents/page.tsx`
   ```typescript
   /**
    * Document management page.
-   * 
+   *
    * Features:
    * - Drag-and-drop file upload
    * - Upload progress indicator
@@ -1178,17 +1223,6 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 
 ##### 5.2.2 IMPLEMENT: Document Detail Page
 - [ ] Create `frontend/src/app/documents/[id]/page.tsx`
-  ```typescript
-  /**
-   * Document detail page.
-   * 
-   * Features:
-   * - Processing status with progress
-   * - Extracted borrowers list
-   * - Link to view document in GCS
-   * - Processing error display
-   */
-  ```
 
 ##### 5.2.3 IMPLEMENT: Document Components
 - [ ] Create `frontend/src/components/documents/upload-zone.tsx`
@@ -1200,35 +1234,14 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 ---
 
 #### Task 5.3: Borrower Pages
+**Can run in parallel with:** 5.2, 5.4, 5.5
+**Depends on:** 5.1
 
 ##### 5.3.1 IMPLEMENT: Borrower List Page
 - [ ] Create `frontend/src/app/borrowers/page.tsx`
-  ```typescript
-  /**
-   * Borrower list page.
-   * 
-   * Features:
-   * - Search bar (name, account, loan number)
-   * - Paginated table of borrowers
-   * - Confidence score indicator
-   * - Quick view of key fields
-   */
-  ```
 
 ##### 5.3.2 IMPLEMENT: Borrower Detail Page
 - [ ] Create `frontend/src/app/borrowers/[id]/page.tsx`
-  ```typescript
-  /**
-   * Borrower detail page.
-   * 
-   * Features:
-   * - Full borrower information display
-   * - Income history timeline
-   * - Account/loan numbers list
-   * - Source documents with links
-   * - Confidence score breakdown
-   */
-  ```
 
 ##### 5.3.3 IMPLEMENT: Borrower Components
 - [ ] Create `frontend/src/components/borrowers/borrower-card.tsx`
@@ -1241,81 +1254,20 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 ---
 
 #### Task 5.4: Architecture Documentation Pages
+**Can run in parallel with:** 5.2, 5.3, 5.5
+**Depends on:** 5.1
 
 ##### 5.4.1 IMPLEMENT: Architecture Overview Page
 - [ ] Create `frontend/src/app/architecture/page.tsx`
-  ```typescript
-  /**
-   * Architecture overview page.
-   *
-   * Content:
-   * - Interactive system diagram using Mermaid component diagram
-   * - Component descriptions
-   * - Technology stack table
-   * - Links to detailed sections
-   *
-   * Mermaid Diagram:
-   * - Shows all major components (Frontend, Backend API, LLM Client,
-   *   Docling Processor, Database, GCS)
-   * - Connection arrows showing data flow
-   * - Labeled with technologies used
-   */
-  ```
 
 ##### 5.4.2 IMPLEMENT: Design Decisions Page
 - [ ] Create `frontend/src/app/architecture/decisions/page.tsx`
-  ```typescript
-  /**
-   * Architecture Decision Records (ADRs) page.
-   * 
-   * Content:
-   * - Why Docling for document processing
-   * - Why Claude 3.5 Sonnet for extraction
-   * - Why PostgreSQL over alternatives
-   * - Why Cloud Run over GKE
-   * - Trade-offs and alternatives considered
-   */
-  ```
 
 ##### 5.4.3 IMPLEMENT: Data Pipeline Page
 - [ ] Create `frontend/src/app/architecture/pipeline/page.tsx`
-  ```typescript
-  /**
-   * Data pipeline visualization page.
-   *
-   * Content:
-   * - Interactive pipeline flowchart using Mermaid
-   * - Step-by-step flow explanation
-   * - Data transformation examples
-   * - Error handling strategy
-   *
-   * Mermaid Flowchart:
-   * - Upload → GCS Storage → Docling Processing → LLM Extraction
-   *   → Validation → Database Storage → API Retrieval
-   * - Decision nodes for error handling
-   * - Retry loops shown clearly
-   */
-  ```
 
 ##### 5.4.4 IMPLEMENT: Scaling Strategy Page
 - [ ] Create `frontend/src/app/architecture/scaling/page.tsx`
-  ```typescript
-  /**
-   * Scaling considerations page.
-   *
-   * Content:
-   * - Current architecture limits
-   * - 10x scaling strategy with Mermaid architecture diagram
-   * - 100x scaling strategy with Mermaid architecture diagram
-   * - Cost projections chart
-   * - Performance benchmarks
-   *
-   * Mermaid Diagrams:
-   * - Current: Single Cloud Run instance + Cloud SQL
-   * - 10x: Multiple Cloud Run instances + read replicas
-   * - 100x: Regional deployment + Cloud Tasks + caching layer
-   */
-  ```
 
 ##### 5.4.5 IMPLEMENT: Architecture Components
 - [ ] Create `frontend/src/components/architecture/system-diagram.tsx`
@@ -1328,20 +1280,11 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 ---
 
 #### Task 5.5: Dashboard Home Page
+**Can run in parallel with:** 5.2, 5.3, 5.4
+**Depends on:** 5.1
 
 ##### 5.5.1 IMPLEMENT: Dashboard Page
 - [ ] Create `frontend/src/app/page.tsx`
-  ```typescript
-  /**
-   * Main dashboard page.
-   * 
-   * Features:
-   * - Quick stats (documents processed, borrowers extracted)
-   * - Recent documents with status
-   * - Quick search
-   * - Links to main sections
-   */
-  ```
 
 ##### 5.5.2 IMPLEMENT: Navigation
 - [ ] Create `frontend/src/components/nav/sidebar.tsx`
@@ -1352,6 +1295,7 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 ---
 
 #### Task 5.6: Phase 5 Verification
+**Depends on:** 5.2, 5.3, 5.4, 5.5
 
 ##### 5.6.1 VERIFY: Frontend builds and runs
 - [ ] Run `npm run build` — NO ERRORS
@@ -1360,22 +1304,6 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 
 ##### 5.6.2 IMPLEMENT: Frontend Smoke Tests
 - [ ] Create `frontend/src/__tests__/smoke.test.tsx`
-  ```typescript
-  /**
-   * Frontend smoke tests.
-   *
-   * Test cases:
-   * - test_home_page_renders
-   * - test_documents_page_renders
-   * - test_borrowers_page_renders
-   * - test_architecture_overview_page_renders
-   * - test_architecture_decisions_page_renders
-   * - test_architecture_pipeline_page_renders
-   * - test_architecture_scaling_page_renders
-   *
-   * Run with: npm test
-   */
-  ```
 
 ##### 5.6.3 VERIFY: Run frontend tests
 - [ ] Run `npm test` — ALL PASS
@@ -1389,169 +1317,107 @@ Build a high-fidelity Next.js frontend with pages for document management, borro
 
 ## Phase 6: GCP Infrastructure
 
-### Phase Overview
+**⚡ PARALLELIZATION:** Tasks 6.2-6.7 can all run in parallel after 6.1 completes. Tasks 6.8 and 6.9 can run in parallel.
 
+### Phase Overview
 Create Terraform configuration for deploying to Google Cloud Platform.
+
+### Dependencies
+- Phase 0 complete
 
 ---
 
 #### Task 6.1: Terraform Setup
+**Must complete before:** 6.2-6.7
 
 ##### 6.1.1 IMPLEMENT: Terraform Configuration
 - [ ] Create `infrastructure/terraform/main.tf`
-  ```hcl
-  # Provider configuration
-  # Project settings
-  # Enable required APIs
-  ```
 
 ##### 6.1.2 IMPLEMENT: Variables
 - [ ] Create `infrastructure/terraform/variables.tf`
-  ```hcl
-  # Variables:
-  # - project_id
-  # - region
-  # - environment (dev/staging/prod)
-  # - db_instance_tier
-  # - cloud_run_cpu
-  # - cloud_run_memory
-  ```
 
 ---
 
 #### Task 6.2: Cloud SQL
+**Can run in parallel with:** 6.3, 6.4, 6.5, 6.6, 6.7
+**Depends on:** 6.1
 
 ##### 6.2.1 IMPLEMENT: Cloud SQL Configuration
 - [ ] Create `infrastructure/terraform/cloud_sql.tf`
-  ```hcl
-  # PostgreSQL instance
-  # Database creation
-  # User creation
-  # Private IP configuration
-  # Backup configuration
-  ```
 
 ---
 
 #### Task 6.3: Cloud Storage
+**Can run in parallel with:** 6.2, 6.4, 6.5, 6.6, 6.7
+**Depends on:** 6.1
 
 ##### 6.3.1 IMPLEMENT: GCS Configuration
 - [ ] Create `infrastructure/terraform/cloud_storage.tf`
-  ```hcl
-  # Document storage bucket
-  # Lifecycle rules (archive after 90 days)
-  # IAM bindings for Cloud Run
-  # CORS configuration
-  ```
 
 ---
 
 #### Task 6.4: Cloud Run
+**Can run in parallel with:** 6.2, 6.3, 6.5, 6.6, 6.7
+**Depends on:** 6.1
 
 ##### 6.4.1 IMPLEMENT: Cloud Run Backend
 - [ ] Create `infrastructure/terraform/cloud_run.tf`
-  ```hcl
-  # Backend service
-  # - Container configuration
-  # - Environment variables from Secret Manager
-  # - Cloud SQL connection
-  # - Autoscaling settings
-  
-  # Frontend service
-  # - Container configuration
-  # - Environment variables
-  # - Autoscaling settings
-  ```
 
 ---
 
 #### Task 6.5: Cloud Tasks
+**Can run in parallel with:** 6.2, 6.3, 6.4, 6.6, 6.7
+**Depends on:** 6.1
 
 ##### 6.5.1 IMPLEMENT: Cloud Tasks Configuration
 - [ ] Create `infrastructure/terraform/cloud_tasks.tf`
-  ```hcl
-  # Task queue for document processing
-  # Retry configuration
-  # Rate limiting
-  ```
 
 ---
 
 #### Task 6.6: IAM & Security
+**Can run in parallel with:** 6.2, 6.3, 6.4, 6.5, 6.7
+**Depends on:** 6.1
 
 ##### 6.6.1 IMPLEMENT: IAM Configuration
 - [ ] Create `infrastructure/terraform/iam.tf`
-  ```hcl
-  # Service accounts
-  # - Backend service account
-  # - Cloud Tasks invoker
-  # IAM bindings
-  # Secret Manager secrets
-  ```
 
 ---
 
 #### Task 6.7: Outputs
+**Can run in parallel with:** 6.2, 6.3, 6.4, 6.5, 6.6
+**Depends on:** 6.1
 
 ##### 6.7.1 IMPLEMENT: Terraform Outputs
 - [ ] Create `infrastructure/terraform/outputs.tf`
-  ```hcl
-  # Output values:
-  # - Backend URL
-  # - Frontend URL
-  # - Database connection string
-  # - Storage bucket name
-  ```
 
 ---
 
 #### Task 6.8: Deployment Scripts
+**Can run in parallel with:** 6.9
+**Depends on:** 6.1
 
 ##### 6.8.1 IMPLEMENT: Setup Script
 - [ ] Create `infrastructure/scripts/setup-gcp.sh`
-  ```bash
-  #!/bin/bash
-  # Enable required GCP APIs
-  # Create Terraform state bucket
-  # Initialize Terraform
-  ```
 
 ##### 6.8.2 IMPLEMENT: Deploy Script
 - [ ] Create `infrastructure/scripts/deploy.sh`
-  ```bash
-  #!/bin/bash
-  # Build and push Docker images
-  # Apply Terraform
-  # Run database migrations
-  # Verify deployment
-  ```
 
 ---
 
 #### Task 6.9: Dockerfiles
+**Can run in parallel with:** 6.8
+**Dependencies:** None
 
 ##### 6.9.1 IMPLEMENT: Backend Dockerfile
 - [ ] Create `backend/Dockerfile`
-  ```dockerfile
-  # Multi-stage build
-  # Python 3.11 slim base
-  # Install dependencies
-  # Copy source
-  # Run with uvicorn
-  ```
 
 ##### 6.9.2 IMPLEMENT: Frontend Dockerfile
 - [ ] Create `frontend/Dockerfile`
-  ```dockerfile
-  # Multi-stage build
-  # Node 20 alpine base
-  # Build Next.js
-  # Run with next start
-  ```
 
 ---
 
 #### Task 6.10: Phase 6 Verification
+**Depends on:** 6.2-6.9
 
 ##### 6.10.1 VERIFY: Terraform validates
 - [ ] Run `terraform init`
@@ -1567,13 +1433,19 @@ Create Terraform configuration for deploying to Google Cloud Platform.
 
 ## Phase 7: Documentation & Final Integration
 
-### Phase Overview
+**⚡ PARALLELIZATION:** Tasks 7.1, 7.2, 7.3 can all run in parallel. Task 7.4 depends on Phases 1-4. Task 7.5 depends on all tasks.
 
+### Phase Overview
 Complete all documentation and perform final integration testing.
+
+### Dependencies
+- All previous phases (1-6) complete
 
 ---
 
 #### Task 7.1: System Design Document
+**Can run in parallel with:** 7.2, 7.3
+**Dependencies:** None (documentation)
 
 ##### 7.1.1 IMPLEMENT: SYSTEM_DESIGN.md
 - [ ] Create `docs/SYSTEM_DESIGN.md`
@@ -1588,7 +1460,7 @@ Complete all documentation and perform final integration testing.
   ## Data Pipeline Design
   - Mermaid flowchart of entire pipeline
   - Ingestion with Docling
-  - LLM extraction with Claude
+  - LLM extraction with Gemini
   - Validation layer
   - Storage in PostgreSQL
   - API retrieval
@@ -1603,68 +1475,23 @@ Complete all documentation and perform final integration testing.
   - Error recovery strategy
   - Context caching for common document templates
 
-  ## Document Format Handling
-  - Docling capabilities
-  - Supported formats (PDF, DOCX, PNG/JPG)
-  - OCR for images
-  - Table extraction
-
-  ## Data Quality Validation
-  - Field format validation (SSN, phone, zip, dates)
-  - Confidence thresholds (< 0.7 requires review)
-  - Cross-document consistency checking
-  - Deduplication logic
-
-  ## Scaling Considerations
-  - Current architecture (baseline)
-  - 10x scaling strategy with Mermaid diagram
-  - 100x scaling strategy with Mermaid diagram
-  - Bottleneck analysis
-
   ## Cost Analysis
-  ### Per-Document Costs (Gemini 3.0 Pro Preview)
-  - Input: ~2000 tokens avg @ $1.25/1M tokens = $0.0025
-  - Output: ~500 tokens avg @ $5/1M tokens = $0.0025
-  - Total per document: ~$0.005
-
-  ### Per-Document Costs (Gemini 3.0 Flash Preview - Recommended Default)
+  ### Gemini 3.0 Flash Preview (Recommended Default)
   - Input: ~2000 tokens avg @ $0.075/1M tokens = $0.00015
   - Output: ~500 tokens avg @ $0.30/1M tokens = $0.00015
   - Total per document: ~$0.0003
 
-  ### Hybrid Strategy (80% Flash, 20% Pro for Complex Docs)
-  - Average cost per document: ~$0.0012
-  - Balances cost and accuracy for mixed document complexity
-
-  ### Scaling Projections (Hybrid Strategy)
-  - 1,000 docs/month: ~$1.20/month
-  - 10,000 docs/month (10x): ~$12/month
-  - 100,000 docs/month (100x): ~$120/month
-
-  ### Scaling Projections (Flash Only - Maximum Savings)
+  ### Scaling Projections
   - 1,000 docs/month: ~$0.30/month
   - 10,000 docs/month (10x): ~$3/month
   - 100,000 docs/month (100x): ~$30/month
-
-  ### Cost Optimization Strategies
-  - Default to gemini-3-flash-preview for standard loan documents
-  - Use gemini-3-pro-preview only for complex multi-borrower scenarios
-  - Implement document complexity classifier to route intelligently
-  - Use context caching for common document templates (up to 75% cost reduction)
-  - Batch processing to reduce API overhead
-  - Implement result caching with document hash
-  - Enable prompt caching for system instructions and schemas
-
-  ## Error Handling
-  - Processing failures with retry logic
-  - LLM errors (rate limits, timeouts, server errors)
-  - Data validation errors
-  - Recovery strategies
   ```
 
 ---
 
 #### Task 7.2: Architecture Decisions Document
+**Can run in parallel with:** 7.1, 7.3
+**Dependencies:** None (documentation)
 
 ##### 7.2.1 IMPLEMENT: ARCHITECTURE_DECISIONS.md
 - [ ] Create `docs/ARCHITECTURE_DECISIONS.md`
@@ -1672,93 +1499,29 @@ Complete all documentation and perform final integration testing.
   # Architecture Decision Records
 
   ## ADR-001: Docling for Document Processing
-  - Context: Need robust document parsing for PDF, DOCX, images
-  - Decision: Use Docling library
-  - Consequences: Production-grade parsing, table extraction, OCR support
-  - Alternatives considered: PyPDF2 (limited), PDFPlumber (no DOCX), custom solution (too complex)
-  - Mermaid diagram comparing processing capabilities
-
   ## ADR-002: Gemini 3.0 Preview Models for Extraction
-  - Context: Need accurate structured data extraction from unstructured documents with varying complexity
-  - Decision: Use Gemini 3.0 Flash Preview as default, Gemini 3.0 Pro Preview for complex cases
-  - Consequences: State-of-the-art accuracy, native structured output, highly cost-effective, GCP-native integration
-  - Alternatives considered: Claude 3.5 Sonnet (more expensive at $3/$15 per 1M tokens), GPT-4 (similar cost to Claude), Gemini 2.5 (previous generation), open-source models (less accurate)
-  - Cost comparison: Gemini 3 Flash is 40x cheaper than Claude for input, 50x cheaper for output
-  - Model selection strategy:
-    - gemini-3-flash-preview: Default for standard loan documents (~80% of cases)
-    - gemini-3-pro-preview: Complex multi-borrower docs, unclear formatting (~20% of cases)
-  - GCP benefits: Seamless integration with Cloud Run, Cloud Tasks, Vertex AI for monitoring
-  - Performance: Gemini 3 models include latest reasoning capabilities and improved structured output
-
   ## ADR-003: PostgreSQL for Storage
-  - Context: Need relational storage for borrower data with complex relationships
-  - Decision: Use PostgreSQL with SQLAlchemy
-  - Consequences: ACID guarantees, complex queries, JSON support for flexible fields
-  - Alternatives considered: MongoDB (no joins), DynamoDB (complex queries difficult)
-
   ## ADR-004: Cloud Run for Compute
-  - Context: Need scalable, managed compute for API and background jobs
-  - Decision: Use Cloud Run with Cloud Tasks
-  - Consequences: Auto-scaling, pay-per-use, simpler than GKE
-  - Alternatives considered: GKE (more complex), Cloud Functions (15min timeout)
-  - Mermaid diagram showing deployment architecture
-
   ## ADR-005: Next.js for Frontend
-  - Context: Need modern, performant frontend framework
-  - Decision: Use Next.js 14 with App Router
-  - Consequences: Server components, excellent performance, built-in API routes
-  - Alternatives considered: React SPA (no SSR), Vue (smaller ecosystem)
   ```
 
 ---
 
 #### Task 7.3: README
+**Can run in parallel with:** 7.1, 7.2
+**Dependencies:** None (documentation)
 
 ##### 7.3.1 IMPLEMENT: README.md
 - [ ] Create `README.md`
-  ```markdown
-  # Loan Document Extraction System
-  
-  ## Overview
-  Brief description of the system
-  
-  ## Quick Start
-  Local development setup
-  
-  ## Architecture
-  High-level architecture summary
-  Link to full design docs
-  
-  ## API Documentation
-  Key endpoints with examples
-  
-  ## Deployment
-  GCP deployment instructions
-  
-  ## Development
-  - Running tests
-  - Code style
-  - Contributing
-  ```
 
 ---
 
 #### Task 7.4: Final Integration Test
+**Depends on:** Phases 1-4
+**Can run in parallel with:** 7.1, 7.2, 7.3
 
 ##### 7.4.1 IMPLEMENT: Full E2E Test
 - [ ] Create and run comprehensive E2E test
-  ```python
-  """
-  Full system integration test.
-  
-  Flow:
-  1. Upload PDF document via API
-  2. Wait for processing to complete
-  3. Query borrowers via API
-  4. Verify extraction accuracy
-  5. Verify source attribution
-  """
-  ```
 
 ##### 7.4.2 VERIFY: All tests pass
 - [ ] Run `pytest backend/tests/ -v --cov=src` — ALL PASS, >80% coverage
@@ -1766,35 +1529,6 @@ Complete all documentation and perform final integration testing.
 
 ##### 7.4.3 IMPLEMENT: Sample Loan Documents Integration Test
 - [ ] Create `backend/tests/integration/test_sample_loan_docs.py`
-  ```python
-  """
-  Integration tests using real sample loan documents.
-
-  Test flow:
-  1. Process all PDFs in loan-docs/Loan 214/ directory
-  2. Extract borrower data from each document
-  3. Verify extraction accuracy against expected results
-  4. Verify all source documents are tracked with page numbers
-  5. Verify confidence scores > 0.7 for complete documents
-  6. Verify deduplication merges same borrower across docs
-  7. Generate detailed extraction report
-
-  Expected outputs:
-  - Borrower names extracted correctly
-  - Addresses parsed and structured
-  - Income history captured from all documents
-  - Account and loan numbers identified
-  - Source attribution includes page numbers and snippets
-
-  Test cases:
-  - test_process_all_sample_loan_documents
-  - test_borrower_extraction_accuracy
-  - test_source_attribution_completeness
-  - test_confidence_scores_meet_threshold
-  - test_income_history_completeness
-  - test_cross_document_deduplication
-  """
-  ```
 
 ##### 7.4.4 VERIFY: Sample document tests pass
 - [ ] Run `pytest backend/tests/integration/test_sample_loan_docs.py -v` — ALL PASS
@@ -1802,6 +1536,7 @@ Complete all documentation and perform final integration testing.
 ---
 
 #### Task 7.5: Final Code Simplification
+**Depends on:** All previous tasks
 
 ##### 7.5.1 SIMPLIFY: Run code-simplifier on entire codebase
 - [ ] Run code-simplifier plugin on `backend/src/`
@@ -1833,7 +1568,7 @@ Complete all documentation and perform final integration testing.
 
 ### Deliverable 2: Working Implementation
 - [ ] Document ingestion pipeline (Docling)
-- [ ] LLM extraction logic (Claude)
+- [ ] LLM extraction logic (Gemini)
 - [ ] Structured output generation (PostgreSQL)
 - [ ] Query/retrieval API (FastAPI)
 - [ ] High-fidelity UI (Next.js)
@@ -1860,7 +1595,7 @@ pytest tests/ -v --cov=src                    # Run all tests
 pytest tests/unit/test_MODULE.py -v           # Run specific tests
 mypy src/ --strict                            # Type check
 
-# Frontend  
+# Frontend
 cd frontend
 npm run dev                                    # Development server
 npm run build                                  # Production build
@@ -1879,4 +1614,56 @@ terraform apply                                # Deploy
 
 ---
 
-*Document Version: 3.0 | Optimized for Claude Code CLI Agent with Docling + GCP*
+## Parallel Execution Summary
+
+### Phase 0: 3 parallel tracks
+- Track 1: Directory structure (0.1)
+- Track 2: Backend config (0.2)
+- Track 3: Frontend config (0.3)
+
+### Phase 1: 3 parallel tracks
+- Track 1: Docling processor (1.1)
+- Track 2: Document service (1.2)
+- Track 3: GCS client (1.3)
+
+### Phase 2: 6 parallel tracks
+- Track 1: Pydantic models (2.1)
+- Track 2: LLM client (2.2)
+- Track 3: Complexity classifier (2.3)
+- Track 4: Prompts (2.4)
+- Track 5: Extractor (2.5) - after 2.1, 2.2, 2.3
+- Track 6: Validation (2.6) - after 2.1
+
+### Phase 3: 2 parallel tracks
+- Track 1: SQLAlchemy models (3.1)
+- Track 2: Repositories (3.2)
+
+### Phase 4: 2 parallel tracks (after 4.1)
+- Track 1: Document endpoints (4.2)
+- Track 2: Borrower endpoints (4.3)
+
+### Phase 5: 4 parallel tracks (after 5.1)
+- Track 1: Document pages (5.2)
+- Track 2: Borrower pages (5.3)
+- Track 3: Architecture pages (5.4)
+- Track 4: Dashboard (5.5)
+
+### Phase 6: 8 parallel tracks (after 6.1)
+- Track 1: Cloud SQL (6.2)
+- Track 2: Cloud Storage (6.3)
+- Track 3: Cloud Run (6.4)
+- Track 4: Cloud Tasks (6.5)
+- Track 5: IAM (6.6)
+- Track 6: Outputs (6.7)
+- Track 7: Scripts (6.8)
+- Track 8: Dockerfiles (6.9)
+
+### Phase 7: 3 parallel tracks
+- Track 1: System design doc (7.1)
+- Track 2: Architecture decisions (7.2)
+- Track 3: README (7.3)
+- Track 4: Integration tests (7.4) - independent
+
+---
+
+*Document Version: 4.0 | Optimized for Parallel Subagent Execution with Docling + Gemini + GCP*
