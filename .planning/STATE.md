@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 5 of 7 (Frontend Dashboard)
-Plan: 4 of 4 in current phase
+Plan: 5 of 5 in current phase (gap closure)
 Status: Phase complete
-Last activity: 2026-01-24 - Completed 05-04-PLAN.md
+Last activity: 2026-01-24 - Completed 05-05-PLAN.md (Gap Closure)
 
 Progress: [████████████████████████░░░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 19
-- Average duration: 7.0 min
-- Total execution time: 2.22 hours
+- Total plans completed: 20
+- Average duration: 6.7 min
+- Total execution time: 2.23 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████████████████
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 | 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
-| 05-frontend-dashboard | 4 | 15 min | 3.8 min |
+| 05-frontend-dashboard | 5 | 16 min | 3.2 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min, 3 min, 3 min, 5 min, 6 min
-- Trend: Frontend plans averaging 3.8 min (fastest phase)
+- Last 5 plans: 3 min, 3 min, 5 min, 6 min, 1 min
+- Trend: Frontend plans averaging 3.2 min (fastest phase)
 
 *Updated after each plan completion*
 
@@ -163,6 +163,11 @@ Recent decisions affecting current work:
 - Neutral theme and loose security level for Mermaid
 - DecisionCard is server component (no interactivity needed)
 
+**Phase 05-05 Decisions (Gap Closure):**
+- BorrowerCard accepts union type (BorrowerSummary | BorrowerDetailResponse) with dynamic income count
+- disableLink prop controls Link wrapper and hover/cursor styles
+- Keep both BorrowerCard and Summary Card on detail page for visual continuity plus expanded metrics
+
 ### Pending Todos
 
 None yet.
@@ -173,6 +178,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 16:00 UTC
-Stopped at: Completed 05-04-PLAN.md (Architecture Documentation Pages)
+Last session: 2026-01-24 15:11 UTC
+Stopped at: Completed 05-05-PLAN.md (Gap Closure - BorrowerCard Wiring)
 Resume file: None
