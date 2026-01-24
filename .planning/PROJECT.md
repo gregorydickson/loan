@@ -15,7 +15,7 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 **Goal:** Add LangExtract-based extraction pipeline with character-level source grounding, optional LightOnOCR GPU service for scanned documents, and migrate from Terraform to CloudBuild + CLI deployment.
 
 **Target features:**
-- LangExtract + Gemini 2.5 Flash extraction with character-level offsets for precise source grounding
+- LangExtract + Gemini 3.0 Flash extraction with character-level offsets for precise source grounding
 - LightOnOCR Cloud Run service with L4 GPU for high-quality OCR of scanned documents
 - Dual extraction method support (Docling + LangExtract) with API selection
 - Complete infrastructure migration from Terraform to CloudBuild + Google Cloud CLI
