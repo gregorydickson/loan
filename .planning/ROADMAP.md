@@ -17,6 +17,8 @@ This roadmap transforms the loan document extraction system from concept to depl
 - [x] **Phase 5: Frontend Dashboard** - Next.js UI with document/borrower management and architecture visualization
 - [x] **Phase 6: GCP Infrastructure** - Terraform configuration, Cloud Run deployment, CI/CD scripts
 - [x] **Phase 7: Documentation & Testing** - System design docs, architecture decisions, comprehensive test suite
+- [ ] **Phase 8: Wire Document-to-Extraction Pipeline** - Connect extraction subsystem to enable end-to-end borrower extraction
+- [ ] **Phase 9: Cloud Tasks Background Processing** - Asynchronous extraction queue with retry logic
 
 ## Phase Details
 
@@ -155,10 +157,38 @@ Plans:
 - [x] 07-04-PLAN.md — Test coverage expansion (TEST-01 to TEST-17)
 - [x] 07-05-PLAN.md — Type safety and quality verification (TEST-18 to TEST-20)
 
+### Phase 8: Wire Document-to-Extraction Pipeline
+**Goal**: Connect orphaned extraction subsystem to document processing pipeline and enable end-to-end borrower extraction
+**Depends on**: Phase 7
+**Requirements**: EXTRACT-01 through EXTRACT-29 (29 requirements), VALID-01 through VALID-09 (9 requirements), DB-13 through DB-18 (6 borrower repository requirements)
+**Gap Closure**: Closes critical integration gap from v1.0 audit - Phase 2 → Phase 3 connection, Phase 3 → Phase 4 data flow, and broken E2E flow "Upload PDF → Extract Borrowers → Save to DB → Display in UI"
+**Success Criteria** (what must be TRUE):
+  1. BorrowerExtractor is injected into DocumentService and called after Docling processing
+  2. Uploading a loan document creates borrower records in the database
+  3. GET /api/borrowers/ returns extracted borrowers (not empty list)
+  4. Frontend borrower list displays actual extracted data
+  5. E2E integration test verifies upload → extraction → database → retrieval flow
+**Plans**: TBD
+**Status**: Pending
+
+### Phase 9: Cloud Tasks Background Processing
+**Goal**: Move document extraction to asynchronous background queue with retry logic
+**Depends on**: Phase 8
+**Requirements**: INGEST-08 (Document service queues processing task in Cloud Tasks), INGEST-10 (Document service handles processing errors gracefully with retry)
+**Gap Closure**: Closes ingestion requirements gap from v1.0 audit - synchronous processing violates requirements
+**Success Criteria** (what must be TRUE):
+  1. DocumentService queues extraction to Cloud Tasks instead of synchronous processing
+  2. Upload endpoint returns immediately with PENDING status
+  3. Extraction runs asynchronously in background worker
+  4. Failed extractions retry with exponential backoff (max 3 attempts)
+  5. Document status updates to COMPLETED or FAILED after extraction finishes
+**Plans**: TBD
+**Status**: Pending
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -169,7 +199,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 5. Frontend Dashboard | 5/5 | Complete | 2026-01-24 |
 | 6. GCP Infrastructure | 4/4 | Complete | 2026-01-24 |
 | 7. Documentation & Testing | 5/5 | Complete | 2026-01-24 |
+| 8. Wire Document-to-Extraction Pipeline | 0/? | Pending | - |
+| 9. Cloud Tasks Background Processing | 0/? | Pending | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Phase 7 complete - All phases finished)*
+*Last updated: 2026-01-24 (Gap closure phases 8-9 added after v1.0 audit)*
