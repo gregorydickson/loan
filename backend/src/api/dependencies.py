@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from src.api.errors import EntityNotFoundError
 from src.config import settings
 from src.ingestion.docling_processor import DoclingProcessor
 from src.ingestion.document_service import DocumentService
@@ -100,9 +101,6 @@ def get_document_service(
 
 
 DocumentServiceDep = Annotated[DocumentService, Depends(get_document_service)]
-
-# Re-export EntityNotFoundError for API module convenience
-from src.api.errors import EntityNotFoundError
 
 __all__ = [
     "DBSession",

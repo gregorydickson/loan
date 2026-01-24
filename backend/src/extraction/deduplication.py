@@ -16,7 +16,7 @@ These are separate concerns.
 
 from rapidfuzz import fuzz, utils
 
-from src.models.borrower import Address, BorrowerRecord, IncomeRecord
+from src.models.borrower import BorrowerRecord, IncomeRecord
 
 
 class BorrowerDeduplicator:
@@ -119,13 +119,12 @@ class BorrowerDeduplicator:
             return True
 
         # Strategy 5: Moderate name match (80%+) + last 4 SSN match
-        if name_score >= self.MODERATE_NAME_THRESHOLD:
-            if a.ssn and b.ssn:
-                # Compare last 4 digits of SSN (XXXX from XXX-XX-XXXX)
-                a_last4 = a.ssn.replace("-", "")[-4:]
-                b_last4 = b.ssn.replace("-", "")[-4:]
-                if a_last4 == b_last4:
-                    return True
+        if name_score >= self.MODERATE_NAME_THRESHOLD and a.ssn and b.ssn:
+            # Compare last 4 digits of SSN (XXXX from XXX-XX-XXXX)
+            a_last4 = a.ssn.replace("-", "")[-4:]
+            b_last4 = b.ssn.replace("-", "")[-4:]
+            if a_last4 == b_last4:
+                return True
 
         return False
 

@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from google.genai.types import GenerateContentResponse
 
 
-def _get_token_counts(response: "GenerateContentResponse") -> tuple[int, int]:
+def _get_token_counts(response: GenerateContentResponse) -> tuple[int, int]:
     """Safely extract token counts from response, handling None values.
 
     Args:

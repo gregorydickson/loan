@@ -249,7 +249,7 @@ class ConsistencyValidator:
             name_groups[normalized_name].append(borrower)
 
         # Check groups with multiple records (same name, different IDs)
-        for name, group in name_groups.items():
+        for _name, group in name_groups.items():
             if len(group) < 2:
                 continue
 
@@ -267,7 +267,6 @@ class ConsistencyValidator:
                 # If there are different last-4 SSN values, flag it
                 if len(ssn_values) > 1:
                     record_ids = [str(b.id) for b in group]
-                    ssn_last4_list = [ssn for _, ssn in ssn_records]
 
                     warnings.append(
                         ConsistencyWarning(
