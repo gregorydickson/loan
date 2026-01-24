@@ -1,4 +1,4 @@
-"""Document service orchestrating upload flow.
+"""Document service orchestrating upload and extraction flow.
 
 Handles:
 - File validation (type, size)
@@ -6,21 +6,35 @@ Handles:
 - GCS upload
 - Database record creation
 - Docling document processing (synchronous)
+- Borrower extraction via LLM
+- Borrower persistence with source attribution
 """
 
 from __future__ import annotations
 
 import hashlib
+import logging
+from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from src.ingestion.docling_processor import DoclingProcessor, DocumentProcessingError
+from src.models.borrower import BorrowerRecord
 from src.storage.gcs_client import GCSClient
-from src.storage.models import Document, DocumentStatus
+from src.storage.models import (
+    AccountNumber,
+    Borrower,
+    Document,
+    DocumentStatus,
+    IncomeRecord as IncomeRecordModel,
+    SourceReference as SourceReferenceModel,
+)
 from src.storage.repositories import BorrowerRepository, DocumentRepository
 
 if TYPE_CHECKING:
     from src.extraction import BorrowerExtractor
+
+logger = logging.getLogger(__name__)
 
 
 class DuplicateDocumentError(Exception):
@@ -39,7 +53,7 @@ class DocumentUploadError(Exception):
 
 
 class DocumentService:
-    """Orchestrates document upload and processing.
+    """Orchestrates document upload, processing, and extraction.
 
     Upload workflow:
     1. Validate file (type, size)
@@ -49,7 +63,13 @@ class DocumentService:
     5. Upload to GCS
     6. Process document with Docling
     7. Update status to COMPLETED/FAILED
-    8. Return document with final status
+    8. Extract borrowers via BorrowerExtractor
+    9. Persist extracted borrowers with source references
+    10. Return document with final status
+
+    Note: Extraction failures are logged but don't fail the upload.
+    A document with successful Docling processing is COMPLETED even
+    if no borrowers were extracted.
     """
 
     # Mapping of MIME types to file type strings
@@ -269,4 +289,77 @@ class DocumentService:
             status,
             error_message=error_message,
             page_count=page_count,
+        )
+
+    async def _persist_borrower(
+        self,
+        record: BorrowerRecord,
+        document_id: UUID,
+    ) -> Borrower:
+        """Convert Pydantic BorrowerRecord to SQLAlchemy Borrower and persist.
+
+        Args:
+            record: Extracted borrower data from BorrowerExtractor
+            document_id: Source document UUID for reference
+
+        Returns:
+            Persisted Borrower with all relationships
+        """
+        # Hash SSN for storage (never store raw SSN - PII protection)
+        ssn_hash = None
+        if record.ssn:
+            ssn_hash = hashlib.sha256(record.ssn.encode()).hexdigest()
+
+        # Convert address to JSON string
+        address_json = None
+        if record.address:
+            address_json = record.address.model_dump_json()
+
+        # Create SQLAlchemy Borrower model
+        borrower = Borrower(
+            id=record.id,
+            name=record.name,
+            ssn_hash=ssn_hash,
+            address_json=address_json,
+            confidence_score=Decimal(str(record.confidence_score)),
+        )
+
+        # Convert income records
+        income_records = [
+            IncomeRecordModel(
+                amount=income.amount,
+                period=income.period,
+                year=income.year,
+                source_type=income.source_type,
+                employer=income.employer,
+            )
+            for income in record.income_history
+        ]
+
+        # Convert account numbers (both bank accounts and loan numbers)
+        account_numbers = [
+            AccountNumber(number=acct, account_type="bank")
+            for acct in record.account_numbers
+        ] + [
+            AccountNumber(number=loan, account_type="loan")
+            for loan in record.loan_numbers
+        ]
+
+        # Convert source references
+        source_references = [
+            SourceReferenceModel(
+                document_id=src.document_id,
+                page_number=src.page_number,
+                section=src.section,
+                snippet=src.snippet,
+            )
+            for src in record.sources
+        ]
+
+        # Persist via repository (handles transaction)
+        return await self.borrower_repository.create(
+            borrower=borrower,
+            income_records=income_records,
+            account_numbers=account_numbers,
+            source_references=source_references,
         )
