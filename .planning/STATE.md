@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 3 of 7 (LLM Extraction & Validation)
-Plan: 4 of 5 in current phase
-Status: In progress
-Last activity: 2026-01-24 - Completed 03-04-PLAN.md (Extraction Orchestrator)
+Plan: 5 of 5 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 03-05-PLAN.md (Consistency Validation)
 
-Progress: [████████████] 48%
+Progress: [███████████████] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 7.3 min
-- Total execution time: 1.4 hours
+- Total plans completed: 12
+- Average duration: 7.5 min
+- Total execution time: 1.6 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [████████████] 48%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
-| 03-llm-extraction-validation | 4 | 34 min | 8.5 min |
+| 03-llm-extraction-validation | 5 | 48 min | 9.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 10 min, 5 min, 5 min, 10 min, 14 min
+- Last 5 plans: 5 min, 5 min, 10 min, 14 min, 14 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -113,6 +113,12 @@ Recent decisions affecting current work:
 - Pydantic validation errors caught and tracked (not crash extraction)
 - Optional[T] = None pattern for Gemini compatibility (not Field(default=...))
 
+**Phase 03-05 Decisions:**
+- Income thresholds: 50% drop, 300% spike (balances anomaly detection vs false positives)
+- Multi-source flagging: Any borrower with >1 source + address flagged for review
+- Cross-document: Only SSN last-4 comparison (definitive identifier)
+- Detect vs Resolve: ConsistencyValidator FLAGS, BorrowerDeduplicator MERGES
+
 ### Pending Todos
 
 None yet.
@@ -123,6 +129,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 04:14 UTC
-Stopped at: Completed 03-04-PLAN.md (Extraction Orchestrator)
+Last session: 2026-01-24 04:32 UTC
+Stopped at: Completed 03-05-PLAN.md (Consistency Validation) - Phase 3 complete
 Resume file: None
+Next: Phase 04 - Extraction API
