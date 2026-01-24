@@ -22,7 +22,7 @@ This roadmap transforms the loan document extraction system from concept to depl
 
 ## Phase Details
 
-### Phase 1: Foundation & Data Models ✅
+### Phase 1: Foundation & Data Models
 **Goal**: Establish project structure with all dependencies and define the Pydantic schemas that represent extracted borrower data
 **Depends on**: Nothing (first phase)
 **Requirements**: FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05, FOUND-06, FOUND-07, MODEL-01, MODEL-02, MODEL-03, MODEL-04, MODEL-05, MODEL-06, MODEL-07
@@ -40,7 +40,7 @@ Plans:
 - [x] 01-02-PLAN.md - Frontend Next.js project with shadcn/ui
 - [x] 01-03-PLAN.md - Pydantic data models with unit tests
 
-### Phase 2: Document Ingestion Pipeline ✅
+### Phase 2: Document Ingestion Pipeline
 **Goal**: Process uploaded documents (PDF, DOCX, images) through Docling and store in GCS with database tracking
 **Depends on**: Phase 1
 **Requirements**: INGEST-01, INGEST-02, INGEST-03, INGEST-04, INGEST-05, INGEST-06, INGEST-07, INGEST-08, INGEST-09, INGEST-10, INGEST-11, INGEST-12, INGEST-13, INGEST-14, DB-01, DB-02, DB-03, DB-04, DB-05, DB-06, DB-07, DB-08, DB-09, DB-10, DB-11, DB-12
@@ -59,7 +59,7 @@ Plans:
 - [x] 02-03-PLAN.md - Document service and upload API (orchestration, POST /api/documents endpoint)
 - [x] 02-04-PLAN.md - Gap closure: Wire Docling processing into upload flow, add end-to-end tests
 
-### Phase 3: LLM Extraction & Validation ✅
+### Phase 3: LLM Extraction & Validation
 **Goal**: Extract structured borrower data from document text using Gemini 3.0 with complexity-based model selection and hybrid validation
 **Depends on**: Phase 2
 **Requirements**: EXTRACT-01, EXTRACT-02, EXTRACT-03, EXTRACT-04, EXTRACT-05, EXTRACT-06, EXTRACT-07, EXTRACT-08, EXTRACT-09, EXTRACT-10, EXTRACT-11, EXTRACT-12, EXTRACT-13, EXTRACT-14, EXTRACT-15, EXTRACT-16, EXTRACT-17, EXTRACT-18, EXTRACT-19, EXTRACT-20, EXTRACT-21, EXTRACT-22, EXTRACT-23, EXTRACT-24, EXTRACT-25, EXTRACT-26, EXTRACT-27, EXTRACT-28, EXTRACT-29, VALID-01, VALID-02, VALID-03, VALID-04, VALID-05, VALID-06, VALID-07, VALID-08, VALID-09
@@ -80,7 +80,7 @@ Plans:
 - [x] 03-04-PLAN.md - Extraction orchestrator with deduplication
 - [x] 03-05-PLAN.md - Consistency validation (address conflicts, income progression, cross-document checks)
 
-### Phase 4: Data Storage & REST API ✅
+### Phase 4: Data Storage & REST API
 **Goal**: Persist extracted borrower data with relationships and expose through searchable REST endpoints
 **Depends on**: Phase 3
 **Requirements**: DB-13, DB-14, DB-15, DB-16, DB-17, DB-18, DB-19, DB-20, API-01, API-02, API-03, API-04, API-05, API-06, API-07, API-08, API-09, API-10, API-11, API-12, API-13, API-14, API-15, API-16, API-17, API-18, API-19, API-20, API-21, API-22, API-23, API-24
@@ -98,7 +98,7 @@ Plans:
 - [x] 04-02-PLAN.md - CORS middleware, exception handlers, document status endpoint
 - [x] 04-03-PLAN.md - Borrower API endpoints with search and pagination
 
-### Phase 5: Frontend Dashboard ✅
+### Phase 5: Frontend Dashboard
 **Goal**: Provide a visual interface for document upload, borrower browsing, and architecture documentation
 **Depends on**: Phase 4
 **Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09, UI-10, UI-11, UI-12, UI-13, UI-14, UI-15, UI-16, UI-17, UI-18, UI-19, UI-20, UI-21, UI-22, UI-23, UI-24, UI-25, UI-26, UI-27, UI-28, UI-29, UI-30, UI-31, UI-32, UI-33, UI-34, UI-35, UI-36, UI-37
@@ -137,7 +137,7 @@ Plans:
 - [x] 06-03-PLAN.md - GCP managed services (Cloud SQL, Cloud Storage, Cloud Tasks)
 - [x] 06-04-PLAN.md - Cloud Run services and outputs
 
-### Phase 7: Documentation & Testing ✅
+### Phase 7: Documentation & Testing
 **Goal**: Complete system documentation and achieve >80% test coverage with type safety
 **Depends on**: Phase 6
 **Requirements**: DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, DOCS-06, DOCS-07, DOCS-08, DOCS-09, DOCS-10, DOCS-11, DOCS-12, DOCS-13, DOCS-14, DOCS-15, DOCS-16, DOCS-17, DOCS-18, DOCS-19, DOCS-20, DOCS-21, DOCS-22, DOCS-23, DOCS-24, DOCS-25, DOCS-26, DOCS-27, DOCS-28, TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, TEST-10, TEST-11, TEST-12, TEST-13, TEST-14, TEST-15, TEST-16, TEST-17, TEST-18, TEST-19, TEST-20
@@ -151,25 +151,30 @@ Plans:
 **Status**: Complete (2026-01-24)
 
 Plans:
-- [x] 07-01-PLAN.md — System design documentation (DOCS-01 to DOCS-19)
-- [x] 07-02-PLAN.md — Architecture decision records (DOCS-20 to DOCS-24)
-- [x] 07-03-PLAN.md — README and project documentation (DOCS-25 to DOCS-28)
-- [x] 07-04-PLAN.md — Test coverage expansion (TEST-01 to TEST-17)
-- [x] 07-05-PLAN.md — Type safety and quality verification (TEST-18 to TEST-20)
+- [x] 07-01-PLAN.md - System design documentation (DOCS-01 to DOCS-19)
+- [x] 07-02-PLAN.md - Architecture decision records (DOCS-20 to DOCS-24)
+- [x] 07-03-PLAN.md - README and project documentation (DOCS-25 to DOCS-28)
+- [x] 07-04-PLAN.md - Test coverage expansion (TEST-01 to TEST-17)
+- [x] 07-05-PLAN.md - Type safety and quality verification (TEST-18 to TEST-20)
 
 ### Phase 8: Wire Document-to-Extraction Pipeline
 **Goal**: Connect orphaned extraction subsystem to document processing pipeline and enable end-to-end borrower extraction
 **Depends on**: Phase 7
 **Requirements**: EXTRACT-01 through EXTRACT-29 (29 requirements), VALID-01 through VALID-09 (9 requirements), DB-13 through DB-18 (6 borrower repository requirements)
-**Gap Closure**: Closes critical integration gap from v1.0 audit - Phase 2 → Phase 3 connection, Phase 3 → Phase 4 data flow, and broken E2E flow "Upload PDF → Extract Borrowers → Save to DB → Display in UI"
+**Gap Closure**: Closes critical integration gap from v1.0 audit - Phase 2 -> Phase 3 connection, Phase 3 -> Phase 4 data flow, and broken E2E flow "Upload PDF -> Extract Borrowers -> Save to DB -> Display in UI"
 **Success Criteria** (what must be TRUE):
   1. BorrowerExtractor is injected into DocumentService and called after Docling processing
   2. Uploading a loan document creates borrower records in the database
   3. GET /api/borrowers/ returns extracted borrowers (not empty list)
   4. Frontend borrower list displays actual extracted data
-  5. E2E integration test verifies upload → extraction → database → retrieval flow
-**Plans**: TBD
+  5. E2E integration test verifies upload -> extraction -> database -> retrieval flow
+**Plans**: 3 plans
 **Status**: Pending
+
+Plans:
+- [ ] 08-01-PLAN.md - Wire extraction dependencies into DocumentService via FastAPI DI
+- [ ] 08-02-PLAN.md - Integrate BorrowerExtractor into upload() with persistence
+- [ ] 08-03-PLAN.md - E2E integration tests for extraction pipeline
 
 ### Phase 9: Cloud Tasks Background Processing
 **Goal**: Move document extraction to asynchronous background queue with retry logic
@@ -199,9 +204,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 5. Frontend Dashboard | 5/5 | Complete | 2026-01-24 |
 | 6. GCP Infrastructure | 4/4 | Complete | 2026-01-24 |
 | 7. Documentation & Testing | 5/5 | Complete | 2026-01-24 |
-| 8. Wire Document-to-Extraction Pipeline | 0/? | Pending | - |
+| 8. Wire Document-to-Extraction Pipeline | 0/3 | Pending | - |
 | 9. Cloud Tasks Background Processing | 0/? | Pending | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Gap closure phases 8-9 added after v1.0 audit)*
+*Last updated: 2026-01-24 (Phase 8 planned with 3 plans)*
