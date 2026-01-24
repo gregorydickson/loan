@@ -106,13 +106,14 @@ Plans:
   3. Borrower detail page shows income timeline visualization and source references
   4. Architecture pages display system diagram, pipeline flow, and scaling analysis
   5. All pages render correctly on desktop and tablet viewports
-**Plans**: 4 plans
+**Plans**: 5 plans
 
 Plans:
-- [x] 05-01-PLAN.md — App shell, layout, and API client (Wave 1)
-- [ ] 05-02-PLAN.md — Document upload and list pages (Wave 2)
-- [ ] 05-03-PLAN.md — Borrower list and detail pages (Wave 2)
-- [ ] 05-04-PLAN.md — Architecture documentation pages (Wave 2)
+- [x] 05-01-PLAN.md - App shell, layout, and API client (Wave 1)
+- [x] 05-02-PLAN.md - Document upload and list pages (Wave 2)
+- [x] 05-03-PLAN.md - Borrower list and detail pages (Wave 2)
+- [x] 05-04-PLAN.md - Architecture documentation pages (Wave 2)
+- [ ] 05-05-PLAN.md - Gap closure: Wire BorrowerCard into detail page (Wave 1)
 
 ### Phase 6: GCP Infrastructure
 **Goal**: Deploy the complete system to Google Cloud Platform with infrastructure as code
@@ -156,14 +157,14 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
-| 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
-| 3. LLM Extraction & Validation | 5/5 | ✅ Complete | 2026-01-24 |
-| 4. Data Storage & REST API | 3/3 | ✅ Complete | 2026-01-24 |
-| 5. Frontend Dashboard | 1/4 | In progress | - |
+| 1. Foundation & Data Models | 3/3 | Complete | 2026-01-23 |
+| 2. Document Ingestion Pipeline | 4/4 | Complete | 2026-01-23 |
+| 3. LLM Extraction & Validation | 5/5 | Complete | 2026-01-24 |
+| 4. Data Storage & REST API | 3/3 | Complete | 2026-01-24 |
+| 5. Frontend Dashboard | 4/5 | Gap closure | - |
 | 6. GCP Infrastructure | 0/3 | Not started | - |
 | 7. Documentation & Testing | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Phase 5 in progress)*
+*Last updated: 2026-01-24 (Phase 5 gap closure planned)*
