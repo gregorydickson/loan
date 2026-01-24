@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 5 of 7 (Frontend Dashboard)
-Plan: 0 of 4 in current phase
-Status: Ready to discuss
-Last activity: 2026-01-24 - Phase 4 verified complete (5/5 criteria, 14/14 must-haves)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-24 - Completed 05-01-PLAN.md
 
-Progress: [█████████████████░░░░░░░░░░░] 57%
+Progress: [██████████████████░░░░░░░░░░] 62%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
-- Average duration: 7.5 min
-- Total execution time: 1.88 hours
+- Total plans completed: 16
+- Average duration: 7.2 min
+- Total execution time: 1.93 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [█████████████████░░░░░░
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 | 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
+| 05-frontend-dashboard | 1 | 3 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 14 min, 14 min, 8 min, 5 min, 5 min
-- Trend: Fast for API plans
+- Last 5 plans: 14 min, 8 min, 5 min, 5 min, 3 min
+- Trend: Fastest plan yet for frontend setup
 
 *Updated after each plan completion*
 
@@ -136,6 +137,12 @@ Recent decisions affecting current work:
 - income_count computed from len(income_records) for list views
 - Search returns len(borrowers) as total (no separate count query)
 
+**Phase 05-01 Decisions:**
+- QueryClient staleTime 60s with retry 1 for queries, 0 for mutations
+- API client uses NEXT_PUBLIC_API_URL env var with localhost:8000 default
+- Sidebar uses usePathname for active state highlighting
+- Dashboard calls API directly without hooks (hooks created in later plans)
+
 ### Pending Todos
 
 None yet.
@@ -146,6 +153,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 14:00 UTC
-Stopped at: Completed 04-03-PLAN.md (Borrower API Endpoints) - Phase 4 complete
+Last session: 2026-01-24 14:37 UTC
+Stopped at: Completed 05-01-PLAN.md (App Shell and API Foundation)
 Resume file: None
