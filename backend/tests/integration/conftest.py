@@ -6,7 +6,12 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.api.dependencies import get_borrower_extractor, get_docling_processor, get_gcs_client
+from src.api.dependencies import (
+    get_borrower_extractor,
+    get_cloud_tasks_client,
+    get_docling_processor,
+    get_gcs_client,
+)
 from src.ingestion.docling_processor import (
     DoclingProcessor,
     DocumentContent,
@@ -364,5 +369,64 @@ async def client_with_extraction(
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def client_with_task_handler(
+    async_engine,
+    mock_gcs_client,
+    mock_docling_processor,
+    mock_borrower_extractor_with_data,
+):
+    """Test client for task handler testing with real document processing.
+
+    This fixture is for testing the Cloud Tasks handler endpoint directly.
+    It sets cloud_tasks_client to None (simulating local dev mode) so the
+    handler can be invoked directly via HTTP requests.
+
+    Use this fixture for tests that need to verify:
+    - Task handler processes documents correctly
+    - Task handler persists borrowers
+    - Task handler handles errors appropriately
+    """
+    session_factory = async_sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    async def override_get_db_session():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    def override_get_gcs_client():
+        return mock_gcs_client
+
+    def override_get_docling_processor():
+        return mock_docling_processor
+
+    def override_get_borrower_extractor():
+        return mock_borrower_extractor_with_data
+
+    def override_cloud_tasks_client():
+        # Return None to simulate local dev (no async queueing)
+        return None
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_gcs_client] = override_get_gcs_client
+    app.dependency_overrides[get_docling_processor] = override_get_docling_processor
+    app.dependency_overrides[get_borrower_extractor] = override_get_borrower_extractor
+    app.dependency_overrides[get_cloud_tasks_client] = override_cloud_tasks_client
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as test_client:
+        yield test_client
 
     app.dependency_overrides.clear()
