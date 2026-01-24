@@ -119,6 +119,90 @@ def mock_borrower_extractor():
 
 
 @pytest.fixture
+def mock_borrower_extractor_with_data():
+    """Create mock BorrowerExtractor that returns realistic borrower data.
+
+    This fixture is used for E2E tests that need to verify borrowers
+    are extracted and persisted correctly.
+    """
+    from decimal import Decimal
+    from uuid import uuid4
+
+    from src.extraction import BorrowerExtractor, ExtractionResult
+    from src.extraction.complexity_classifier import ComplexityAssessment, ComplexityLevel
+    from src.models.borrower import Address, BorrowerRecord, IncomeRecord
+    from src.models.document import SourceReference
+
+    # Create test borrower data template
+    test_borrower_id = uuid4()
+
+    def create_mock_extract(document, document_id, document_name):
+        """Create extraction result with document-specific source reference."""
+        # Create source reference with actual document_id
+        source = SourceReference(
+            document_id=document_id,
+            document_name=document_name,
+            page_number=1,
+            snippet="John Smith, SSN: 123-45-6789, employed at Acme Corp",
+        )
+
+        # Create borrower with all fields populated
+        borrower_with_source = BorrowerRecord(
+            id=uuid4(),
+            name="John Smith",
+            ssn="123-45-6789",
+            phone="(555) 123-4567",
+            email="john.smith@example.com",
+            address=Address(
+                street="123 Main St",
+                city="Austin",
+                state="TX",
+                zip_code="78701",
+            ),
+            income_history=[
+                IncomeRecord(
+                    amount=Decimal("75000.00"),
+                    period="annual",
+                    year=2024,
+                    source_type="employment",
+                    employer="Acme Corp",
+                ),
+                IncomeRecord(
+                    amount=Decimal("72000.00"),
+                    period="annual",
+                    year=2023,
+                    source_type="employment",
+                    employer="Acme Corp",
+                ),
+            ],
+            account_numbers=["1234567890"],
+            loan_numbers=["LOAN-2024-001"],
+            sources=[source],
+            confidence_score=0.85,
+        )
+
+        return ExtractionResult(
+            borrowers=[borrower_with_source],
+            complexity=ComplexityAssessment(
+                level=ComplexityLevel.SIMPLE if hasattr(ComplexityLevel, 'SIMPLE') else ComplexityLevel.STANDARD,
+                reasons=["Single borrower document"],
+                page_count=1,
+                estimated_borrowers=1,
+                has_handwritten=False,
+                has_poor_quality=False,
+            ),
+            chunks_processed=1,
+            total_tokens=500,
+            validation_errors=[],
+            consistency_warnings=[],
+        )
+
+    extractor = MagicMock(spec=BorrowerExtractor)
+    extractor.extract = MagicMock(side_effect=create_mock_extract)
+    return extractor
+
+
+@pytest.fixture
 async def client(async_engine, db_session, mock_gcs_client, mock_docling_processor, mock_borrower_extractor):
     """Create test client with mocked dependencies."""
     session_factory = async_sessionmaker(
