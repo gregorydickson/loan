@@ -137,12 +137,16 @@ def get_document_service(
     repository: DocumentRepoDep,
     gcs_client: GCSClientDep,
     docling_processor: DoclingProcessorDep,
+    borrower_extractor: BorrowerExtractorDep,
+    borrower_repository: BorrowerRepoDep,
 ) -> DocumentService:
-    """Get document service with dependencies."""
+    """Get document service with all dependencies."""
     return DocumentService(
         repository=repository,
         gcs_client=gcs_client,
         docling_processor=docling_processor,
+        borrower_extractor=borrower_extractor,
+        borrower_repository=borrower_repository,
     )
 
 

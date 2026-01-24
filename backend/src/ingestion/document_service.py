@@ -8,13 +8,19 @@ Handles:
 - Docling document processing (synchronous)
 """
 
+from __future__ import annotations
+
 import hashlib
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from src.ingestion.docling_processor import DoclingProcessor, DocumentProcessingError
 from src.storage.gcs_client import GCSClient
 from src.storage.models import Document, DocumentStatus
-from src.storage.repositories import DocumentRepository
+from src.storage.repositories import BorrowerRepository, DocumentRepository
+
+if TYPE_CHECKING:
+    from src.extraction import BorrowerExtractor
 
 
 class DuplicateDocumentError(Exception):
@@ -65,17 +71,23 @@ class DocumentService:
         repository: DocumentRepository,
         gcs_client: GCSClient,
         docling_processor: DoclingProcessor,
+        borrower_extractor: BorrowerExtractor,
+        borrower_repository: BorrowerRepository,
     ) -> None:
         """Initialize DocumentService.
 
         Args:
-            repository: DocumentRepository for database operations
+            repository: DocumentRepository for document database operations
             gcs_client: GCSClient for file storage
             docling_processor: DoclingProcessor for document processing
+            borrower_extractor: BorrowerExtractor for LLM-based extraction
+            borrower_repository: BorrowerRepository for persisting borrowers
         """
         self.repository = repository
         self.gcs_client = gcs_client
         self.docling_processor = docling_processor
+        self.borrower_extractor = borrower_extractor
+        self.borrower_repository = borrower_repository
 
     @staticmethod
     def compute_file_hash(content: bytes) -> str:
