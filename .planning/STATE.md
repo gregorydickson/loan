@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 6 of 7 (GCP Infrastructure)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 06-01-PLAN.md
+Last activity: 2026-01-24 - Completed 06-02-PLAN.md
 
-Progress: [██████████████████████████░░] 88%
+Progress: [██████████████████████████░░] 92%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
-- Average duration: 6.9 min
-- Total execution time: 2.42 hours
+- Total plans completed: 22
+- Average duration: 7.1 min
+- Total execution time: 2.63 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [███████████████████████
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 | 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
 | 05-frontend-dashboard | 5 | 16 min | 3.2 min |
-| 06-gcp-infrastructure | 1 | 12 min | 12.0 min |
+| 06-gcp-infrastructure | 2 | 25 min | 12.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 3 min, 5 min, 6 min, 1 min, 12 min
-- Trend: Infrastructure setup requires Terraform initialization
+- Last 5 plans: 5 min, 6 min, 1 min, 12 min, 13 min
+- Trend: Infrastructure plans take longer due to Docker builds and Terraform
 
 *Updated after each plan completion*
 
@@ -176,6 +176,14 @@ Recent decisions affecting current work:
 - Direct VPC egress pattern (no VPC connector cost)
 - Least-privilege IAM with 4 specific roles (cloudsql.client, secretmanager.secretAccessor, cloudtasks.enqueuer, logging.logWriter)
 
+**Phase 06-02 Decisions:**
+- python:3.12-slim for backend Dockerfile (smaller than full Python, includes gcc for asyncpg)
+- node:20-alpine for frontend Dockerfile (smallest Node.js image)
+- Standalone Next.js output mode for optimized Docker runtime (~100MB vs ~500MB)
+- Non-root container users for Cloud Run security
+- Pre-compiled Python bytecode for faster cold starts
+- Git commit hash as default image tag for deployment traceability
+
 ### Pending Todos
 
 None yet.
@@ -186,6 +194,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 16:19 UTC
-Stopped at: Completed 06-01-PLAN.md (Terraform Foundation)
+Last session: 2026-01-24 16:20 UTC
+Stopped at: Completed 06-02-PLAN.md (Dockerfiles & Deployment Scripts)
 Resume file: None
