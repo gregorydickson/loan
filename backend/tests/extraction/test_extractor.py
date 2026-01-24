@@ -23,6 +23,7 @@ from src.extraction.complexity_classifier import (
     ComplexityLevel,
 )
 from src.extraction.confidence import ConfidenceCalculator
+from src.extraction.consistency import ConsistencyValidator
 from src.extraction.deduplication import BorrowerDeduplicator
 from src.extraction.extractor import BorrowerExtractor, ExtractionResult
 from src.extraction.llm_client import GeminiClient, LLMResponse
@@ -92,6 +93,12 @@ def real_deduplicator() -> BorrowerDeduplicator:
 
 
 @pytest.fixture
+def real_consistency_validator() -> ConsistencyValidator:
+    """Create a real ConsistencyValidator for integration tests."""
+    return ConsistencyValidator()
+
+
+@pytest.fixture
 def sample_document() -> DocumentContent:
     """Create a sample DocumentContent for testing."""
     return DocumentContent(
@@ -156,6 +163,7 @@ def extractor(
     real_validator: FieldValidator,
     real_confidence_calc: ConfidenceCalculator,
     real_deduplicator: BorrowerDeduplicator,
+    real_consistency_validator: ConsistencyValidator,
 ) -> BorrowerExtractor:
     """Create a BorrowerExtractor with mocked LLM and real validation."""
     return BorrowerExtractor(
@@ -165,6 +173,7 @@ def extractor(
         validator=real_validator,
         confidence_calc=real_confidence_calc,
         deduplicator=real_deduplicator,
+        consistency_validator=real_consistency_validator,
     )
 
 
@@ -287,6 +296,7 @@ class TestChunking:
         real_validator: FieldValidator,
         real_confidence_calc: ConfidenceCalculator,
         real_deduplicator: BorrowerDeduplicator,
+        real_consistency_validator: ConsistencyValidator,
         sample_extraction_response: LLMResponse,
     ) -> None:
         """Large documents are split into multiple chunks."""
@@ -300,6 +310,7 @@ class TestChunking:
             validator=real_validator,
             confidence_calc=real_confidence_calc,
             deduplicator=real_deduplicator,
+            consistency_validator=real_consistency_validator,
         )
 
         # Create a document larger than chunk size
@@ -365,6 +376,7 @@ class TestDeduplication:
         real_validator: FieldValidator,
         real_confidence_calc: ConfidenceCalculator,
         real_deduplicator: BorrowerDeduplicator,
+        real_consistency_validator: ConsistencyValidator,
         sample_document: DocumentContent,
     ) -> None:
         """Duplicate borrowers from multiple chunks are merged."""
@@ -382,6 +394,7 @@ class TestDeduplication:
             validator=real_validator,
             confidence_calc=real_confidence_calc,
             deduplicator=real_deduplicator,
+            consistency_validator=real_consistency_validator,
         )
 
         # Both chunks extract same borrower (same SSN)
@@ -590,3 +603,212 @@ class TestPageEstimation:
 
         # Source should reference page 1 (chunk starts at char 0)
         assert result.borrowers[0].sources[0].page_number == 1
+
+
+class TestConsistencyIntegration:
+    """Tests for consistency validation integration in extractor."""
+
+    def test_consistency_warnings_in_result(
+        self,
+        mock_llm_client: MagicMock,
+        mock_classifier: MagicMock,
+        mock_chunker: MagicMock,
+        real_validator: FieldValidator,
+        real_confidence_calc: ConfidenceCalculator,
+        real_deduplicator: BorrowerDeduplicator,
+        real_consistency_validator: ConsistencyValidator,
+        sample_document: DocumentContent,
+    ) -> None:
+        """Extraction result includes consistency warnings for income drop."""
+        # Create extractor with all real validators
+        extractor = BorrowerExtractor(
+            llm_client=mock_llm_client,
+            classifier=mock_classifier,
+            chunker=mock_chunker,
+            validator=real_validator,
+            confidence_calc=real_confidence_calc,
+            deduplicator=real_deduplicator,
+            consistency_validator=real_consistency_validator,
+        )
+
+        # Mock LLM response with income drop (triggers INCOME_DROP warning)
+        extraction_result = BorrowerExtractionResult(
+            borrowers=[
+                ExtractedBorrower(
+                    name="Income Drop Person",
+                    income_history=[
+                        ExtractedIncome(
+                            amount=100000.0,
+                            period="annual",
+                            year=2023,
+                            source_type="employment",
+                        ),
+                        ExtractedIncome(
+                            amount=30000.0,  # 70% drop - triggers warning
+                            period="annual",
+                            year=2024,
+                            source_type="employment",
+                        ),
+                    ],
+                )
+            ],
+        )
+
+        mock_llm_client.extract.return_value = LLMResponse(
+            content="{}",
+            parsed=extraction_result,
+            input_tokens=50,
+            output_tokens=25,
+            latency_ms=250,
+            model_used="gemini-3-flash-preview",
+            finish_reason="STOP",
+        )
+
+        result = extractor.extract(
+            document=sample_document,
+            document_id=uuid4(),
+            document_name="test.pdf",
+        )
+
+        # Should have income drop warning
+        assert len(result.consistency_warnings) >= 1
+        warning_types = {w.warning_type for w in result.consistency_warnings}
+        assert "INCOME_DROP" in warning_types
+
+    def test_multi_source_borrower_flagged(
+        self,
+        mock_llm_client: MagicMock,
+        mock_classifier: MagicMock,
+        real_validator: FieldValidator,
+        real_confidence_calc: ConfidenceCalculator,
+        real_deduplicator: BorrowerDeduplicator,
+        real_consistency_validator: ConsistencyValidator,
+        sample_document: DocumentContent,
+    ) -> None:
+        """Multi-source borrower is flagged for address verification."""
+        # Create chunker that returns 2 chunks
+        mock_chunker = MagicMock(spec=DocumentChunker)
+        mock_chunker.chunk.return_value = [
+            TextChunk(
+                text="Chunk 1",
+                start_char=0,
+                end_char=10,
+                chunk_index=0,
+                total_chunks=2,
+            ),
+            TextChunk(
+                text="Chunk 2",
+                start_char=10,
+                end_char=20,
+                chunk_index=1,
+                total_chunks=2,
+            ),
+        ]
+
+        extractor = BorrowerExtractor(
+            llm_client=mock_llm_client,
+            classifier=mock_classifier,
+            chunker=mock_chunker,
+            validator=real_validator,
+            confidence_calc=real_confidence_calc,
+            deduplicator=real_deduplicator,
+            consistency_validator=real_consistency_validator,
+        )
+
+        # Both chunks return same borrower (same SSN) with address
+        # This will be merged by deduplicator, resulting in 2 sources
+        extraction_result = BorrowerExtractionResult(
+            borrowers=[
+                ExtractedBorrower(
+                    name="Multi Source Person",
+                    ssn="123-45-6789",
+                    address=ExtractedAddress(
+                        street="123 Main St",
+                        city="Dallas",
+                        state="TX",
+                        zip_code="75001",
+                    ),
+                )
+            ],
+        )
+
+        mock_llm_client.extract.return_value = LLMResponse(
+            content="{}",
+            parsed=extraction_result,
+            input_tokens=50,
+            output_tokens=25,
+            latency_ms=250,
+            model_used="gemini-3-flash-preview",
+            finish_reason="STOP",
+        )
+
+        result = extractor.extract(
+            document=sample_document,
+            document_id=uuid4(),
+            document_name="test.pdf",
+        )
+
+        # Merged borrower should have 2 sources
+        assert len(result.borrowers) == 1
+        assert len(result.borrowers[0].sources) == 2
+
+        # Should have ADDRESS_CONFLICT warning
+        assert len(result.consistency_warnings) >= 1
+        warning_types = {w.warning_type for w in result.consistency_warnings}
+        assert "ADDRESS_CONFLICT" in warning_types
+
+    def test_clean_extraction_no_warnings(
+        self,
+        extractor: BorrowerExtractor,
+        mock_llm_client: MagicMock,
+        sample_document: DocumentContent,
+    ) -> None:
+        """Simple single-source extraction has no consistency warnings."""
+        # Clean borrower with stable income and single source
+        extraction_result = BorrowerExtractionResult(
+            borrowers=[
+                ExtractedBorrower(
+                    name="Clean Person",
+                    ssn="123-45-6789",
+                    address=ExtractedAddress(
+                        street="123 Main St",
+                        city="Dallas",
+                        state="TX",
+                        zip_code="75001",
+                    ),
+                    income_history=[
+                        ExtractedIncome(
+                            amount=50000.0,
+                            period="annual",
+                            year=2023,
+                            source_type="employment",
+                        ),
+                        ExtractedIncome(
+                            amount=52000.0,  # 4% increase - normal
+                            period="annual",
+                            year=2024,
+                            source_type="employment",
+                        ),
+                    ],
+                )
+            ],
+        )
+
+        mock_llm_client.extract.return_value = LLMResponse(
+            content="{}",
+            parsed=extraction_result,
+            input_tokens=50,
+            output_tokens=25,
+            latency_ms=250,
+            model_used="gemini-3-flash-preview",
+            finish_reason="STOP",
+        )
+
+        result = extractor.extract(
+            document=sample_document,
+            document_id=uuid4(),
+            document_name="test.pdf",
+        )
+
+        # Clean extraction should have no consistency warnings
+        assert len(result.consistency_warnings) == 0
