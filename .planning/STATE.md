@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 4 of 7 (Data Storage & REST API)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-24 - Completed 04-02-PLAN.md (CORS, Exception Handlers, Status Endpoint)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 04-03-PLAN.md (Borrower API Endpoints)
 
-Progress: [██████████████░░░░░░░░░░░░░░░] 50%
+Progress: [████████████████░░░░░░░░░░░░░] 54%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
-- Average duration: 7.7 min
-- Total execution time: 1.80 hours
+- Total plans completed: 15
+- Average duration: 7.5 min
+- Total execution time: 1.88 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [██████████████░░░░░░░░░
 | 01-foundation | 3 | 17 min | 5.7 min |
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
-| 04-data-storage-rest-api | 2 | 13 min | 6.5 min |
+| 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 10 min, 14 min, 14 min, 8 min, 5 min
+- Last 5 plans: 14 min, 14 min, 8 min, 5 min, 5 min
 - Trend: Fast for API plans
 
 *Updated after each plan completion*
@@ -131,6 +131,11 @@ Recent decisions affecting current work:
 - Status endpoint placed BEFORE /{document_id} to avoid route conflicts
 - EntityNotFoundError re-exported from dependencies.py for API convenience
 
+**Phase 04-03 Decisions:**
+- Search endpoint before {borrower_id} to avoid "search" interpreted as UUID
+- income_count computed from len(income_records) for list views
+- Search returns len(borrowers) as total (no separate count query)
+
 ### Pending Todos
 
 None yet.
@@ -141,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 13:50 UTC
-Stopped at: Completed 04-02-PLAN.md (CORS, Exception Handlers, Status Endpoint)
+Last session: 2026-01-24 14:00 UTC
+Stopped at: Completed 04-03-PLAN.md (Borrower API Endpoints) - Phase 4 complete
 Resume file: None
