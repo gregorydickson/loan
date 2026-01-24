@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Gap Closure - Wiring document upload to extraction pipeline
+**Current focus:** Cloud Tasks Background Processing - Async document extraction
 
 ## Current Position
 
-Phase: 8 of 9 (Wire Document to Extraction Pipeline)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-01-24 - Completed 08-03-PLAN.md (E2E Integration Tests)
+Phase: 9 of 9 (Cloud Tasks Background Processing)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-24 - Completed 09-01-PLAN.md (Cloud Tasks Client and Configuration)
 
-Progress: [████████████████████████████████] 100% (32/32 plans)
+Progress: [█████████████████████████████████] 100% (33/36 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32
+- Total plans completed: 33
 - Average duration: 6.1 min
-- Total execution time: 3.5 hours
+- Total execution time: 3.6 hours
 
 **By Phase:**
 
@@ -35,10 +35,11 @@ Progress: [███████████████████████
 | 06-gcp-infrastructure | 4 | 30 min | 7.5 min |
 | 07-documentation-testing | 5 | 35 min | 7.0 min |
 | 08-wire-document-to-extraction-pipeline | 3 | 19 min | 6.3 min |
+| 09-cloud-tasks-background-processing | 1 | 7 min | 7.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 13 min, 6 min, 8 min, 5 min
-- Trend: Phase 8 complete - document-to-extraction pipeline fully wired and tested
+- Last 5 plans: 6 min, 8 min, 5 min, 7 min
+- Trend: Phase 9 started - Cloud Tasks infrastructure for async processing
 
 *Updated after each plan completion*
 
@@ -242,16 +243,24 @@ Recent decisions affecting current work:
 - Each test uploads fresh document to ensure test isolation
 - Mock extractor creates new borrower per call with unique UUID
 
+**Phase 09-01 Decisions:**
+- 10-minute dispatch_deadline for Docling + LLM processing time
+- OIDC token with service_url as audience for Cloud Run authentication
+- Empty string defaults for all Cloud Tasks settings to allow local development
+- types-protobuf dev dependency for mypy strict compliance
+
 ### Pending Todos
 
-None - Phase 8 complete.
+- Complete 09-02: Wire upload endpoint to Cloud Tasks
+- Complete 09-03: Task handler endpoint
+- Complete 09-04: Cloud Tasks integration tests
 
 ### Blockers/Concerns
 
-None - document-to-extraction pipeline fully wired and operational.
+None - CloudTasksClient ready for use in subsequent plans.
 
 ## Session Continuity
 
-Last session: 2026-01-24 20:11 UTC
-Stopped at: Completed 08-03-PLAN.md
-Resume file: None - Phase 8 complete
+Last session: 2026-01-24 20:37 UTC
+Stopped at: Completed 09-01-PLAN.md
+Resume file: None
