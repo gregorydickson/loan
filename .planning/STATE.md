@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 5 - Frontend Dashboard
+**Current focus:** Phase 5 - Frontend Dashboard (COMPLETE)
 
 ## Current Position
 
 Phase: 5 of 7 (Frontend Dashboard)
-Plan: 2 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-24 - Completed 05-02-PLAN.md
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 05-04-PLAN.md
 
-Progress: [███████████████████░░░░░░░░░] 65%
+Progress: [████████████████████████░░░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
-- Average duration: 7.1 min
-- Total execution time: 2.01 hours
+- Total plans completed: 19
+- Average duration: 7.0 min
+- Total execution time: 2.22 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████████████░░░░
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
 | 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 | 04-data-storage-rest-api | 3 | 18 min | 6.0 min |
-| 05-frontend-dashboard | 2 | 8 min | 4.0 min |
+| 05-frontend-dashboard | 4 | 15 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 8 min, 5 min, 5 min, 3 min, 5 min
-- Trend: Consistent fast execution for frontend plans
+- Last 5 plans: 5 min, 3 min, 3 min, 5 min, 6 min
+- Trend: Frontend plans averaging 3.8 min (fastest phase)
 
 *Updated after each plan completion*
 
@@ -149,6 +149,12 @@ Recent decisions affecting current work:
 - Upload zone shows truncated document ID in success message for verification
 - Detail page polls status only when document is pending/processing
 
+**Phase 05-04 Decisions:**
+- Mermaid initialized in useEffect to avoid SSR errors
+- Error boundary shows raw chart on render failure for debugging
+- Neutral theme and loose security level for Mermaid
+- DecisionCard is server component (no interactivity needed)
+
 ### Pending Todos
 
 None yet.
@@ -159,6 +165,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 14:45 UTC
-Stopped at: Completed 05-02-PLAN.md (Document Upload and Listing)
+Last session: 2026-01-24 16:00 UTC
+Stopped at: Completed 05-04-PLAN.md (Architecture Documentation Pages)
 Resume file: None
