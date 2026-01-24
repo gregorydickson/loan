@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-23)
 ## Current Position
 
 Phase: 9 of 9 (Cloud Tasks Background Processing)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 09-01-PLAN.md (Cloud Tasks Client and Configuration)
+Last activity: 2026-01-24 - Completed 09-02-PLAN.md (Task Handler Endpoint)
 
-Progress: [█████████████████████████████████] 100% (33/36 plans)
+Progress: [██████████████████████████████████] 94% (34/36 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 33
-- Average duration: 6.1 min
-- Total execution time: 3.6 hours
+- Total plans completed: 34
+- Average duration: 6.0 min
+- Total execution time: 3.7 hours
 
 **By Phase:**
 
@@ -35,11 +35,11 @@ Progress: [███████████████████████
 | 06-gcp-infrastructure | 4 | 30 min | 7.5 min |
 | 07-documentation-testing | 5 | 35 min | 7.0 min |
 | 08-wire-document-to-extraction-pipeline | 3 | 19 min | 6.3 min |
-| 09-cloud-tasks-background-processing | 1 | 7 min | 7.0 min |
+| 09-cloud-tasks-background-processing | 2 | 10 min | 5.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 6 min, 8 min, 5 min, 7 min
-- Trend: Phase 9 started - Cloud Tasks infrastructure for async processing
+- Last 5 plans: 8 min, 5 min, 7 min, 3 min
+- Trend: Phase 9 progressing - Task handler endpoint complete
 
 *Updated after each plan completion*
 
@@ -249,18 +249,23 @@ Recent decisions affecting current work:
 - Empty string defaults for all Cloud Tasks settings to allow local development
 - types-protobuf dev dependency for mypy strict compliance
 
+**Phase 09-02 Decisions:**
+- MAX_RETRY_COUNT=4 matching Cloud Tasks queue config (5 total attempts)
+- Return 200 for permanent failures (no retry), 503 for transient (triggers retry)
+- Set FAILED status only on final retry attempt
+- Idempotent: skip processing if document already COMPLETED or FAILED
+
 ### Pending Todos
 
-- Complete 09-02: Wire upload endpoint to Cloud Tasks
-- Complete 09-03: Task handler endpoint
+- Complete 09-03: Wire upload endpoint to Cloud Tasks
 - Complete 09-04: Cloud Tasks integration tests
 
 ### Blockers/Concerns
 
-None - CloudTasksClient ready for use in subsequent plans.
+None - Task handler endpoint ready to receive Cloud Tasks callbacks.
 
 ## Session Continuity
 
-Last session: 2026-01-24 20:37 UTC
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-01-24 21:05 UTC
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
