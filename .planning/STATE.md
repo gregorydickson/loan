@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Project Complete - All 7 phases finished
+**Current focus:** Gap Closure - Wiring document upload to extraction pipeline
 
 ## Current Position
 
-Phase: 7 of 7 (Documentation & Testing)
-Plan: 5 of 5 in current phase
-Status: COMPLETE
-Last activity: 2026-01-24 - Completed 07-05-PLAN.md (Type Safety & Quality Gates)
+Phase: 8 of 9 (Wire Document to Extraction Pipeline)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-24 - Completed 08-01-PLAN.md (Extraction DI Wiring)
 
-Progress: [██████████████████████████████] 100% (29/29 plans)
+Progress: [██████████████████████████████░] 97% (30/31 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
-- Average duration: 6.3 min
-- Total execution time: 3.2 hours
+- Total plans completed: 30
+- Average duration: 6.2 min
+- Total execution time: 3.3 hours
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: [███████████████████████
 | 05-frontend-dashboard | 5 | 16 min | 3.2 min |
 | 06-gcp-infrastructure | 4 | 30 min | 7.5 min |
 | 07-documentation-testing | 5 | 35 min | 7.0 min |
+| 08-wire-document-to-extraction-pipeline | 1 | 6 min | 6.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 4 min, 5 min, 13 min, 13 min
-- Trend: Final phase completed with comprehensive type safety and quality gates
+- Last 5 plans: 13 min, 13 min, 6 min
+- Trend: Gap closure phase started, DI wiring complete
 
 *Updated after each plan completion*
 
@@ -227,16 +228,20 @@ Recent decisions affecting current work:
 - Changed PostgresDsn/RedisDsn to str for simpler default handling
 - Exclude playwright.config.ts from frontend TypeScript build
 
+**Phase 08-01 Decisions:**
+- TYPE_CHECKING import to avoid circular dependency (extraction -> ingestion -> extraction)
+- Singleton pattern for BorrowerExtractor (expensive to instantiate with 7 components)
+
 ### Pending Todos
 
-None - project complete.
+- Plan 08-02: Call extractor from upload() and persist borrowers
 
 ### Blockers/Concerns
 
-None - all quality gates pass.
+None - DI wiring complete, ready for extraction integration.
 
 ## Session Continuity
 
-Last session: 2026-01-24 18:46 UTC
-Stopped at: PROJECT COMPLETE - All 29 plans executed
-Resume file: None
+Last session: 2026-01-24 19:51 UTC
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-wire-document-to-extraction-pipeline/08-02-PLAN.md
