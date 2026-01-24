@@ -321,3 +321,48 @@ async def client_with_failing_docling(
         yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def client_with_extraction(
+    async_engine, db_session, mock_gcs_client, mock_docling_processor, mock_borrower_extractor_with_data
+):
+    """Create test client with extractor that returns borrower data.
+
+    Use this fixture for tests that need to verify the full extraction
+    pipeline: upload -> extract -> persist -> retrieve.
+    """
+    session_factory = async_sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    async def override_get_db_session():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    def override_get_gcs_client():
+        return mock_gcs_client
+
+    def override_get_docling_processor():
+        return mock_docling_processor
+
+    def override_get_borrower_extractor():
+        return mock_borrower_extractor_with_data
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_gcs_client] = override_get_gcs_client
+    app.dependency_overrides[get_docling_processor] = override_get_docling_processor
+    app.dependency_overrides[get_borrower_extractor] = override_get_borrower_extractor
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+
+    app.dependency_overrides.clear()
