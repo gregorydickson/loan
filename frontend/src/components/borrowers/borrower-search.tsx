@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useRef, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -18,19 +18,19 @@ export function BorrowerSearch({
   isSearching = false,
 }: BorrowerSearchProps) {
   const deferredValue = useDeferredValue(value);
-  const [hasTriggered, setHasTriggered] = useState(false);
+  const previousDeferredRef = useRef(deferredValue);
 
   useEffect(() => {
-    // Only trigger search when deferred value settles and meets minimum length
-    if (deferredValue.length >= 2) {
-      onSearch(deferredValue);
-      setHasTriggered(true);
-    } else if (deferredValue.length === 0 && hasTriggered) {
-      // Reset to list view when search is cleared
-      onSearch("");
-      setHasTriggered(false);
+    // Only trigger search when deferred value actually changes
+    if (previousDeferredRef.current !== deferredValue) {
+      previousDeferredRef.current = deferredValue;
+
+      // Trigger search for 2+ chars or clear for empty
+      if (deferredValue.length >= 2 || deferredValue.length === 0) {
+        onSearch(deferredValue);
+      }
     }
-  }, [deferredValue, onSearch, hasTriggered]);
+  }, [deferredValue, onSearch]);
 
   return (
     <div className="relative">

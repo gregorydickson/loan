@@ -12,6 +12,7 @@ import type { SourceReference } from "@/lib/api/types";
 
 interface SourceReferencesProps {
   sources: SourceReference[];
+  /** Optional borrower name for context (used in future enhancements) */
   borrowerName?: string;
 }
 
@@ -26,6 +27,7 @@ function truncateSnippet(snippet: string, maxLength = 150): string {
 
 export function SourceReferences({
   sources,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   borrowerName,
 }: SourceReferencesProps) {
   // Group sources by document ID
