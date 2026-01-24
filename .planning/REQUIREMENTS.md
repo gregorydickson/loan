@@ -149,11 +149,101 @@ Requirements for v2.0 milestone: LangExtract extraction pipeline, LightOnOCR GPU
 
 Which phases cover which requirements. Updated during roadmap creation.
 
-**Coverage:**
-- v2.0 requirements: 60 total
-- Mapped to phases: TBD
-- Unmapped: TBD
+### v2.0 Requirement-to-Phase Mapping
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| LXTR-01 | Phase 11 | Pending |
+| LXTR-02 | Phase 11 | Pending |
+| LXTR-03 | Phase 11 | Pending |
+| LXTR-04 | Phase 11 | Pending |
+| LXTR-05 | Phase 11 | Pending |
+| LXTR-06 | Phase 12 | Pending |
+| LXTR-07 | Phase 12 | Pending |
+| LXTR-08 | Phase 11 | Pending |
+| LXTR-09 | Phase 11 | Pending |
+| LXTR-10 | Phase 12 | Pending |
+| LXTR-11 | Phase 12 | Pending |
+| LXTR-12 | Phase 11 | Pending |
+| LOCR-01 | Phase 13 | Pending |
+| LOCR-02 | Phase 13 | Pending |
+| LOCR-03 | Phase 13 | Pending |
+| LOCR-04 | Phase 13 | Pending |
+| LOCR-05 | Phase 14 | Pending |
+| LOCR-06 | Phase 13 | Pending |
+| LOCR-07 | Phase 13 | Pending |
+| LOCR-08 | Phase 13 | Pending |
+| LOCR-09 | Phase 10 | Pending |
+| LOCR-10 | Phase 13 | Pending |
+| LOCR-11 | Phase 14 | Pending |
+| LOCR-12 | Phase 13 | Pending |
+| DUAL-01 | Phase 15 | Pending |
+| DUAL-02 | Phase 15 | Pending |
+| DUAL-03 | Phase 15 | Pending |
+| DUAL-04 | Phase 15 | Pending |
+| DUAL-05 | Phase 15 | Pending |
+| DUAL-06 | Phase 15 | Pending |
+| DUAL-07 | Phase 15 | Pending |
+| DUAL-08 | Phase 15 | Pending |
+| DUAL-09 | Phase 15 | Pending |
+| DUAL-10 | Phase 18 | Pending |
+| DUAL-11 | Phase 15 | Pending |
+| DUAL-12 | Phase 18 | Pending |
+| CBLD-01 | Phase 16 | Pending |
+| CBLD-02 | Phase 16 | Pending |
+| CBLD-03 | Phase 16 | Pending |
+| CBLD-04 | Phase 10 | Pending |
+| CBLD-05 | Phase 16 | Pending |
+| CBLD-06 | Phase 16 | Pending |
+| CBLD-07 | Phase 16 | Pending |
+| CBLD-08 | Phase 10 | Pending |
+| CBLD-09 | Phase 16 | Pending |
+| CBLD-10 | Phase 16 | Pending |
+| CBLD-11 | Phase 16 | Pending |
+| CBLD-12 | Phase 10 | Pending |
+| TEST-01 | Phase 17 | Pending |
+| TEST-02 | Phase 17 | Pending |
+| TEST-03 | Phase 17 | Pending |
+| TEST-04 | Phase 17 | Pending |
+| TEST-05 | Phase 17 | Pending |
+| TEST-06 | Phase 17 | Pending |
+| TEST-07 | Phase 17 | Pending |
+| TEST-08 | Phase 17 | Pending |
+| TEST-09 | Phase 17 | Pending |
+| TEST-10 | Phase 17 | Pending |
+| TEST-11 | Phase 17 | Pending |
+| TEST-12 | Phase 17 | Pending |
+| DOCS-01 | Phase 18 | Pending |
+| DOCS-02 | Phase 18 | Pending |
+| DOCS-03 | Phase 18 | Pending |
+| DOCS-04 | Phase 18 | Pending |
+| DOCS-05 | Phase 18 | Pending |
+| DOCS-06 | Phase 18 | Pending |
+| DOCS-07 | Phase 18 | Pending |
+| DOCS-08 | Phase 18 | Pending |
+| DOCS-09 | Phase 18 | Pending |
+| DOCS-10 | Phase 18 | Pending |
+| DOCS-11 | Phase 18 | Pending |
+| DOCS-12 | Phase 18 | Pending |
+
+### Coverage Summary
+
+**v2.0 requirements:** 72 total
+**Mapped to phases:** 72/72 (100%)
+**Unmapped:** 0
+
+| Phase | Requirements | Count |
+|-------|--------------|-------|
+| Phase 10 | LOCR-09, CBLD-04, CBLD-08, CBLD-12 | 4 |
+| Phase 11 | LXTR-01, LXTR-02, LXTR-03, LXTR-04, LXTR-05, LXTR-08, LXTR-09, LXTR-12 | 8 |
+| Phase 12 | LXTR-06, LXTR-07, LXTR-10, LXTR-11 | 4 |
+| Phase 13 | LOCR-01, LOCR-02, LOCR-03, LOCR-04, LOCR-06, LOCR-07, LOCR-08, LOCR-10, LOCR-12 | 9 |
+| Phase 14 | LOCR-05, LOCR-11 | 2 |
+| Phase 15 | DUAL-01, DUAL-02, DUAL-03, DUAL-04, DUAL-05, DUAL-06, DUAL-07, DUAL-08, DUAL-09, DUAL-11 | 10 |
+| Phase 16 | CBLD-01, CBLD-02, CBLD-03, CBLD-05, CBLD-06, CBLD-07, CBLD-09, CBLD-10, CBLD-11 | 9 |
+| Phase 17 | TEST-01 through TEST-12 | 12 |
+| Phase 18 | DOCS-01 through DOCS-12, DUAL-10, DUAL-12 | 14 |
 
 ---
 *Requirements defined: 2026-01-24*
-*Last updated: 2026-01-24 after initial definition*
+*Last updated: 2026-01-24 - v2.0 traceability mapping complete*
