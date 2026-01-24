@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 
 from src.api.borrowers import router as borrowers_router
 from src.api.documents import router as documents_router
+from src.api.tasks import router as tasks_router
 from src.api.errors import EntityNotFoundError
 from src.config import settings
 
@@ -87,6 +88,7 @@ async def generic_exception_handler(
 # Include routers
 app.include_router(documents_router)
 app.include_router(borrowers_router)
+app.include_router(tasks_router)
 
 
 @app.get("/health")
