@@ -36,47 +36,47 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### LLM Extraction
 
-- [ ] **EXTRACT-01**: Gemini client initializes with google-genai SDK (not deprecated google-generativeai)
-- [ ] **EXTRACT-02**: Gemini client supports gemini-3-flash-preview model
-- [ ] **EXTRACT-03**: Gemini client supports gemini-3-pro-preview model
-- [ ] **EXTRACT-04**: Gemini client implements retry with exponential backoff (max 3 attempts)
-- [ ] **EXTRACT-05**: Gemini client handles rate limiting (429) with 60s wait
-- [ ] **EXTRACT-06**: Gemini client handles server errors (5xx) with 10s wait
-- [ ] **EXTRACT-07**: Gemini client handles timeout with chunk size reduction
-- [ ] **EXTRACT-08**: Gemini client handles None response when max_output_tokens exceeded
-- [ ] **EXTRACT-09**: Gemini client tracks token usage (input/output)
-- [ ] **EXTRACT-10**: Gemini client returns structured response with latency metrics
-- [ ] **EXTRACT-11**: Complexity classifier identifies simple single-borrower documents
-- [ ] **EXTRACT-12**: Complexity classifier identifies complex multi-borrower documents
-- [ ] **EXTRACT-13**: Complexity classifier identifies poor scan quality documents
-- [ ] **EXTRACT-14**: Complexity classifier identifies handwritten sections
-- [ ] **EXTRACT-15**: Complexity classifier returns STANDARD or COMPLEX level
-- [ ] **EXTRACT-16**: Extraction prompts render with document text
-- [ ] **EXTRACT-17**: Extraction prompts include Pydantic schema for structured output
-- [ ] **EXTRACT-18**: Extraction prompts handle special characters safely
-- [ ] **EXTRACT-19**: Extractor assesses document complexity before extraction
-- [ ] **EXTRACT-20**: Extractor chunks large documents (4000 tokens, 200 overlap)
-- [ ] **EXTRACT-21**: Extractor calls appropriate model (Flash for standard, Pro for complex)
-- [ ] **EXTRACT-22**: Extractor aggregates results from multiple chunks
-- [ ] **EXTRACT-23**: Extractor deduplicates borrower records (SSN/account match, fuzzy name match)
-- [ ] **EXTRACT-24**: Extractor tracks source attribution (document ID, page, section, snippet)
-- [ ] **EXTRACT-25**: Extractor calculates confidence scores (0.0-1.0 range)
-- [ ] **EXTRACT-26**: Confidence score increases for complete required fields
-- [ ] **EXTRACT-27**: Confidence score increases for complete optional fields
-- [ ] **EXTRACT-28**: Confidence score increases for multi-source confirmation
-- [ ] **EXTRACT-29**: Confidence score increases for format validation passing
+- [x] **EXTRACT-01**: Gemini client initializes with google-genai SDK (not deprecated google-generativeai)
+- [x] **EXTRACT-02**: Gemini client supports gemini-3-flash-preview model
+- [x] **EXTRACT-03**: Gemini client supports gemini-3-pro-preview model
+- [x] **EXTRACT-04**: Gemini client implements retry with exponential backoff (max 3 attempts)
+- [x] **EXTRACT-05**: Gemini client handles rate limiting (429) with 60s wait
+- [x] **EXTRACT-06**: Gemini client handles server errors (5xx) with 10s wait
+- [x] **EXTRACT-07**: Gemini client handles timeout with chunk size reduction
+- [x] **EXTRACT-08**: Gemini client handles None response when max_output_tokens exceeded
+- [x] **EXTRACT-09**: Gemini client tracks token usage (input/output)
+- [x] **EXTRACT-10**: Gemini client returns structured response with latency metrics
+- [x] **EXTRACT-11**: Complexity classifier identifies simple single-borrower documents
+- [x] **EXTRACT-12**: Complexity classifier identifies complex multi-borrower documents
+- [x] **EXTRACT-13**: Complexity classifier identifies poor scan quality documents
+- [x] **EXTRACT-14**: Complexity classifier identifies handwritten sections
+- [x] **EXTRACT-15**: Complexity classifier returns STANDARD or COMPLEX level
+- [x] **EXTRACT-16**: Extraction prompts render with document text
+- [x] **EXTRACT-17**: Extraction prompts include Pydantic schema for structured output
+- [x] **EXTRACT-18**: Extraction prompts handle special characters safely
+- [x] **EXTRACT-19**: Extractor assesses document complexity before extraction
+- [x] **EXTRACT-20**: Extractor chunks large documents (4000 tokens, 200 overlap)
+- [x] **EXTRACT-21**: Extractor calls appropriate model (Flash for standard, Pro for complex)
+- [x] **EXTRACT-22**: Extractor aggregates results from multiple chunks
+- [x] **EXTRACT-23**: Extractor deduplicates borrower records (SSN/account match, fuzzy name match)
+- [x] **EXTRACT-24**: Extractor tracks source attribution (document ID, page, section, snippet)
+- [x] **EXTRACT-25**: Extractor calculates confidence scores (0.0-1.0 range)
+- [x] **EXTRACT-26**: Confidence score increases for complete required fields
+- [x] **EXTRACT-27**: Confidence score increases for complete optional fields
+- [x] **EXTRACT-28**: Confidence score increases for multi-source confirmation
+- [x] **EXTRACT-29**: Confidence score increases for format validation passing
 
 ### Data Validation
 
-- [ ] **VALID-01**: Validator checks SSN format (XXX-XX-XXXX)
-- [ ] **VALID-02**: Validator checks phone number format (various US formats)
-- [ ] **VALID-03**: Validator checks zip code format (XXXXX or XXXXX-XXXX)
-- [ ] **VALID-04**: Validator checks date formats
-- [ ] **VALID-05**: Validator flags records with confidence < 0.7 for manual review
-- [ ] **VALID-06**: Validator tracks validation errors with reasons
-- [ ] **VALID-07**: Validator checks borrower data consistency across documents
-- [ ] **VALID-08**: Validator validates income progression is logical
-- [ ] **VALID-09**: Validator flags conflicting addresses for same borrower
+- [x] **VALID-01**: Validator checks SSN format (XXX-XX-XXXX)
+- [x] **VALID-02**: Validator checks phone number format (various US formats)
+- [x] **VALID-03**: Validator checks zip code format (XXXXX or XXXXX-XXXX)
+- [x] **VALID-04**: Validator checks date formats
+- [x] **VALID-05**: Validator flags records with confidence < 0.7 for manual review
+- [x] **VALID-06**: Validator tracks validation errors with reasons
+- [x] **VALID-07**: Validator checks borrower data consistency across documents
+- [x] **VALID-08**: Validator validates income progression is logical
+- [x] **VALID-09**: Validator flags conflicting addresses for same borrower
 
 ### Data Models
 

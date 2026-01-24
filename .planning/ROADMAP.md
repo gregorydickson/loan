@@ -12,7 +12,7 @@ This roadmap transforms the loan document extraction system from concept to depl
 
 - [x] **Phase 1: Foundation & Data Models** - Project scaffolding, dependencies, and Pydantic schemas for extraction output
 - [x] **Phase 2: Document Ingestion Pipeline** - Docling integration, GCS storage, document database layer
-- [ ] **Phase 3: LLM Extraction & Validation** - Gemini client, complexity classifier, extractor, data validation
+- [x] **Phase 3: LLM Extraction & Validation** - Gemini client, complexity classifier, extractor, data validation
 - [ ] **Phase 4: Data Storage & REST API** - Borrower repositories, complete API endpoints
 - [ ] **Phase 5: Frontend Dashboard** - Next.js UI with document/borrower management and architecture visualization
 - [ ] **Phase 6: GCP Infrastructure** - Terraform configuration, Cloud Run deployment, CI/CD scripts
@@ -57,7 +57,7 @@ Plans:
 - [x] 02-03-PLAN.md - Document service and upload API (orchestration, POST /api/documents endpoint)
 - [x] 02-04-PLAN.md - Gap closure: Wire Docling processing into upload flow, add end-to-end tests
 
-### Phase 3: LLM Extraction & Validation
+### Phase 3: LLM Extraction & Validation ✅
 **Goal**: Extract structured borrower data from document text using Gemini 3.0 with complexity-based model selection and hybrid validation
 **Depends on**: Phase 2
 **Requirements**: EXTRACT-01, EXTRACT-02, EXTRACT-03, EXTRACT-04, EXTRACT-05, EXTRACT-06, EXTRACT-07, EXTRACT-08, EXTRACT-09, EXTRACT-10, EXTRACT-11, EXTRACT-12, EXTRACT-13, EXTRACT-14, EXTRACT-15, EXTRACT-16, EXTRACT-17, EXTRACT-18, EXTRACT-19, EXTRACT-20, EXTRACT-21, EXTRACT-22, EXTRACT-23, EXTRACT-24, EXTRACT-25, EXTRACT-26, EXTRACT-27, EXTRACT-28, EXTRACT-29, VALID-01, VALID-02, VALID-03, VALID-04, VALID-05, VALID-06, VALID-07, VALID-08, VALID-09
@@ -69,14 +69,14 @@ Plans:
   5. Large documents chunked and results aggregated correctly
   6. Consistency validation flags address conflicts, income anomalies, and cross-document mismatches
 **Plans**: 5 plans
-**Status**: Planned (2026-01-23)
+**Status**: Complete (2026-01-24)
 
 Plans:
-- [ ] 03-01-PLAN.md - Gemini client with retry and error handling
-- [ ] 03-02-PLAN.md - Complexity classifier, prompt templates, and document chunker
-- [ ] 03-03-PLAN.md - Validation service and confidence scoring
-- [ ] 03-04-PLAN.md - Extraction orchestrator with deduplication
-- [ ] 03-05-PLAN.md - Consistency validation (address conflicts, income progression, cross-document checks)
+- [x] 03-01-PLAN.md - Gemini client with retry and error handling
+- [x] 03-02-PLAN.md - Complexity classifier, prompt templates, and document chunker
+- [x] 03-03-PLAN.md - Validation service and confidence scoring
+- [x] 03-04-PLAN.md - Extraction orchestrator with deduplication
+- [x] 03-05-PLAN.md - Consistency validation (address conflicts, income progression, cross-document checks)
 
 ### Phase 4: Data Storage & REST API
 **Goal**: Persist extracted borrower data with relationships and expose through searchable REST endpoints
@@ -157,7 +157,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Models | 3/3 | ✅ Complete | 2026-01-23 |
 | 2. Document Ingestion Pipeline | 4/4 | ✅ Complete | 2026-01-23 |
-| 3. LLM Extraction & Validation | 0/5 | Planned | - |
+| 3. LLM Extraction & Validation | 5/5 | ✅ Complete | 2026-01-24 |
 | 4. Data Storage & REST API | 0/3 | Not started | - |
 | 5. Frontend Dashboard | 0/4 | Not started | - |
 | 6. GCP Infrastructure | 0/3 | Not started | - |

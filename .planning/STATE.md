@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 3 - LLM Extraction & Validation
+**Current focus:** Phase 4 - Data Storage & REST API
 
 ## Current Position
 
-Phase: 3 of 7 (LLM Extraction & Validation)
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-01-24 - Completed 03-05-PLAN.md (Consistency Validation)
+Phase: 4 of 7 (Data Storage & REST API)
+Plan: 0 of 3 in current phase
+Status: Ready to plan
+Last activity: 2026-01-24 - Phase 3 verified complete (6/6 criteria)
 
-Progress: [███████████████] 60%
+Progress: [████████████] 43%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 12
-- Average duration: 7.5 min
-- Total execution time: 1.6 hours
+- Average duration: 7.9 min
+- Total execution time: 1.58 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [███████████████] 60%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 17 min | 5.7 min |
 | 02-document-ingestion-pipeline | 4 | 34 min | 8.5 min |
-| 03-llm-extraction-validation | 5 | 48 min | 9.6 min |
+| 03-llm-extraction-validation | 5 | 49 min | 9.8 min |
 
 **Recent Trend:**
 - Last 5 plans: 5 min, 5 min, 10 min, 14 min, 14 min
-- Trend: Stable
+- Trend: Increasing (more complex work)
 
 *Updated after each plan completion*
 
@@ -89,6 +89,12 @@ Recent decisions affecting current work:
 - Include page_count and error_message in upload response
 - DoclingProcessor injection via FastAPI dependencies
 
+**Phase 03-01 Decisions:**
+- Type-safe token extraction via helper function (handles None usage_metadata)
+- Let RetryError propagate after exhaustion (caller can distinguish from single-attempt failure)
+- Temperature=1.0 for Gemini 3 (lower causes looping)
+- No max_output_tokens (causes None response with structured output)
+
 **Phase 03-02 Decisions:**
 - Compiled regex patterns at init time for O(n) efficiency
 - Threshold >3 for poor quality indicators (avoids false positives)
@@ -101,23 +107,16 @@ Recent decisions affecting current work:
 - Year validation range 1950 to current+1 (historical + projected income)
 - Confidence threshold 0.7 for review flagging
 
-**Phase 03-01 Decisions:**
-- Type-safe token extraction via helper function (handles None usage_metadata)
-- Let RetryError propagate after exhaustion (caller can distinguish from single-attempt failure)
-- Temperature=1.0 for Gemini 3 (lower causes looping)
-- No max_output_tokens (causes None response with structured output)
-
 **Phase 03-04 Decisions:**
-- Gemini-compatible schemas separate from storage models (simpler types for LLM)
-- Multi-strategy deduplication (SSN > account > fuzzy name) with priority ordering
-- Pydantic validation errors caught and tracked (not crash extraction)
-- Optional[T] = None pattern for Gemini compatibility (not Field(default=...))
+- Separate ExtractedBorrower (LLM output) from BorrowerRecord (storage) schemas
+- No Field(default=...) in extraction schemas (Gemini compatibility)
+- Deduplication priority: SSN > account > fuzzy name (90%+) > high name match (95%+)
+- Page finding via text search fallback to char position estimation
 
 **Phase 03-05 Decisions:**
-- Income thresholds: 50% drop, 300% spike (balances anomaly detection vs false positives)
-- Multi-source flagging: Any borrower with >1 source + address flagged for review
-- Cross-document: Only SSN last-4 comparison (definitive identifier)
-- Detect vs Resolve: ConsistencyValidator FLAGS, BorrowerDeduplicator MERGES
+- Income drop >50% or spike >300% flagged as warnings
+- Consistency runs AFTER deduplication (flags review items, doesn't resolve)
+- Cross-document checks use normalized names for matching
 
 ### Pending Todos
 
@@ -129,7 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24 04:32 UTC
-Stopped at: Completed 03-05-PLAN.md (Consistency Validation) - Phase 3 complete
+Last session: 2026-01-24 04:30 UTC
+Stopped at: Completed Phase 3 (LLM Extraction & Validation) - 5/5 plans executed and verified
 Resume file: None
-Next: Phase 04 - Extraction API
