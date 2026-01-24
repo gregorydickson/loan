@@ -145,13 +145,15 @@ Plans:
   3. README.md includes complete setup and run instructions
   4. pytest coverage report shows >80% backend coverage
   5. mypy strict mode passes with zero errors
-**Plans**: TBD
+**Plans**: 5 plans
+**Status**: Not started
 
 Plans:
-- [ ] 07-01: System design documentation
-- [ ] 07-02: Architecture decision records
-- [ ] 07-03: Unit and integration tests
-- [ ] 07-04: End-to-end tests and quality verification
+- [ ] 07-01-PLAN.md — System design documentation (DOCS-01 to DOCS-19)
+- [ ] 07-02-PLAN.md — Architecture decision records (DOCS-20 to DOCS-24)
+- [ ] 07-03-PLAN.md — README and project documentation (DOCS-25 to DOCS-28)
+- [ ] 07-04-PLAN.md — Test coverage expansion (TEST-01 to TEST-17)
+- [ ] 07-05-PLAN.md — Type safety and quality verification (TEST-18 to TEST-20)
 
 ## Progress
 
@@ -166,7 +168,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Data Storage & REST API | 3/3 | Complete | 2026-01-24 |
 | 5. Frontend Dashboard | 5/5 | Complete | 2026-01-24 |
 | 6. GCP Infrastructure | 4/4 | Complete | 2026-01-24 |
-| 7. Documentation & Testing | 0/4 | Not started | - |
+| 7. Documentation & Testing | 0/5 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-23*
