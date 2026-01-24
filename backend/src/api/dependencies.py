@@ -6,6 +6,16 @@ from fastapi import Depends
 
 from src.api.errors import EntityNotFoundError
 from src.config import settings
+from src.extraction import (
+    BorrowerDeduplicator,
+    BorrowerExtractor,
+    ComplexityClassifier,
+    ConfidenceCalculator,
+    ConsistencyValidator,
+    DocumentChunker,
+    FieldValidator,
+    GeminiClient,
+)
 from src.ingestion.docling_processor import DoclingProcessor
 from src.ingestion.document_service import DocumentService
 from src.storage.database import DBSession
@@ -71,6 +81,42 @@ def get_docling_processor() -> DoclingProcessor:
 DoclingProcessorDep = Annotated[DoclingProcessor, Depends(get_docling_processor)]
 
 
+# BorrowerExtractor dependency
+_borrower_extractor: BorrowerExtractor | None = None
+
+
+def get_borrower_extractor() -> BorrowerExtractor:
+    """Get or create BorrowerExtractor singleton with all components.
+
+    Returns:
+        BorrowerExtractor instance configured with:
+        - GeminiClient for LLM extraction
+        - ComplexityClassifier for model routing
+        - DocumentChunker for large documents
+        - FieldValidator for format validation
+        - ConfidenceCalculator for scoring
+        - BorrowerDeduplicator for merging duplicates
+        - ConsistencyValidator for data quality checks
+    """
+    global _borrower_extractor
+
+    if _borrower_extractor is None:
+        _borrower_extractor = BorrowerExtractor(
+            llm_client=GeminiClient(),
+            classifier=ComplexityClassifier(),
+            chunker=DocumentChunker(),
+            validator=FieldValidator(),
+            confidence_calc=ConfidenceCalculator(),
+            deduplicator=BorrowerDeduplicator(),
+            consistency_validator=ConsistencyValidator(),
+        )
+
+    return _borrower_extractor
+
+
+BorrowerExtractorDep = Annotated[BorrowerExtractor, Depends(get_borrower_extractor)]
+
+
 def get_document_repository(session: DBSession) -> DocumentRepository:
     """Get document repository with session."""
     return DocumentRepository(session)
@@ -106,9 +152,11 @@ __all__ = [
     "DBSession",
     "GCSClientDep",
     "DoclingProcessorDep",
+    "BorrowerExtractorDep",
     "DocumentRepoDep",
     "DocumentServiceDep",
     "BorrowerRepoDep",
     "EntityNotFoundError",
+    "get_borrower_extractor",
     "get_borrower_repository",
 ]
