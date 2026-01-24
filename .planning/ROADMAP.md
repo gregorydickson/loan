@@ -17,7 +17,7 @@ This roadmap transforms the loan document extraction system from concept to depl
 - [x] **Phase 5: Frontend Dashboard** - Next.js UI with document/borrower management and architecture visualization
 - [x] **Phase 6: GCP Infrastructure** - Terraform configuration, Cloud Run deployment, CI/CD scripts
 - [x] **Phase 7: Documentation & Testing** - System design docs, architecture decisions, comprehensive test suite
-- [ ] **Phase 8: Wire Document-to-Extraction Pipeline** - Connect extraction subsystem to enable end-to-end borrower extraction
+- [x] **Phase 8: Wire Document-to-Extraction Pipeline** - Connect extraction subsystem to enable end-to-end borrower extraction
 - [ ] **Phase 9: Cloud Tasks Background Processing** - Asynchronous extraction queue with retry logic
 
 ## Phase Details
@@ -169,12 +169,12 @@ Plans:
   4. Frontend borrower list displays actual extracted data
   5. E2E integration test verifies upload -> extraction -> database -> retrieval flow
 **Plans**: 3 plans
-**Status**: Pending
+**Status**: Complete (2026-01-24)
 
 Plans:
-- [ ] 08-01-PLAN.md - Wire extraction dependencies into DocumentService via FastAPI DI
-- [ ] 08-02-PLAN.md - Integrate BorrowerExtractor into upload() with persistence
-- [ ] 08-03-PLAN.md - E2E integration tests for extraction pipeline
+- [x] 08-01-PLAN.md - Wire extraction dependencies into DocumentService via FastAPI DI
+- [x] 08-02-PLAN.md - Integrate BorrowerExtractor into upload() with persistence
+- [x] 08-03-PLAN.md - E2E integration tests for extraction pipeline
 
 ### Phase 9: Cloud Tasks Background Processing
 **Goal**: Move document extraction to asynchronous background queue with retry logic
@@ -204,9 +204,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 5. Frontend Dashboard | 5/5 | Complete | 2026-01-24 |
 | 6. GCP Infrastructure | 4/4 | Complete | 2026-01-24 |
 | 7. Documentation & Testing | 5/5 | Complete | 2026-01-24 |
-| 8. Wire Document-to-Extraction Pipeline | 0/3 | Pending | - |
+| 8. Wire Document-to-Extraction Pipeline | 3/3 | Complete | 2026-01-24 |
 | 9. Cloud Tasks Background Processing | 0/? | Pending | - |
 
 ---
 *Roadmap created: 2026-01-23*
-*Last updated: 2026-01-24 (Phase 8 planned with 3 plans)*
+*Last updated: 2026-01-24 (Phase 8 executed with 3 plans)*
