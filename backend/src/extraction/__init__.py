@@ -7,6 +7,7 @@ This package provides the complete borrower extraction pipeline:
 - FieldValidator: Validates extracted field formats
 - ConfidenceCalculator: Scores extraction confidence
 - BorrowerDeduplicator: Merges duplicate borrower records
+- ConsistencyValidator: Flags data inconsistencies for review
 - BorrowerExtractor: Orchestrates the full pipeline
 """
 
@@ -17,6 +18,7 @@ from src.extraction.complexity_classifier import (
     ComplexityLevel,
 )
 from src.extraction.confidence import ConfidenceBreakdown, ConfidenceCalculator
+from src.extraction.consistency import ConsistencyValidator, ConsistencyWarning
 from src.extraction.deduplication import BorrowerDeduplicator
 from src.extraction.extractor import BorrowerExtractor, ExtractionResult
 from src.extraction.llm_client import GeminiClient, LLMResponse
@@ -48,6 +50,9 @@ __all__ = [
     "ConfidenceBreakdown",
     # Deduplication
     "BorrowerDeduplicator",
+    # Consistency Validation
+    "ConsistencyValidator",
+    "ConsistencyWarning",
     # Extraction Schemas
     "ExtractedBorrower",
     "ExtractedAddress",

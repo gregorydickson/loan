@@ -7,13 +7,15 @@ This module ties together all extraction components:
 - BorrowerDeduplicator: Merges duplicate records
 - FieldValidator: Validates extracted fields
 - ConfidenceCalculator: Scores extraction confidence
+- ConsistencyValidator: Flags data inconsistencies for review
 
 The extractor coordinates these components to:
 1. Assess document complexity
 2. Chunk large documents
 3. Extract borrowers from each chunk
 4. Deduplicate merged records
-5. Validate and score results
+5. Check consistency (after deduplication)
+6. Validate and score results
 """
 
 import logging
@@ -30,6 +32,7 @@ from src.extraction.complexity_classifier import (
     ComplexityLevel,
 )
 from src.extraction.confidence import ConfidenceCalculator
+from src.extraction.consistency import ConsistencyValidator, ConsistencyWarning
 from src.extraction.deduplication import BorrowerDeduplicator
 from src.extraction.llm_client import GeminiClient
 from src.extraction.prompts import EXTRACTION_SYSTEM_PROMPT, build_extraction_prompt
@@ -63,7 +66,7 @@ class ExtractionResult:
     chunks_processed: int
     total_tokens: int
     validation_errors: list[ValidationError] = field(default_factory=list)
-    consistency_warnings: list = field(default_factory=list)
+    consistency_warnings: list[ConsistencyWarning] = field(default_factory=list)
 
 
 class BorrowerExtractor:
@@ -92,6 +95,7 @@ class BorrowerExtractor:
         validator: FieldValidator,
         confidence_calc: ConfidenceCalculator,
         deduplicator: BorrowerDeduplicator,
+        consistency_validator: ConsistencyValidator,
     ) -> None:
         """Initialize extractor with required components.
 
@@ -102,6 +106,7 @@ class BorrowerExtractor:
             validator: Field validator for format checking
             confidence_calc: Confidence calculator for scoring
             deduplicator: Deduplicator for merging duplicates
+            consistency_validator: Consistency validator for data quality checks
         """
         self.llm_client = llm_client
         self.classifier = classifier
@@ -109,6 +114,7 @@ class BorrowerExtractor:
         self.validator = validator
         self.confidence_calc = confidence_calc
         self.deduplicator = deduplicator
+        self.consistency_validator = consistency_validator
 
     def extract(
         self,
@@ -193,6 +199,9 @@ class BorrowerExtractor:
         # Step 4: Deduplicate
         merged = self.deduplicator.deduplicate(all_borrowers)
 
+        # Step 4.5: Check consistency (after deduplication)
+        consistency_warnings = self.consistency_validator.validate(merged)
+
         # Step 5: Validate and score each borrower
         for borrower in merged:
             # Validate fields
@@ -242,6 +251,7 @@ class BorrowerExtractor:
             chunks_processed=len(chunks),
             total_tokens=total_tokens,
             validation_errors=all_validation_errors,
+            consistency_warnings=consistency_warnings,
         )
 
     def _find_page_for_position(
