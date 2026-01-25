@@ -31,6 +31,16 @@ class SourceReference(BaseModel):
         max_length=500,
         description="Text snippet that was extracted from",
     )
+    char_start: int | None = Field(
+        default=None,
+        ge=0,
+        description="Start character position in source text (inclusive), None for page-level references",
+    )
+    char_end: int | None = Field(
+        default=None,
+        ge=0,
+        description="End character position in source text (exclusive), None for page-level references",
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
