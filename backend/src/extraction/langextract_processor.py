@@ -16,6 +16,7 @@ import langextract as lx
 from langextract.core.data import AnnotatedDocument, CharInterval
 
 from examples import ALL_EXAMPLES
+from src.extraction.extraction_config import ExtractionConfig
 from src.extraction.offset_translator import OffsetTranslator
 from src.models.borrower import Address, BorrowerRecord, IncomeRecord
 from src.models.document import SourceReference
@@ -74,7 +75,7 @@ class LangExtractProcessor:
         document_id: UUID,
         document_name: str,
         raw_text: str | None = None,
-        extraction_passes: int = 2,
+        config: ExtractionConfig | None = None,
     ) -> LangExtractResult:
         """Extract borrower data with character-level source references.
 
@@ -83,11 +84,13 @@ class LangExtractProcessor:
             document_id: UUID of source document
             document_name: Human-readable document name
             raw_text: Optional raw text for offset translation
-            extraction_passes: Number of extraction passes (1-5)
+            config: Extraction configuration (defaults to ExtractionConfig())
 
         Returns:
             LangExtractResult with borrowers and metadata
         """
+        config = config or ExtractionConfig()
+
         # Create offset translator for verification
         translator = OffsetTranslator(document_text, raw_text)
 
@@ -98,7 +101,9 @@ class LangExtractProcessor:
                 prompt_description=self._get_prompt_description(),
                 examples=self.examples,
                 model_id=self._model_id,
-                extraction_passes=extraction_passes,
+                extraction_passes=config.extraction_passes,
+                max_workers=config.max_workers,
+                max_char_buffer=config.max_char_buffer,
             )
         except Exception as e:
             logger.error("LangExtract extraction failed: %s", str(e))
