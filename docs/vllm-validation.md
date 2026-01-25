@@ -77,6 +77,16 @@ Successful validation shows:
 | Model not supported | vLLM version too old | Upgrade to vLLM 0.11.2+ |
 | Connection refused | Server not running | Start vLLM serve command |
 
+## Local Validation Status
+
+**Status:** Skipped - No local GPU available (2026-01-24)
+
+Local validation was deferred because:
+- No NVIDIA GPU with sufficient VRAM available on development machine
+- vLLM requires CUDA-capable hardware for model serving
+
+Validation will occur during Phase 13 cloud deployment when the L4 GPU Cloud Run service is configured.
+
 ## Cloud Deployment
 
-Once validated locally, the same model serves on Cloud Run with L4 GPU (Phase 13).
+Once validated in Phase 13 cloud deployment, the same model serves on Cloud Run with L4 GPU.
