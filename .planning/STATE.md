@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 16 of 18 (CloudBuild Deployment)
-Plan: 2 of 3 in current phase
-Status: In Progress
-Last activity: 2026-01-25 - Completed 16-02-PLAN.md (Infrastructure Scripts & Rollback)
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-01-25 - Completed 16-03-PLAN.md (GitHub Triggers & Deployment Guide)
 
-Progress: [###############===..] 85% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 partial)
+Progress: [################==..] 87% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16)
 
 ## Performance Metrics
 
@@ -100,15 +100,15 @@ Progress: [###############===..] 85% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 15 Total:** 11 min (2 plans, avg 5.5 min/plan)
 
-**v2.0 Phase 16 In Progress:**
+**v2.0 Phase 16 Complete:**
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
 | 16-01 | CloudBuild YAML Configs | 5 min | Complete |
 | 16-02 | Infrastructure Scripts & Rollback | 3 min | Complete |
-| 16-03 | GitHub Triggers & Build Verification | - | Pending |
+| 16-03 | GitHub Triggers & Deployment Guide | 3 min | Complete |
 
-**Phase 16 Progress:** 2 of 3 plans complete
+**Phase 16 Total:** 11 min (3 plans, avg 3.7 min/plan)
 
 ## Accumulated Context
 
@@ -171,12 +171,12 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 16 in progress, 16-02 complete.
+None - Phase 16 complete.
 
-## Phase 16 Progress Summary
+## Phase 16 Completion Summary
 
-**Plans:** 2 of 3 complete
-**Requirements Satisfied:** CBLD-05, CBLD-06, CBLD-11
+**Plans:** 3 of 3 complete
+**Requirements Satisfied:** CBLD-05, CBLD-06, CBLD-07, CBLD-10, CBLD-11
 
 **Deliverables (16-01):**
 - backend-cloudbuild.yaml with VPC egress and Secret Manager
@@ -188,7 +188,11 @@ None - Phase 16 in progress, 16-02 complete.
 - infrastructure/scripts/provision-infra.sh (CBLD-06)
 - infrastructure/scripts/rollback.sh (CBLD-11)
 
-**Total Phase 16 so far:** 8 min (2 plans)
+**Deliverables (16-03):**
+- infrastructure/scripts/setup-github-triggers.sh (CBLD-07)
+- docs/cloudbuild-deployment-guide.md (CBLD-10, CBLD-11)
+
+**Total Phase 16:** 11 min (3 plans, avg 3.7 min/plan)
 
 ## Phase 15 Completion Summary
 
@@ -212,7 +216,7 @@ None - Phase 16 in progress, 16-02 complete.
 
 ## Session Continuity
 
-Last session: 2026-01-25T17:18:00Z
-Stopped at: Completed 16-02-PLAN.md (Infrastructure Scripts & Rollback)
+Last session: 2026-01-25T17:26:00Z
+Stopped at: Completed 16-03-PLAN.md (GitHub Triggers & Deployment Guide)
 Resume file: None
-Next action: Phase 16-03 (GitHub Triggers & Build Verification)
+Next action: Phase 17 (Frontend Integration) or Phase 18 (Testing & Verification)
