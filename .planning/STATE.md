@@ -11,18 +11,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 13 of 18 (LightOnOCR GPU Service)
-Plan: 3 of 4 in current phase
+Plan: 2 of 4 in current phase (13-02 merged into 13-01)
 Status: In Progress
-Last activity: 2026-01-25 - Completed 13-03-PLAN.md (LightOnOCR Client)
+Last activity: 2026-01-25 - Completed 13-01-PLAN.md (LightOnOCR GPU Infrastructure)
 
-Progress: [############======..] 72% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + 13-03)
+Progress: [############======..] 73% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + 13-01 + 13-03)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 48 (v1.0: 36, v2.0: 12)
-- Average duration: 5.0 min
-- Total execution time: 4.49 hours
+- Total plans completed: 49 (v1.0: 36, v2.0: 13)
+- Average duration: 4.9 min
+- Total execution time: 4.52 hours
 
 **By Phase (v1.0):**
 
@@ -75,12 +75,12 @@ Progress: [############======..] 72% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
-| 13-01 | Dockerfile for LightOnOCR GPU Service | - | Pending |
-| 13-02 | Cloud Run Deployment Script | - | Pending |
+| 13-01 | LightOnOCR GPU Infrastructure | 3 min | Complete |
+| 13-02 | Cloud Run Deployment Script | - | Merged into 13-01 |
 | 13-03 | LightOnOCR Client | 4 min | Complete |
 | 13-04 | API Integration | - | Pending |
 
-**Phase 13 Progress:** 1 of 4 plans complete
+**Phase 13 Progress:** 2 of 4 plans complete (13-02 merged into 13-01)
 
 ## Accumulated Context
 
@@ -115,6 +115,9 @@ Recent decisions affecting v2.0 work:
 - [13-03]: Use id_token.fetch_id_token for Cloud Run OIDC authentication
 - [13-03]: 120s default timeout for GPU cold start tolerance
 - [13-03]: Detect PNG vs JPEG via magic bytes for proper data URI encoding
+- [13-01]: vLLM v0.11.2 base image with transformers from source for LightOnOCR-2-1B
+- [13-01]: Model baked into Docker image for faster cold starts
+- [13-01]: 8 vCPU, 32Gi memory, L4 GPU, 240s startup probe
 
 ### Pending Todos
 
@@ -126,8 +129,13 @@ None - Phase 13 progressing normally.
 
 ## Phase 13 Progress Summary
 
-**Plans:** 1 of 4 complete
-**Requirements Satisfied (so far):** LOCR-06, LOCR-07
+**Plans:** 2 of 4 complete (13-02 merged into 13-01)
+**Requirements Satisfied (so far):** LOCR-01, LOCR-02, LOCR-03, LOCR-04, LOCR-06, LOCR-07
+
+**Deliverables (13-01):**
+- LightOnOCR Dockerfile with vLLM base and model baked in
+- Cloud Run GPU deployment script with L4 configuration
+- Service account setup script for GPU service
 
 **Deliverables (13-03):**
 - LightOnOCRClient HTTP client for GPU service
@@ -136,13 +144,11 @@ None - Phase 13 progressing normally.
 - 23 unit tests covering all client functionality
 
 **Remaining Plans:**
-- 13-01: Dockerfile for LightOnOCR GPU Service
-- 13-02: Cloud Run Deployment Script
 - 13-04: API Integration
 
 ## Session Continuity
 
-Last session: 2026-01-25T12:57:53Z
-Stopped at: Completed 13-03-PLAN.md (LightOnOCR Client)
+Last session: 2026-01-25T12:59:31Z
+Stopped at: Completed 13-01-PLAN.md (LightOnOCR GPU Infrastructure)
 Resume file: None
-Next action: Execute 13-01 or 13-02 (GPU service infrastructure)
+Next action: Execute 13-04 (API Integration)
