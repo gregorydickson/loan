@@ -17,7 +17,6 @@ steps:
     id: 'build-backend'
     args:
       - 'build'
-      - '--no-cache'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
       - '-t'
