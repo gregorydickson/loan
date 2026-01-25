@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 10 of 18 (v2.0 Setup & Preparation)
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-01-24 - Completed 10-04-PLAN.md (vLLM Validation Scripts)
+Plan: 5 of 5 in current phase (including gap closure)
+Status: Phase complete (gaps closed)
+Last activity: 2026-01-25 - Completed 10-05-PLAN.md (Gap Closure: CloudBuild Service Account)
 
-Progress: [##########===.......] 58% (v1.0 complete + Phase 10 complete)
+Progress: [##########===.......] 58% (v1.0 complete + Phase 10 complete with gaps closed)
 
 ## Performance Metrics
 
@@ -46,8 +46,9 @@ Progress: [##########===.......] 58% (v1.0 complete + Phase 10 complete)
 | 10-02 | Terraform Archival | 3 min | Complete |
 | 10-03 | CloudBuild Foundation | 8 min | Complete |
 | 10-04 | vLLM Validation Scripts | 4 min | Complete |
+| 10-05 | Gap Closure: Service Account | 2 min | Complete |
 
-**Phase 10 Total:** 20 min (4 plans, avg 5.0 min/plan)
+**Phase 10 Total:** 22 min (5 plans, avg 4.4 min/plan)
 
 ## Accumulated Context
 
@@ -65,6 +66,7 @@ Recent decisions affecting v2.0 work:
 - [10-02]: Terraform state remains in GCS, not copied locally for recovery capability
 - [10-03]: CloudBuild uses dedicated cloudbuild-deployer service account with 5 least-privilege IAM roles
 - [10-04]: Local vLLM validation skipped (no GPU), deferred to Phase 13 cloud deployment
+- [10-05]: Gap closure executed setup-service-account.sh, CBLD-08 now satisfied
 
 ### Pending Todos
 
@@ -79,7 +81,7 @@ From research (address in Phase 10):
 
 ## Session Continuity
 
-Last session: 2026-01-24
-Stopped at: Completed 10-04-PLAN.md (vLLM Validation Scripts) - Phase 10 complete
+Last session: 2026-01-25
+Stopped at: Completed 10-05-PLAN.md (Gap Closure: CloudBuild Service Account) - Phase 10 fully complete with gaps closed
 Resume file: None
 Next action: `/gsd:plan-phase 11` (LangExtract Integration)
