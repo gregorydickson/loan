@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 11 of 18 (LangExtract Core Integration)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 11-01-PLAN.md (schema updates)
+Last activity: 2026-01-25 - Completed 11-02-PLAN.md (few-shot examples)
 
-Progress: [##########====......] 62% (v1.0 complete + Phase 10 + 11-01)
+Progress: [##########=====.....] 63% (v1.0 complete + Phase 10 + 11-01 + 11-02)
 
 ## Performance Metrics
 
@@ -68,6 +68,8 @@ Recent decisions affecting v2.0 work:
 - [10-04]: Local vLLM validation skipped (no GPU), deferred to Phase 13 cloud deployment
 - [10-05]: CloudBuild service account created in GCP with 5 IAM roles, closes CBLD-08 gap
 - [10-05]: Gap closure executed setup-service-account.sh, CBLD-08 now satisfied
+- [11-02]: Few-shot examples use ExampleData/Extraction from langextract.data
+- [11-02]: All extraction_text values must be verbatim substrings (validated programmatically)
 
 ### Pending Todos
 
@@ -99,6 +101,6 @@ From research (address in Phase 11):
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 11-01-PLAN.md (schema updates for char offsets)
+Stopped at: Completed 11-02-PLAN.md (few-shot examples)
 Resume file: None
-Next action: Continue Phase 11 execution (11-02, 11-03, 11-04)
+Next action: Continue Phase 11 execution (11-03, 11-04)
