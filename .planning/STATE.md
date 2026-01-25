@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 14 - OCR Routing & Fallback (Complete)
+**Current focus:** Phase 15 - Dual Pipeline Integration (In Progress)
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
-Phase: 14 of 18 (OCR Routing & Fallback)
-Plan: 2 of 2 in current phase
-Status: Phase Complete
-Last activity: 2026-01-25 - Completed 14-02-PLAN.md (OCR Router)
+Phase: 15 of 18 (Dual Pipeline Integration)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-01-25 - Completed 15-01-PLAN.md (Schema & API Parameters)
 
-Progress: [#############=====..] 79% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14)
+Progress: [#############=====..] 81% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 partial)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 51 (v1.0: 36, v2.0: 15)
-- Average duration: 4.9 min
-- Total execution time: 4.69 hours
+- Total plans completed: 52 (v1.0: 36, v2.0: 16)
+- Average duration: 4.8 min
+- Total execution time: 4.74 hours
 
 **By Phase (v1.0):**
 
@@ -91,6 +91,15 @@ Progress: [#############=====..] 79% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 14 Total:** 10 min (2 plans, avg 5.0 min/plan)
 
+**v2.0 Phase 15 In Progress:**
+
+| Plan | Name | Duration | Status |
+|------|------|----------|--------|
+| 15-01 | Schema & API Parameters | 3 min | Complete |
+| 15-02 | Service Layer Integration | - | Pending |
+
+**Phase 15 Progress:** 1 of 2 plans complete
+
 ## Accumulated Context
 
 ### Decisions
@@ -138,6 +147,9 @@ Recent decisions affecting v2.0 work:
 - [14-02]: Circuit breaker: fail_max=3, timeout_duration=60s
 - [14-02]: OCR modes: auto (detect), force (always OCR), skip (never OCR)
 - [14-02]: Circuit breaker state exposed as lowercase string via .name.lower()
+- [15-01]: Default method=docling preserves v1.0 backward compatibility (DUAL-09)
+- [15-01]: Nullable columns allow legacy documents to coexist without migration
+- [15-01]: ExtractionMethod includes 'auto' option for future auto-detection
 
 ### Pending Todos
 
@@ -145,32 +157,23 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 14 complete, ready for Phase 15.
+None - Plan 15-01 complete, ready for Plan 15-02.
 
-## Phase 14 Completion Summary
+## Phase 15 Progress Summary
 
-**Plans:** 2 of 2 complete
-**Requirements Satisfied:** LOCR-05, LOCR-11
+**Plans:** 1 of 2 complete
 
-**Deliverables (14-01):**
-- ScannedDocumentDetector class with pypdfium2 text ratio detection
-- DetectionResult dataclass for structured output
-- Page-level and document-level detection
-- Configurable thresholds (MIN_CHARS_THRESHOLD, SCANNED_RATIO_THRESHOLD)
-- 17 unit tests
+**Deliverables (15-01):**
+- Document model with extraction_method and ocr_processed columns
+- Alembic migration 003_add_extraction_metadata.py
+- Upload endpoint with method and ocr query parameters
+- ExtractionMethod and OCRMode type aliases
 
-**Deliverables (14-02):**
-- OCRRouter with circuit breaker protection (fail_max=3, 60s timeout)
-- OCRMode type alias: auto, force, skip
-- OCRResult dataclass for tracking OCR method used
-- Automatic Docling fallback on GPU unavailability
-- 18 unit tests
-
-**Total Phase 14:** 10 min, 35 unit tests
+**Next:** Plan 15-02 will wire service layer to use these parameters
 
 ## Session Continuity
 
-Last session: 2026-01-25T15:47:00Z
-Stopped at: Completed 14-02-PLAN.md (OCR Router)
+Last session: 2026-01-25T16:24:58Z
+Stopped at: Completed 15-01-PLAN.md (Schema & API Parameters)
 Resume file: None
-Next action: Phase 15 (Dual Pipeline Integration) or Phase 13-04 (API Integration)
+Next action: Phase 15 Plan 02 (Service Layer Integration)
