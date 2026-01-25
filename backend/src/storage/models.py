@@ -13,7 +13,7 @@ from decimal import Decimal
 from enum import Enum
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -61,6 +61,12 @@ class Document(Base):
     processed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+    # Extraction metadata (v2.0 dual pipeline support)
+    # Values: "docling", "langextract", or None (legacy/pre-v2.0 documents)
+    extraction_method: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # True if OCR was applied, False if skipped, None (legacy)
+    ocr_processed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
     # Relationships
     source_references: Mapped[list["SourceReference"]] = relationship(
