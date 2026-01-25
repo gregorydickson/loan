@@ -34,7 +34,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 **Phase Numbering:** 10-18 (continuing from v1.0)
 
 - [x] **Phase 10: v2.0 Setup & Preparation** - GPU quota, Terraform archival, CloudBuild foundation
-- [ ] **Phase 11: LangExtract Core Integration** - Character offset storage, Gemini integration, few-shot examples
+- [x] **Phase 11: LangExtract Core Integration** - Character offset storage, Gemini integration, few-shot examples
 - [ ] **Phase 12: LangExtract Advanced Features** - Multi-pass extraction, HTML visualization, parallel processing
 - [ ] **Phase 13: LightOnOCR GPU Service** - Cloud Run GPU deployment, vLLM serving, client integration
 - [ ] **Phase 14: OCR Routing & Fallback** - Scanned document detection, Docling OCR fallback
@@ -93,7 +93,12 @@ Plans:
   2. LangExtract generates HTML visualization with highlighted source spans
   3. Parallel chunk processing improves throughput for long documents
   4. LangExtract errors fall back to Docling extraction gracefully
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md - ExtractionConfig and LangExtractProcessor enhancement (LXTR-06, LXTR-10)
+- [ ] 12-02-PLAN.md - LangExtractVisualizer for HTML visualization (LXTR-07)
+- [ ] 12-03-PLAN.md - ExtractionRouter with fallback to Docling (LXTR-11)
 
 ### Phase 13: LightOnOCR GPU Service
 
@@ -182,7 +187,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 |-------|-----------|----------------|--------|-----------|
 | 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
 | 11. LangExtract Core Integration | v2.0 | 4/4 | Complete | 2026-01-25 |
-| 12. LangExtract Advanced Features | v2.0 | 0/TBD | Not started | - |
+| 12. LangExtract Advanced Features | v2.0 | 0/3 | Planned | - |
 | 13. LightOnOCR GPU Service | v2.0 | 0/TBD | Not started | - |
 | 14. OCR Routing & Fallback | v2.0 | 0/TBD | Not started | - |
 | 15. Dual Pipeline Integration | v2.0 | 0/TBD | Not started | - |
@@ -192,5 +197,4 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 
 ---
 *Roadmap created: 2026-01-24*
-*Last updated: 2026-01-25*
 *Last updated: 2026-01-25*
