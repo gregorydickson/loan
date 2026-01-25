@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 
+from src.extraction import BorrowerExtractor
 from src.ingestion.docling_processor import (
     DoclingProcessor,
     DocumentContent,
@@ -17,6 +18,7 @@ from src.ingestion.document_service import (
     DuplicateDocumentError,
 )
 from src.storage.models import Document, DocumentStatus
+from src.storage.repositories import BorrowerRepository
 
 
 @pytest.fixture
@@ -45,6 +47,28 @@ def mock_docling_processor_failing():
     return processor
 
 
+@pytest.fixture
+def mock_borrower_extractor():
+    """Create mock BorrowerExtractor."""
+    extractor = MagicMock(spec=BorrowerExtractor)
+    extractor.extract = MagicMock(
+        return_value=MagicMock(
+            borrowers=[],
+            validation_errors=[],
+            consistency_warnings=[],
+        )
+    )
+    return extractor
+
+
+@pytest.fixture
+def mock_borrower_repository():
+    """Create mock BorrowerRepository."""
+    repo = AsyncMock(spec=BorrowerRepository)
+    repo.create = AsyncMock()
+    return repo
+
+
 class TestDocumentServiceValidation:
     """Tests for DocumentService validation."""
 
@@ -63,12 +87,16 @@ class TestDocumentServiceValidation:
         hash2 = DocumentService.compute_file_hash(b"content 2")
         assert hash1 != hash2
 
-    def test_validate_file_pdf(self, mock_docling_processor):
+    def test_validate_file_pdf(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test PDF validation."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
         content_type, file_type = service.validate_file(
             b"pdf content",
@@ -78,12 +106,16 @@ class TestDocumentServiceValidation:
         assert content_type == "application/pdf"
         assert file_type == "pdf"
 
-    def test_validate_file_docx(self, mock_docling_processor):
+    def test_validate_file_docx(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test DOCX validation."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
         docx_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         content_type, file_type = service.validate_file(
@@ -93,12 +125,16 @@ class TestDocumentServiceValidation:
         )
         assert file_type == "docx"
 
-    def test_validate_file_infer_from_filename(self, mock_docling_processor):
+    def test_validate_file_infer_from_filename(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test content type inference from filename."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
         content_type, file_type = service.validate_file(
             b"pdf content",
@@ -108,12 +144,16 @@ class TestDocumentServiceValidation:
         assert content_type == "application/pdf"
         assert file_type == "pdf"
 
-    def test_validate_file_unsupported_type(self, mock_docling_processor):
+    def test_validate_file_unsupported_type(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test rejection of unsupported file types."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
         with pytest.raises(ValueError, match="Unsupported file type"):
             service.validate_file(
@@ -122,12 +162,16 @@ class TestDocumentServiceValidation:
                 "test.txt",
             )
 
-    def test_validate_file_too_large(self, mock_docling_processor):
+    def test_validate_file_too_large(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test rejection of oversized files."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
         large_content = b"x" * (51 * 1024 * 1024)  # 51MB
         with pytest.raises(ValueError, match="File too large"):
@@ -162,7 +206,12 @@ class TestDocumentServiceUpload:
 
     @pytest.mark.asyncio
     async def test_upload_success_returns_completed(
-        self, mock_repository, mock_gcs_client, mock_docling_processor
+        self,
+        mock_repository,
+        mock_gcs_client,
+        mock_docling_processor,
+        mock_borrower_extractor,
+        mock_borrower_repository,
     ):
         """Test successful upload returns document with COMPLETED status."""
         # Setup mock to return the created document
@@ -193,6 +242,8 @@ class TestDocumentServiceUpload:
             repository=mock_repository,
             gcs_client=mock_gcs_client,
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         result = await service.upload(
@@ -212,7 +263,12 @@ class TestDocumentServiceUpload:
 
     @pytest.mark.asyncio
     async def test_upload_duplicate_rejected(
-        self, mock_repository, mock_gcs_client, mock_docling_processor
+        self,
+        mock_repository,
+        mock_gcs_client,
+        mock_docling_processor,
+        mock_borrower_extractor,
+        mock_borrower_repository,
     ):
         """Test that duplicate file is rejected."""
         existing_doc = Document(
@@ -229,6 +285,8 @@ class TestDocumentServiceUpload:
             repository=mock_repository,
             gcs_client=mock_gcs_client,
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         with pytest.raises(DuplicateDocumentError) as exc_info:
@@ -244,7 +302,12 @@ class TestDocumentServiceUpload:
 
     @pytest.mark.asyncio
     async def test_upload_gcs_failure_marks_failed(
-        self, mock_repository, mock_gcs_client, mock_docling_processor
+        self,
+        mock_repository,
+        mock_gcs_client,
+        mock_docling_processor,
+        mock_borrower_extractor,
+        mock_borrower_repository,
     ):
         """Test that GCS upload failure marks document as FAILED."""
         created_doc = Document(
@@ -262,6 +325,8 @@ class TestDocumentServiceUpload:
             repository=mock_repository,
             gcs_client=mock_gcs_client,
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         with pytest.raises(DocumentUploadError, match="Failed to upload"):
@@ -280,7 +345,12 @@ class TestDocumentServiceUpload:
 
     @pytest.mark.asyncio
     async def test_upload_calls_docling_processor(
-        self, mock_repository, mock_gcs_client, mock_docling_processor
+        self,
+        mock_repository,
+        mock_gcs_client,
+        mock_docling_processor,
+        mock_borrower_extractor,
+        mock_borrower_repository,
     ):
         """Test that upload calls DoclingProcessor.process_bytes."""
         doc_id = uuid4()
@@ -309,6 +379,8 @@ class TestDocumentServiceUpload:
             repository=mock_repository,
             gcs_client=mock_gcs_client,
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         await service.upload(
@@ -322,7 +394,12 @@ class TestDocumentServiceUpload:
 
     @pytest.mark.asyncio
     async def test_upload_processing_error_marks_failed(
-        self, mock_repository, mock_gcs_client, mock_docling_processor_failing
+        self,
+        mock_repository,
+        mock_gcs_client,
+        mock_docling_processor_failing,
+        mock_borrower_extractor,
+        mock_borrower_repository,
     ):
         """Test that processing errors mark document as FAILED."""
         doc_id = uuid4()
@@ -351,6 +428,8 @@ class TestDocumentServiceUpload:
             repository=mock_repository,
             gcs_client=mock_gcs_client,
             docling_processor=mock_docling_processor_failing,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         result = await service.upload(
@@ -368,7 +447,9 @@ class TestDocumentServiceProcessing:
     """Tests for DocumentService processing methods."""
 
     @pytest.mark.asyncio
-    async def test_update_processing_success(self, mock_docling_processor):
+    async def test_update_processing_success(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test updating document after successful processing."""
         mock_repository = AsyncMock()
         updated_doc = Document(
@@ -386,6 +467,8 @@ class TestDocumentServiceProcessing:
             repository=mock_repository,
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         result = await service.update_processing_result(
@@ -404,7 +487,9 @@ class TestDocumentServiceProcessing:
         )
 
     @pytest.mark.asyncio
-    async def test_update_processing_failure(self, mock_docling_processor):
+    async def test_update_processing_failure(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test updating document after failed processing."""
         mock_repository = AsyncMock()
         doc_id = uuid4()
@@ -422,6 +507,8 @@ class TestDocumentServiceProcessing:
             repository=mock_repository,
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         result = await service.update_processing_result(
@@ -444,12 +531,16 @@ class TestDocumentServiceErrorHandling:
     """Tests for error handling (INGEST-14 coverage)."""
 
     @pytest.mark.asyncio
-    async def test_validation_error_does_not_crash(self, mock_docling_processor):
+    async def test_validation_error_does_not_crash(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test that validation errors are raised properly without crashing."""
         service = DocumentService(
             repository=MagicMock(),
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         # Invalid file type should raise ValueError, not crash
@@ -463,7 +554,9 @@ class TestDocumentServiceErrorHandling:
         assert "Unsupported file type" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_duplicate_error_does_not_crash(self, mock_docling_processor):
+    async def test_duplicate_error_does_not_crash(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test that duplicate detection errors are raised properly."""
         mock_repository = AsyncMock()
         existing_doc = Document(
@@ -480,6 +573,8 @@ class TestDocumentServiceErrorHandling:
             repository=mock_repository,
             gcs_client=MagicMock(),
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         with pytest.raises(DuplicateDocumentError) as exc_info:
@@ -494,7 +589,9 @@ class TestDocumentServiceErrorHandling:
         assert exc_info.value.file_hash is not None
 
     @pytest.mark.asyncio
-    async def test_gcs_error_wrapped_properly(self, mock_docling_processor):
+    async def test_gcs_error_wrapped_properly(
+        self, mock_docling_processor, mock_borrower_extractor, mock_borrower_repository
+    ):
         """Test that GCS errors are wrapped in DocumentUploadError."""
         mock_repository = AsyncMock()
         mock_repository.get_by_hash.return_value = None
@@ -514,6 +611,8 @@ class TestDocumentServiceErrorHandling:
             repository=mock_repository,
             gcs_client=mock_gcs,
             docling_processor=mock_docling_processor,
+            borrower_extractor=mock_borrower_extractor,
+            borrower_repository=mock_borrower_repository,
         )
 
         with pytest.raises(DocumentUploadError) as exc_info:
