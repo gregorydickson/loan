@@ -33,7 +33,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 
 **Phase Numbering:** 10-18 (continuing from v1.0)
 
-- [ ] **Phase 10: v2.0 Setup & Preparation** - GPU quota, Terraform archival, CloudBuild foundation
+- [x] **Phase 10: v2.0 Setup & Preparation** - GPU quota, Terraform archival, CloudBuild foundation
 - [ ] **Phase 11: LangExtract Core Integration** - Character offset storage, Gemini integration, few-shot examples
 - [ ] **Phase 12: LangExtract Advanced Features** - Multi-pass extraction, HTML visualization, parallel processing
 - [ ] **Phase 13: LightOnOCR GPU Service** - Cloud Run GPU deployment, vLLM serving, client integration
@@ -75,7 +75,13 @@ Plans:
   3. Few-shot examples defined in examples/ directory for loan document entities
   4. Character offsets verified via substring matching at reported positions
   5. Offset translation layer handles Docling text vs raw text alignment
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 11-01-PLAN.md - Schema updates (char_start/char_end in SourceReference)
+- [ ] 11-02-PLAN.md - Few-shot examples for LangExtract
+- [ ] 11-03-PLAN.md - LangExtractProcessor and OffsetTranslator
+- [ ] 11-04-PLAN.md - Verification tests for character offsets
 
 ### Phase 12: LangExtract Advanced Features
 
@@ -175,7 +181,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
-| 11. LangExtract Core Integration | v2.0 | 0/TBD | Not started | - |
+| 11. LangExtract Core Integration | v2.0 | 0/4 | Planned | - |
 | 12. LangExtract Advanced Features | v2.0 | 0/TBD | Not started | - |
 | 13. LightOnOCR GPU Service | v2.0 | 0/TBD | Not started | - |
 | 14. OCR Routing & Fallback | v2.0 | 0/TBD | Not started | - |

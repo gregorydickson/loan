@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 11 - LangExtract Integration
+**Current focus:** Phase 11 - LangExtract Core Integration
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
-Phase: 10 of 18 (v2.0 Setup & Preparation)
-Plan: 5 of 5 in current phase
-Status: Phase complete (all gaps closed, verified)
-Last activity: 2026-01-25 - Completed 10-05-PLAN.md (Gap closure - CloudBuild service account)
+Phase: 11 of 18 (LangExtract Core Integration)
+Plan: 0 of 4 in current phase
+Status: Planning complete, ready for execution
+Last activity: 2026-01-25 - Planned Phase 11 (4 plans in 3 waves)
 
 Progress: [##########====......] 61% (v1.0 complete + Phase 10 verified complete)
 
@@ -75,14 +75,30 @@ None yet.
 
 ### Blockers/Concerns
 
-From research (address in Phase 10):
-- GPU quota request takes 24-48 hours - must request early (RESOLVED: 1 L4 GPU available)
-- Terraform state orphaning risk during migration - archive before starting (RESOLVED: archived in 10-02)
-- LangExtract offset alignment with Docling markdown - needs validation in Phase 11
+From research (address in Phase 11):
+- LangExtract offset alignment with Docling markdown - addressed in 11-03 OffsetTranslator
+
+## Phase 11 Planning Summary
+
+**Plans:** 4 plans in 3 waves
+**Requirements:** LXTR-01, LXTR-02, LXTR-03, LXTR-04, LXTR-05, LXTR-08, LXTR-09, LXTR-12
+
+**Wave Structure:**
+- Wave 1 (parallel): 11-01 (schema), 11-02 (examples)
+- Wave 2: 11-03 (LangExtractProcessor + OffsetTranslator)
+- Wave 3: 11-04 (verification tests)
+
+**Plan Summary:**
+| Plan | Objective | Tasks | Files |
+|------|-----------|-------|-------|
+| 11-01 | Schema updates for char_start/char_end | 2 | document.py, models.py, migration |
+| 11-02 | Few-shot examples for LangExtract | 3 | examples/*.py |
+| 11-03 | LangExtractProcessor + OffsetTranslator | 3 | langextract_processor.py, offset_translator.py |
+| 11-04 | Verification tests | 3 | test_*.py |
 
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 10-05-PLAN.md (Gap Closure: CloudBuild Service Account) - Phase 10 fully complete with gaps closed
+Stopped at: Completed Phase 11 planning (4 plans created)
 Resume file: None
-Next action: `/gsd:discuss-phase 11` (LangExtract Integration)
+Next action: `/gsd:execute-phase 11`
