@@ -50,4 +50,4 @@ ENV PORT=8080
 ENV PYTHONPATH=/app
 
 # Use exec form for proper signal handling
-CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
