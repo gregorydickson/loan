@@ -96,9 +96,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 12-01-PLAN.md - ExtractionConfig and LangExtractProcessor enhancement (LXTR-06, LXTR-10)
-- [ ] 12-02-PLAN.md - LangExtractVisualizer for HTML visualization (LXTR-07)
-- [ ] 12-03-PLAN.md - ExtractionRouter with fallback to Docling (LXTR-11)
+- [x] 12-01-PLAN.md - ExtractionConfig and LangExtractProcessor enhancement (LXTR-06, LXTR-10)
+- [x] 12-02-PLAN.md - LangExtractVisualizer for HTML visualization (LXTR-07)
+- [x] 12-03-PLAN.md - ExtractionRouter with fallback to Docling (LXTR-11)
 
 ### Phase 13: LightOnOCR GPU Service
 
@@ -187,7 +187,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 |-------|-----------|----------------|--------|-----------|
 | 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
 | 11. LangExtract Core Integration | v2.0 | 4/4 | Complete | 2026-01-25 |
-| 12. LangExtract Advanced Features | v2.0 | 0/3 | Planned | - |
+| 12. LangExtract Advanced Features | v2.0 | 3/3 | Complete | 2026-01-25 |
 | 13. LightOnOCR GPU Service | v2.0 | 0/TBD | Not started | - |
 | 14. OCR Routing & Fallback | v2.0 | 0/TBD | Not started | - |
 | 15. Dual Pipeline Integration | v2.0 | 0/TBD | Not started | - |
@@ -197,4 +197,4 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 
 ---
 *Roadmap created: 2026-01-24*
-*Last updated: 2026-01-25*
+*Last updated: 2026-01-25 17:12 UTC*

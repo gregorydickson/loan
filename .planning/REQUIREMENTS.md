@@ -14,12 +14,12 @@ Requirements for v2.0 milestone: LangExtract extraction pipeline, LightOnOCR GPU
 - [ ] **LXTR-03**: LangExtractProcessor integrates with Gemini 3.0 Flash for extraction
 - [ ] **LXTR-04**: Few-shot examples defined for loan document entities (borrower, income, accounts)
 - [ ] **LXTR-05**: Few-shot examples use verbatim text from sample documents
-- [ ] **LXTR-06**: Multi-pass extraction configurable (2-5 passes) for thoroughness
-- [ ] **LXTR-07**: LangExtract generates HTML visualization with highlighted source spans
+- [x] **LXTR-06**: Multi-pass extraction configurable (2-5 passes) for thoroughness
+- [x] **LXTR-07**: LangExtract generates HTML visualization with highlighted source spans
 - [ ] **LXTR-08**: Character offsets verified via substring matching at reported positions
 - [ ] **LXTR-09**: Offset translation layer handles Docling markdown vs raw text alignment
-- [ ] **LXTR-10**: Parallel chunk processing implemented for long documents
-- [ ] **LXTR-11**: LangExtract extraction errors logged with fallback to Docling
+- [x] **LXTR-10**: Parallel chunk processing implemented for long documents
+- [x] **LXTR-11**: LangExtract extraction errors logged with fallback to Docling
 - [ ] **LXTR-12**: Few-shot examples stored in examples/ directory with versioning
 
 ### LightOnOCR GPU Service
@@ -158,12 +158,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LXTR-03 | Phase 11 | Complete |
 | LXTR-04 | Phase 11 | Complete |
 | LXTR-05 | Phase 11 | Complete |
-| LXTR-06 | Phase 12 | Pending |
-| LXTR-07 | Phase 12 | Pending |
+| LXTR-06 | Phase 12 | Complete |
+| LXTR-07 | Phase 12 | Complete |
 | LXTR-08 | Phase 11 | Complete |
 | LXTR-09 | Phase 11 | Complete |
-| LXTR-10 | Phase 12 | Pending |
-| LXTR-11 | Phase 12 | Pending |
+| LXTR-10 | Phase 12 | Complete |
+| LXTR-11 | Phase 12 | Complete |
 | LXTR-12 | Phase 11 | Complete |
 | LOCR-01 | Phase 13 | Pending |
 | LOCR-02 | Phase 13 | Pending |
