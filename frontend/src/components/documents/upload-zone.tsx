@@ -2,12 +2,20 @@
 
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, CheckCircle, XCircle } from "lucide-react";
+import { Upload, CheckCircle, XCircle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadDocument } from "@/hooks/use-documents";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { ExtractionMethod, OCRMode } from "@/lib/api/types";
 
 /**
- * Drag-and-drop file upload component for documents.
+ * Drag-and-drop file upload component with extraction method and OCR selection.
  *
  * Accepts PDF, DOCX, PNG, and JPG files (max 1 file at a time).
  * Shows loading state during upload and success/error feedback.
@@ -16,21 +24,26 @@ export function UploadZone() {
   const { mutate, isPending, isSuccess, error, data, reset } =
     useUploadDocument();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [method, setMethod] = useState<ExtractionMethod>("docling");
+  const [ocr, setOcr] = useState<OCRMode>("auto");
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         setSuccessMessage(null);
-        mutate(acceptedFiles[0], {
-          onSuccess: (response) => {
-            setSuccessMessage(
-              `Uploaded: ${response.filename} (ID: ${response.id.slice(0, 8)}...)`
-            );
-          },
-        });
+        mutate(
+          { file: acceptedFiles[0], method, ocr },
+          {
+            onSuccess: (response) => {
+              setSuccessMessage(
+                `Uploaded: ${response.filename} (ID: ${response.id.slice(0, 8)}...)`
+              );
+            },
+          }
+        );
       }
     },
-    [mutate]
+    [mutate, method, ocr]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -52,7 +65,62 @@ export function UploadZone() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* Extraction Options */}
+      <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-muted-foreground">
+            Extraction Method
+          </label>
+          <Select
+            value={method}
+            onValueChange={(value) => setMethod(value as ExtractionMethod)}
+            disabled={isPending}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select method" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="docling">Docling (Fast)</SelectItem>
+              <SelectItem value="langextract">LangExtract (Precise)</SelectItem>
+              <SelectItem value="auto">Auto</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-muted-foreground">
+            OCR Mode
+          </label>
+          <Select
+            value={ocr}
+            onValueChange={(value) => setOcr(value as OCRMode)}
+            disabled={isPending}
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Select OCR" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto Detect</SelectItem>
+              <SelectItem value="force">Force OCR</SelectItem>
+              <SelectItem value="skip">Skip OCR</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Method Description */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded-md p-2">
+        <Info className="h-4 w-4 mt-0.5 shrink-0" />
+        <span>
+          {method === "docling" && "Fast extraction for standard documents."}
+          {method === "langextract" &&
+            "Precise extraction with character-level source tracing."}
+          {method === "auto" && "System selects best method based on document."}
+        </span>
+      </div>
+
+      {/* Dropzone */}
       <div
         {...getRootProps()}
         className={cn(
