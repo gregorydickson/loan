@@ -1,5 +1,32 @@
 # Project Milestones: Loan Document Data Extraction System
 
+## v2.0 LangExtract & CloudBuild (Shipped: 2026-01-25)
+
+**Delivered:** LangExtract character-level source grounding, LightOnOCR GPU service with scale-to-zero, and complete CloudBuild CI/CD migration
+
+**Phases completed:** 10-18 (28 plans total)
+
+**Key accomplishments:**
+
+- LangExtract Integration - Character-level source attribution with Gemini 3.0 Flash, few-shot examples, and offset translation for precise extraction traceability
+- LightOnOCR GPU Service - Cloud Run L4 GPU deployment with vLLM serving, scale-to-zero cost optimization ($0 baseline vs $485/month always-on)
+- Dual Pipeline Architecture - API-based extraction method selection (Docling/LangExtract) with backward-compatible defaults and unified output schema
+- CloudBuild Migration - Complete replacement of Terraform with CloudBuild + gcloud CLI, GitHub triggers, and idempotent infrastructure scripts
+- Comprehensive Testing - 86.98% coverage (490 tests), mypy strict compliance (0 errors), E2E verification for both extraction paths
+
+**Stats:**
+
+- 28 plans across 9 phases
+- 72 requirements satisfied (100% coverage)
+- 95,818 total lines of code (v1.0 + v2.0 combined)
+- 1 day from Phase 10 start to Phase 18 complete (2026-01-25)
+
+**Git range:** `feat(10-01)` → `feat(18-03)`
+
+**What's next:** Production deployment with CloudBuild automation and GPU service cost monitoring
+
+---
+
 ## v1.0 MVP (Shipped: 2026-01-24)
 
 **Delivered:** Production-grade AI-powered loan document extraction system with full-stack implementation and GCP deployment

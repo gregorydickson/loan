@@ -2,20 +2,20 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-24)
+See: .planning/PROJECT.md (updated 2026-01-25)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** v2.0 Milestone Complete
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Milestone: v2.0 LangExtract & CloudBuild
-Phase: 18 of 18 (All phases complete)
-Plan: All plans complete across all phases
-Status: Milestone Complete (all phases verified)
-Last activity: 2026-01-25 - Completed quick task 002: implement code simplification quick wins
+Milestone: Next milestone (TBD)
+Phase: Not started
+Plan: Not started
+Status: Ready to plan next milestone
+Last activity: 2026-01-25 - v2.0 milestone archived
 
-Progress: [####################] 100% (v1.0 complete + v2.0 complete)
+Progress: [####################] 100% (v1.0 + v2.0 shipped)
 
 ## Performance Metrics
 
@@ -202,11 +202,11 @@ Recent decisions affecting v2.0 work:
 
 ### Pending Todos
 
-None - v2.0 milestone complete.
+None - ready for next milestone.
 
 ### Blockers/Concerns
 
-None - v2.0 milestone complete.
+None - v2.0 shipped successfully.
 
 ### Quick Tasks Completed
 

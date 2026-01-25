@@ -10,38 +10,49 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 
 **Accurate extraction of borrower data with complete traceability.** Every extracted field (PII, income history, account/loan numbers) must include source attribution showing which document and page it came from, with confidence scoring to flag data needing manual review.
 
-## Current Milestone: v2.0 LangExtract & CloudBuild
+## Current State (v2.0 Shipped)
 
-**Goal:** Add LangExtract-based extraction pipeline with character-level source grounding, optional LightOnOCR GPU service for scanned documents, and migrate from Terraform to CloudBuild + CLI deployment.
+**Latest Version:** v2.0 LangExtract & CloudBuild (shipped 2026-01-25)
 
-**Target features:**
-- LangExtract + Gemini 3.0 Flash extraction with character-level offsets for precise source grounding
-- LightOnOCR Cloud Run service with L4 GPU for high-quality OCR of scanned documents
-- Dual extraction method support (Docling + LangExtract) with API selection
-- Complete infrastructure migration from Terraform to CloudBuild + Google Cloud CLI
-- Few-shot example-based extraction schema definition for loan documents
-- Enhanced source attribution with character offsets (not just page/snippet)
+**System Capabilities:**
+- Dual extraction pipelines: Docling (fast, page-level attribution) and LangExtract (precise, character-level attribution)
+- LightOnOCR GPU service for high-quality OCR of scanned documents (scale-to-zero enabled)
+- API-based extraction method selection with backward-compatible defaults
+- CloudBuild CI/CD with GitHub triggers replacing Terraform for application deployments
+- 86.98% test coverage, mypy strict compliance, 490 passing tests
+
+**Next Milestone:** TBD - Run `/gsd:new-milestone` to define
 
 ## Requirements
 
 ### Validated
 
-#### v1.0 Requirements
+#### v1.0 Requirements (Shipped 2026-01-24)
 - ✓ Foundation & Data Models (17 requirements) — v1.0
 - ✓ Document Ingestion Pipeline (28 requirements) — v1.0
 - ✓ LLM Extraction & Validation (38 requirements) — v1.0
 - ✓ Data Storage & REST API (32 requirements) — v1.0
 - ✓ Frontend Dashboard (37 requirements) — v1.0
-- ✓ GCP Infrastructure (27 requirements) — v1.0 (code-level)
+- ✓ GCP Infrastructure (27 requirements) — v1.0
 - ✓ Documentation & Testing (48 requirements) — v1.0
 - ✓ Pipeline Integration (44 requirements) — v1.0
 - ✓ Async Background Processing (2 requirements) — v1.0
 
 **Total v1.0:** 222/222 requirements (100%)
 
+#### v2.0 Requirements (Shipped 2026-01-25)
+- ✓ LangExtract Integration (12 requirements) — v2.0
+- ✓ LightOnOCR GPU Service (12 requirements) — v2.0
+- ✓ Dual Pipeline Integration (12 requirements) — v2.0
+- ✓ CloudBuild Deployment (12 requirements) — v2.0
+- ✓ Testing & Quality (12 requirements) — v2.0
+- ✓ Documentation (12 requirements) — v2.0
+
+**Total v2.0:** 72/72 requirements (100%)
+
 ### Active
 
-(v2.0 requirements to be defined)
+(To be defined in next milestone - run `/gsd:new-milestone` to begin)
 
 ### Out of Scope
 
@@ -57,33 +68,39 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 
 ## Context
 
+**v2.0 Shipped (2026-01-25):**
+- Dual extraction pipelines (Docling + LangExtract) with API method selection
+- LightOnOCR GPU service deployed with L4 GPU and scale-to-zero cost optimization
+- CloudBuild CI/CD migration complete (replaces Terraform for application deployments)
+- 95,818 lines of code across backend (Python), frontend (TypeScript), infrastructure (CloudBuild YAML)
+- 86.98% test coverage with 490 passing tests
+- All 72 v2.0 requirements satisfied (100%)
+- 9 phases (28 plans) executed in 1 day (2026-01-25)
+
 **v1.0 Shipped (2026-01-24):**
 - Complete full-stack loan document extraction system
-- 9,357 lines of code across backend (Python), frontend (TypeScript), infrastructure (Terraform)
+- 9,357 lines of code
 - 92% test coverage with 283 passing tests
 - All 222 v1.0 requirements satisfied (100%)
-- 9 phases executed in 2 days (2026-01-23 → 2026-01-24)
+- 9 phases (36 plans) executed in 2 days (2026-01-23 → 2026-01-24)
 
 **Tech Stack:**
 - Backend: FastAPI + PostgreSQL + SQLAlchemy (async)
 - LLM: Gemini 3.0 (Flash for standard docs, Pro for complex)
-- Document Processing: Docling (PDF/DOCX/image OCR)
+- Extraction: Docling (page-level) + LangExtract (character-level with Gemini 3.0 Flash)
+- OCR: LightOnOCR GPU service (Cloud Run L4) with Docling fallback
 - Frontend: Next.js 14 App Router + shadcn/ui + Tailwind CSS
 - Infrastructure: GCP (Cloud Run + Cloud SQL + Cloud Storage + Cloud Tasks)
-- IaC: Terraform with 32 GCP resources
+- CI/CD: CloudBuild with GitHub triggers
+- IaC: gcloud CLI scripts for infrastructure, CloudBuild for applications
 
 **Implementation Highlights:**
-- Dynamic model selection based on document complexity classification
-- Source attribution tracking (every field links to document + page + snippet)
-- Async background processing with Cloud Tasks (max 5 retry attempts)
-- SSN hashing for PII protection (SHA-256, never stored raw)
-- Confidence scoring (0.0-1.0) with <0.7 flagged for manual review
-- Complete E2E testing: upload → extraction → persistence → retrieval
-
-**Known Deployment Status:**
-- Code-level verification: 100% complete
-- Infrastructure-as-code: 32 Terraform resources configured
-- Live GCP deployment: Pending manual `terraform apply` verification
+- Character-level source attribution with LangExtract (char_start/char_end offsets)
+- Few-shot example-based extraction schema definition
+- Dual pipeline architecture with backward-compatible defaults
+- GPU service with scale-to-zero ($0 baseline vs $485/month always-on)
+- Circuit breaker pattern for GPU OCR fallback to Docling
+- Comprehensive test coverage (86.98%) with mypy strict compliance
 
 ## Constraints
 
@@ -107,9 +124,12 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 | Next.js 14 App Router | Server components reduce client bundle size. App router provides better code organization. shadcn/ui offers high-quality accessible components. | ✓ Good — Standalone output mode reduces Docker image to ~100MB; shadcn components provided polished UI quickly |
 | Cloud Run over GKE/Compute Engine | Serverless auto-scaling with pay-per-use pricing. No cluster management overhead. Suitable for demo/portfolio scale. | ✓ Good — OIDC authentication with Cloud Tasks works seamlessly; VPC egress enables Cloud SQL private IP; scale-to-zero saves costs |
 | Monorepo structure | Backend, frontend, infrastructure in single repo simplifies dependency management and deployment coordination for portfolio project. | ✓ Good — Simplified deployment coordination; single git history shows full-stack progress |
-| Test-first TDD approach | Tests define contracts before implementation, catching errors early and providing confidence for aggressive 3-day timeline. | ✓ Good — 283 tests caught integration bugs early; 92% coverage provides confidence for refactoring |
-| Cloud Tasks for async processing | Decouples upload from extraction; handles retries with exponential backoff; OIDC auth for Cloud Run endpoints. | ✓ Good — Upload returns instantly; retry logic handles transient failures; dual-mode (sync fallback) enables local dev |
-| Phase 8 Gap Closure | Wired orphaned extraction subsystem into upload flow; added E2E tests. | ✓ Good — Closed 44 blocked requirements; all E2E flows now working; zero orphaned code |
+| Test-first TDD approach | Tests define contracts before implementation, catching errors early and providing confidence for aggressive timeline. | ✓ Good — v1.0: 283 tests (92% coverage), v2.0: 490 tests (86.98% coverage); mypy strict compliance |
+| Cloud Tasks for async processing | Decouples upload from extraction; handles retries with exponential backoff; OIDC auth for Cloud Run endpoints. | ✓ Good — Upload returns instantly; retry logic handles transient failures; dual-mode (sync fallback) enables local dev; extended with method/ocr params in v2.0 |
+| Phase 8 Gap Closure (v1.0) | Wired orphaned extraction subsystem into upload flow; added E2E tests. | ✓ Good — Closed 44 blocked requirements; all E2E flows now working; zero orphaned code |
+| LangExtract for character-level attribution (v2.0) | Provides precise source grounding with char_start/char_end offsets vs page-level attribution. | ✓ Good — Few-shot examples enable schema customization; offset translation handles Docling markdown alignment; fallback to Docling on errors |
+| LightOnOCR as dedicated GPU service (v2.0) | Cloud Run with L4 GPU, scale-to-zero, circuit breaker fallback to Docling OCR. | ✓ Good — $0 baseline cost vs $485/month always-on; vLLM batching improves throughput; 120s timeout handles cold starts |
+| CloudBuild replaces Terraform (v2.0) | Application deployments via CloudBuild + GitHub triggers, infrastructure via gcloud CLI scripts. | ✓ Good — Separation of concerns (infra vs apps); GitHub integration for CI/CD; idempotent gcloud scripts; Terraform state archived for recovery |
 
 ---
-*Last updated: 2026-01-24 after v2.0 milestone initialization*
+*Last updated: 2026-01-25 after v2.0 milestone completion*
