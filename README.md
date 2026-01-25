@@ -1,100 +1,223 @@
-# Loan Document Data Extraction System
+```
+    __                           ____                                          __
+   / /   ____  ____ _____       / __ \____  _______  ______ ___  ___  ____  / /_
+  / /   / __ \/ __ `/ __ \     / / / / __ \/ ___/ / / / __ `__ \/ _ \/ __ \/ __/
+ / /___/ /_/ / /_/ / / / /    / /_/ / /_/ / /__/ /_/ / / / / / /  __/ / / / /_
+/_____/\____/\__,_/_/ /_/    /_____/\____/\___/\__,_/_/ /_/ /_/\___/_/ /_/\__/
 
-A production-grade system for extracting structured borrower data from loan documents (PDF, DOCX, images) using AI-powered document processing.
+    ____        __           ______     __                  __  _
+   / __ \____ _/ /_____ _   / ____/  __/ /__________ ______/ /_(_)___  ____
+  / / / / __ `/ __/ __ `/  / __/ | |/_/ __/ ___/ __ `/ ___/ __/ / __ \/ __ \
+ / /_/ / /_/ / /_/ /_/ /  / /____>  </ /_/ /  / /_/ / /__/ /_/ / /_/ / / / /
+/_____/\__,_/\__/\__,_/  /_____/_/|_|\__/_/   \__,_/\___/\__/_/\____/_/ /_/
 
-## Features
+                    _____ __  _____ __
+                   / ___// / / /   / /______ _
+                   \__ \/ / / / /| / __/ __ `/
+                  ___/ / /_/ / ___ / /_/ /_/ /
+                 /____/\__, /_/  |_\__/\__,_/
+                      /____/
+                           _____________
+                          |  _________  |
+                          | |   PDF   | |  📄 → 🤖 → 💾
+                          | |  .docx  | |
+                          | |   📷    | |
+                          | |_________| |
+                          |_____________|
+                               UPLOAD
+```
 
-- **Document Processing**: Parse PDF, DOCX, and scanned images using Docling with built-in OCR
-- **AI Extraction**: Extract borrower information using Google Gemini 3.0 with dynamic model selection
-- **Source Attribution**: Every extracted field traces back to the source document and page
-- **Validation**: Automated format validation (SSN, phone, zip) with confidence scoring
-- **Web Dashboard**: React-based UI for document upload and borrower management
+# 📋 Loan Document Data Extraction System
 
-## Architecture
+> 🤖 **AI-Powered** | 📄 **Multi-Format** | 🔍 **Traceable** | ⚡ **Production-Ready**
 
-The system follows a document processing pipeline architecture: documents are uploaded and parsed by Docling, then sent to Gemini for structured data extraction, validated and stored in PostgreSQL with full source attribution, served via FastAPI REST API, and displayed in a Next.js dashboard. See [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) for detailed architecture documentation.
+A production-grade system for extracting structured borrower data from loan documents (PDF, DOCX, images) using AI-powered document processing with **complete source traceability**.
+
+---
+
+## 🌟 Highlights
+
+| | |
+|---|---|
+| 🧪 **490 Tests** | ✅ 86.98% Coverage |
+| 📝 **95,818 LOC** | 🚀 v2.0 Shipped 2026-01-25 |
+| 🔒 **mypy Strict** | 🐍 Python + 📘 TypeScript |
+
+---
+
+## ✨ Features
+
+### 🎯 Core Capabilities
+
+- 📄 **Document Processing** — Parse PDF, DOCX, and scanned images with intelligent layout understanding
+- 🤖 **AI Extraction** — Extract borrower information using Google Gemini 3.0 with dynamic model selection
+- 🔍 **Source Attribution** — Every extracted field traces back to source document and page
+- ✅ **Validation** — Automated format validation (SSN, phone, zip) with confidence scoring
+- 🖥️ **Web Dashboard** — React-based UI for document upload and borrower management
+
+### 🆕 v2.0 Dual Pipeline Architecture
+
+- ⚡ **Docling Pipeline** — Fast page-level attribution, built-in OCR
+- 🎯 **LangExtract Pipeline** — Precise character-level attribution with few-shot examples
+- 🔄 **Auto-Selection** — Intelligent routing or manual method selection via API
+- 🖼️ **LightOnOCR GPU** — High-quality OCR for scanned documents (scale-to-zero enabled)
+- 🔁 **Circuit Breaker** — Automatic fallback from LangExtract → Docling on errors
+
+---
+
+## 🏗️ Architecture
+
+The system follows a **document processing pipeline architecture**:
 
 ```mermaid
 flowchart LR
-    Upload[Document Upload] --> Docling[Docling Parser]
-    Docling --> Gemini[Gemini Extraction]
-    Gemini --> Validate[Validation]
-    Validate --> DB[(PostgreSQL)]
-    DB --> API[REST API]
-    API --> UI[Dashboard]
+    subgraph Upload["📤 Upload"]
+        A[Document Upload]
+    end
+
+    subgraph OCR["🖼️ OCR Layer"]
+        B{Scanned?}
+        C[LightOnOCR GPU]
+        D[Docling OCR]
+    end
+
+    subgraph Extract["🤖 Extraction"]
+        E{Method}
+        F[Docling + Gemini]
+        G[LangExtract + Gemini]
+    end
+
+    subgraph Store["💾 Storage"]
+        H[Validation]
+        I[(PostgreSQL)]
+    end
+
+    subgraph Serve["🌐 API"]
+        J[FastAPI REST]
+        K[Next.js Dashboard]
+    end
+
+    A --> B
+    B -->|Yes| C
+    B -->|No| E
+    C --> E
+    D -.->|Fallback| E
+    E -->|docling| F
+    E -->|langextract| G
+    F --> H
+    G --> H
+    H --> I
+    I --> J
+    J --> K
 ```
 
-## Tech Stack
+📚 See [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) for detailed architecture documentation.
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Backend | FastAPI | Async REST API |
-| Frontend | Next.js 16 | React dashboard with App Router |
-| Document Processing | Docling | PDF/DOCX/Image parsing with OCR |
-| LLM | Google Gemini 3.0 | Data extraction |
-| Database | PostgreSQL 16 | Relational storage |
-| Storage | Google Cloud Storage | Document files |
-| Deployment | Cloud Run | Serverless containers |
-| Infrastructure | Terraform | Infrastructure as Code |
+---
 
-## Prerequisites
+## 🛠️ Tech Stack
 
-- Python 3.10+
-- Node.js 20+
-- Docker and Docker Compose
-- Google Cloud SDK (for deployment)
-- Gemini API key (from [Google AI Studio](https://aistudio.google.com/))
+| Component | Technology | Purpose | Emoji |
+|-----------|------------|---------|-------|
+| 🐍 Backend | FastAPI | Async REST API with OpenAPI docs | ⚡ |
+| 🖥️ Frontend | Next.js 14 | React dashboard with App Router | ⚛️ |
+| 📄 Doc Processing | Docling | PDF/DOCX/Image parsing with OCR | 📋 |
+| 🎯 Extraction | LangExtract | Character-level attribution extraction | 🔍 |
+| 🤖 LLM | Google Gemini 3.0 | Flash (standard) / Pro (complex) | 💡 |
+| 🖼️ OCR | LightOnOCR | GPU-accelerated scanned doc OCR | 🚀 |
+| 💾 Database | PostgreSQL 16 | Relational storage with async driver | 🗄️ |
+| ☁️ Storage | Cloud Storage | Document file storage | 📦 |
+| 🚀 Deployment | Cloud Run | Serverless containers (incl. GPU) | 🐳 |
+| 🔧 CI/CD | CloudBuild | GitHub-triggered deployments | 🔄 |
+| 🏗️ Infrastructure | gcloud CLI | Infrastructure provisioning scripts | 📝 |
 
-## Setup
+---
 
-### 1. Clone the Repository
+## 📊 Project Metrics
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    📈 v2.0 Statistics                       │
+├─────────────────────────────────────────────────────────────┤
+│  🧪 Tests:        490 passing                               │
+│  📊 Coverage:     86.98%                                    │
+│  📝 Lines:        95,818 LOC                                │
+│  ✅ Requirements: 294/294 (v1.0: 222, v2.0: 72)             │
+│  📦 Phases:       18 complete                               │
+│  📋 Plans:        64 executed                               │
+│  🔒 Type Safety:  mypy strict (0 errors)                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+| Requirement | Version | Check Command |
+|-------------|---------|---------------|
+| 🐍 Python | 3.10+ | `python --version` |
+| 📦 Node.js | 20+ | `node --version` |
+| 🐳 Docker | Latest | `docker --version` |
+| ☁️ gcloud CLI | Latest | `gcloud --version` |
+| 🔑 Gemini API Key | — | [Get from AI Studio](https://aistudio.google.com/) |
+
+---
+
+## 🚀 Setup
+
+### 1️⃣ Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd loan
 ```
 
-### 2. Backend Setup
+### 2️⃣ Backend Setup
 
 ```bash
 cd backend
 
-# Create virtual environment
+# 🐍 Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies (including dev tools)
+# 📦 Install dependencies (including dev tools)
 pip install -e ".[dev]"
 ```
 
-### 3. Frontend Setup
+### 3️⃣ Frontend Setup
 
 ```bash
 cd frontend
 
-# Install dependencies
+# 📦 Install dependencies
 npm install
 ```
 
-### 4. Environment Configuration
+### 4️⃣ Environment Configuration
 
 Create `.env` files for local development:
 
-**backend/.env:**
+**📝 backend/.env:**
 ```bash
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/loan_extraction
 GCS_BUCKET_NAME=  # Optional for local dev (mock GCS client used when not set)
 GEMINI_API_KEY=your-api-key-here
+GOOGLE_API_KEY=your-api-key-here  # For LangExtract (same key)
 ```
 
-**frontend/.env.local:**
+**📝 frontend/.env.local:**
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-## Running Locally
+---
 
-### Start Infrastructure
+## 🏃 Running Locally
+
+### 🐳 Start Infrastructure
 
 ```bash
 # Start PostgreSQL and Redis
@@ -102,10 +225,10 @@ docker-compose up -d
 ```
 
 This starts:
-- PostgreSQL 16 on port 5432 (database: `loan_extraction`, user: `postgres`, password: `postgres`)
-- Redis 7 on port 6379
+- 🗄️ PostgreSQL 16 on port 5432 (database: `loan_extraction`, user: `postgres`, password: `postgres`)
+- 📮 Redis 7 on port 6379
 
-### Run Database Migrations
+### 📊 Run Database Migrations
 
 ```bash
 cd backend
@@ -113,7 +236,7 @@ source venv/bin/activate
 alembic upgrade head
 ```
 
-### Start Backend Server
+### 🖥️ Start Backend Server
 
 ```bash
 cd backend
@@ -121,210 +244,224 @@ source venv/bin/activate
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at http://localhost:8000
-- API docs: http://localhost:8000/docs
-- Health check: http://localhost:8000/health
+🌐 The API will be available at:
+- 📡 API: http://localhost:8000
+- 📚 Docs: http://localhost:8000/docs
+- ❤️ Health: http://localhost:8000/health
 
-### Start Frontend Development Server
+### 💻 Start Frontend Development Server
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-The dashboard will be available at http://localhost:3000
+🖥️ The dashboard will be available at http://localhost:3000
 
-## Development
+---
 
-### Running Tests
+## 🧪 Development
+
+### 🔬 Running Tests
 
 ```bash
 cd backend
 source venv/bin/activate
 
-# Run all tests with coverage
+# 🧪 Run all tests with coverage
 pytest
 
-# Run only unit tests
+# 📁 Run only unit tests
 pytest tests/unit
 
-# Run specific test file
+# 📄 Run specific test file
 pytest tests/extraction/test_llm_client.py
 
-# Run with verbose output and HTML coverage report
+# 📊 Run with verbose output and HTML coverage report
 pytest -v --cov-report=html
 ```
 
-### Code Quality
+### ✅ Code Quality
 
 ```bash
 cd backend
 source venv/bin/activate
 
-# Type checking (strict mode)
+# 🔒 Type checking (strict mode)
 mypy src/
 
-# Linting
+# 🔍 Linting
 ruff check src/
 
-# Format code
+# ✨ Format code
 ruff format src/
 ```
 
-### Frontend Development
+### 💻 Frontend Development
 
 ```bash
 cd frontend
 
-# Type checking
+# 🔒 Type checking
 npx tsc --noEmit
 
-# Linting
+# 🔍 Linting
 npm run lint
 
-# Build for production
+# 📦 Build for production
 npm run build
 ```
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
 loan/
-├── backend/
+├── 🐍 backend/
 │   ├── src/
-│   │   ├── api/           # FastAPI routes and endpoints
-│   │   ├── extraction/    # LLM extraction and validation logic
-│   │   ├── ingestion/     # Document processing with Docling
-│   │   ├── models/        # Pydantic schemas and SQLAlchemy models
-│   │   └── storage/       # Database repositories and GCS client
-│   ├── tests/             # pytest unit and integration tests
-│   └── alembic/           # Database migrations
-├── frontend/
+│   │   ├── api/           # 🌐 FastAPI routes and endpoints
+│   │   ├── extraction/    # 🤖 LLM extraction and validation logic
+│   │   ├── ingestion/     # 📄 Document processing with Docling
+│   │   ├── ocr/           # 🖼️ LightOnOCR client and router
+│   │   ├── models/        # 📋 Pydantic schemas and SQLAlchemy models
+│   │   └── storage/       # 💾 Database repositories and GCS client
+│   ├── tests/             # 🧪 pytest unit and integration tests
+│   └── alembic/           # 📊 Database migrations
+├── 💻 frontend/
 │   ├── src/
-│   │   ├── app/           # Next.js pages and routes
-│   │   ├── components/    # React components (shadcn/ui)
-│   │   └── lib/           # API client and utilities
-│   └── public/            # Static assets
-├── infrastructure/
-│   ├── terraform/         # IaC configuration for GCP
-│   └── scripts/           # Deployment automation scripts
-├── docs/                  # Documentation
-├── docker-compose.yml     # Local development infrastructure
-└── README.md              # This file
+│   │   ├── app/           # 📱 Next.js pages and routes
+│   │   ├── components/    # 🎨 React components (shadcn/ui)
+│   │   └── lib/           # 🔧 API client and utilities
+│   └── public/            # 🖼️ Static assets
+├── 🏗️ infrastructure/
+│   ├── cloudbuild/        # 🔧 CloudBuild YAML configs
+│   └── scripts/           # 📝 Deployment automation scripts
+├── 📚 docs/               # 📖 Documentation
+├── 🐳 docker-compose.yml  # Local development infrastructure
+└── 📋 README.md           # This file
 ```
 
-## Deployment
+---
 
-### Prerequisites
+## ☁️ Deployment
 
-1. Google Cloud project with billing enabled
-2. gcloud CLI installed and authenticated (`gcloud auth login`)
-3. Docker installed for building images
+### 📋 Prerequisites
 
-### Initialize GCP Resources
+1. ☁️ Google Cloud project with billing enabled
+2. 🔧 gcloud CLI installed and authenticated (`gcloud auth login`)
+3. 🐳 Docker installed for building images
+
+### 🏗️ Initialize GCP Resources
 
 ```bash
 cd infrastructure/scripts
-chmod +x setup-gcp.sh deploy.sh
+chmod +x setup-gcp.sh provision-infra.sh
 
-# Initialize GCP project (enables APIs, creates Artifact Registry, Terraform state bucket)
+# 🚀 Initialize GCP project (enables APIs, creates resources)
 ./setup-gcp.sh YOUR_PROJECT_ID us-central1
+
+# 🏗️ Provision infrastructure
+./provision-infra.sh YOUR_PROJECT_ID us-central1
 ```
 
-This script:
-- Enables required GCP APIs (Cloud Run, Cloud SQL, Secret Manager, etc.)
-- Creates Artifact Registry repository for Docker images
-- Configures Docker authentication
-- Creates Terraform state bucket with versioning
-
-### Configure Terraform
-
-```bash
-cd infrastructure/terraform
-
-# Initialize Terraform
-terraform init
-
-# Create terraform.tfvars from example
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your values:
-#   project_id = "your-project-id"
-#   db_password = "secure-password"
-#   gemini_api_key = "your-api-key"
-```
-
-### Deploy Services
+### 🔧 Set Up CloudBuild Triggers
 
 ```bash
 cd infrastructure/scripts
 
-# Set required environment variable
-export PROJECT_ID=your-project-id
-
-# Deploy (builds images, pushes to registry, applies Terraform)
-./deploy.sh
+# 🔗 Connect GitHub and create triggers
+./setup-github-triggers.sh YOUR_PROJECT_ID us-central1 your-github-repo
 ```
 
-The deploy script:
-1. Builds backend Docker image and pushes to Artifact Registry
-2. Builds frontend Docker image and pushes to Artifact Registry
-3. Applies Terraform configuration to create/update Cloud Run services
-4. Outputs the service URLs
+### 🚀 Deploy Services
 
-### Environment Variables (Production)
+Services deploy automatically on push to main branch via CloudBuild triggers:
 
-These are managed automatically by Terraform via Secret Manager:
-- `DATABASE_URL`: Cloud SQL connection string (private IP)
-- `GEMINI_API_KEY`: Gemini API key
-- `GCS_BUCKET_NAME`: Document storage bucket name
+- 🐍 **Backend**: `backend-cloudbuild.yaml`
+- 💻 **Frontend**: `frontend-cloudbuild.yaml`
+- 🖼️ **GPU Service**: `gpu-cloudbuild.yaml`
 
-## API Usage
+📚 See [docs/cloudbuild-deployment-guide.md](docs/cloudbuild-deployment-guide.md) for detailed deployment instructions.
 
-### Upload a Document
+### 🔑 Environment Variables (Production)
+
+Managed automatically via Secret Manager:
+- 🔗 `DATABASE_URL`: Cloud SQL connection string (private IP)
+- 🔑 `GEMINI_API_KEY`: Gemini API key
+- 📦 `GCS_BUCKET_NAME`: Document storage bucket name
+
+---
+
+## 📡 API Usage
+
+### 📤 Upload a Document
 
 ```bash
+# 📄 Default (Docling extraction)
 curl -X POST http://localhost:8000/api/documents \
   -F "file=@/path/to/document.pdf"
+
+# 🎯 With LangExtract (character-level attribution)
+curl -X POST "http://localhost:8000/api/documents?method=langextract" \
+  -F "file=@/path/to/document.pdf"
+
+# 🖼️ Force OCR for scanned documents
+curl -X POST "http://localhost:8000/api/documents?method=docling&ocr=force" \
+  -F "file=@/path/to/scanned.pdf"
 ```
 
-Response:
+**📋 Response:**
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "filename": "document.pdf",
   "status": "completed",
-  "page_count": 5
+  "page_count": 5,
+  "extraction_method": "langextract",
+  "ocr_processed": false
 }
 ```
 
-### Get Document Status
+### 🔍 Extraction Method Options
+
+| Parameter | Options | Description |
+|-----------|---------|-------------|
+| `method` | `docling` (default), `langextract`, `auto` | 🤖 Extraction pipeline to use |
+| `ocr` | `auto` (default), `force`, `skip` | 🖼️ OCR behavior for scanned docs |
+
+📚 See [docs/api/extraction-method-guide.md](docs/api/extraction-method-guide.md) for detailed API guide.
+
+### 📊 Get Document Status
 
 ```bash
 curl http://localhost:8000/api/documents/{document_id}/status
 ```
 
-Response:
+**📋 Response:**
 ```json
 {
   "status": "completed",
   "page_count": 5,
+  "extraction_method": "docling",
+  "ocr_processed": true,
   "error_message": null
 }
 ```
 
-### List Documents
+### 📋 List Documents
 
 ```bash
 curl "http://localhost:8000/api/documents?page=1&page_size=10"
 ```
 
-### List Borrowers
+### 👥 List Borrowers
 
 ```bash
 curl "http://localhost:8000/api/borrowers?page=1&page_size=10"
 ```
 
-Response:
+**📋 Response:**
 ```json
 {
   "borrowers": [
@@ -341,46 +478,127 @@ Response:
 }
 ```
 
-### Get Borrower Details
+### 👤 Get Borrower Details
 
 ```bash
 curl http://localhost:8000/api/borrowers/{borrower_id}
 ```
 
-Response includes:
-- Borrower information (name, SSN, address, phone)
-- Income records with amounts and periods
-- Account numbers
-- Source references (document ID, page number, text snippet)
+**📋 Response includes:**
+- 👤 Borrower information (name, SSN, address, phone)
+- 💰 Income records with amounts and periods
+- 🔢 Account numbers
+- 📄 Source references (document ID, page number, text snippet)
+- 🔍 Character offsets (when using LangExtract)
 
-### Search Borrowers
+### 🔎 Search Borrowers
 
 ```bash
-# Search by name
+# 👤 Search by name
 curl "http://localhost:8000/api/borrowers/search?name=John"
 
-# Search by account number
+# 🔢 Search by account number
 curl "http://localhost:8000/api/borrowers/search?account_number=12345"
 ```
 
-### Health Check
+### ❤️ Health Check
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-Response:
+**📋 Response:**
 ```json
 {
   "status": "healthy"
 }
 ```
 
-## Documentation
+---
 
-- [System Design](docs/SYSTEM_DESIGN.md) - Architecture, pipeline, scaling analysis
-- [Architecture Decisions](docs/ARCHITECTURE_DECISIONS.md) - ADRs for technology choices
+## 📚 Documentation
 
-## License
+### 🏗️ Architecture & Design
+
+| Document | Description |
+|----------|-------------|
+| 📐 [System Design](docs/SYSTEM_DESIGN.md) | Architecture, pipeline, scaling analysis |
+| 📝 [Architecture Decisions](docs/ARCHITECTURE_DECISIONS.md) | ADRs for technology choices |
+
+### 📖 Guides
+
+| Guide | Description |
+|-------|-------------|
+| 🤖 [Extraction Method Guide](docs/api/extraction-method-guide.md) | API parameters and method selection |
+| 📝 [Few-Shot Examples](docs/guides/few-shot-examples.md) | Creating extraction schema examples |
+| 💰 [GPU Service Cost](docs/guides/gpu-service-cost.md) | Cost management strategies |
+| 🖼️ [LightOnOCR Deployment](docs/guides/lightonocr-deployment.md) | GPU service deployment |
+| 🚀 [CloudBuild Deployment](docs/cloudbuild-deployment-guide.md) | CI/CD deployment guide |
+
+### 🔄 Migration & Operations
+
+| Document | Description |
+|----------|-------------|
+| 🔄 [Terraform Migration](docs/migration/terraform-migration.md) | Terraform to CloudBuild migration |
+| 📋 [Terraform Inventory](docs/terraform-to-gcloud-inventory.md) | gcloud CLI equivalents |
+
+---
+
+## 🆕 v2.0 Release Notes (2026-01-25)
+
+### 🎯 Dual Extraction Pipelines
+
+**Docling Pipeline** (default)
+- ⚡ Fast page-level attribution
+- 📄 Built-in OCR for scanned documents
+- 🔧 Mature, battle-tested processing
+
+**LangExtract Pipeline** (new)
+- 🎯 Character-level source attribution (char_start/char_end)
+- 📝 Few-shot example-based extraction schema
+- 🔍 Precise text grounding for verification
+
+### 🖼️ LightOnOCR GPU Service
+
+- 🚀 High-quality OCR powered by LightOn VLM
+- 💰 Scale-to-zero ($0 baseline vs $485/month always-on)
+- 🔁 Circuit breaker fallback to Docling OCR
+- ⚡ L4 GPU for fast processing
+
+### 🔧 CloudBuild CI/CD
+
+- 🔗 GitHub-triggered deployments
+- 📦 Separate configs for backend, frontend, GPU
+- 🔄 Replaces Terraform for application deployments
+- 🏗️ Infrastructure via gcloud CLI scripts
+
+### 📊 Quality Improvements
+
+- 🧪 490 tests (up from 283 in v1.0)
+- 📊 86.98% coverage (threshold: 80%)
+- 🔒 mypy strict compliance (0 errors)
+
+---
+
+## 📜 License
 
 MIT
+
+---
+
+<div align="center">
+
+```
+ _____ _                 _           __             _   _     _
+|_   _| |__   __ _ _ __ | | _____   / _| ___  _ __| | | |___(_)_ __   __ _
+  | | | '_ \ / _` | '_ \| |/ / __| | |_ / _ \| '__| | | / __| | '_ \ / _` |
+  | | | | | | (_| | | | |   <\__ \ |  _| (_) | |  | |_| \__ \ | | | | (_| |
+  |_| |_| |_|\__,_|_| |_|_|\_\___/ |_|  \___/|_|   \___/|___/_|_| |_|\__, |
+                                                                     |___/
+```
+
+**Built with** 💻 **FastAPI** + ⚛️ **Next.js** + 🤖 **Gemini** + ☁️ **GCP**
+
+🌟 Star this repo if you found it helpful!
+
+</div>
