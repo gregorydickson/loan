@@ -17,16 +17,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { BorrowerSummary } from "@/lib/api/types";
+import { getConfidenceBadgeVariant } from "@/lib/formatting";
 
 const columnHelper = createColumnHelper<BorrowerSummary>();
-
-function getConfidenceBadgeVariant(
-  score: number
-): "default" | "secondary" | "destructive" {
-  if (score >= 0.7) return "default";
-  if (score >= 0.5) return "secondary";
-  return "destructive";
-}
 
 const columns = [
   columnHelper.accessor("name", {

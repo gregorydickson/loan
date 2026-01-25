@@ -10,14 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { BorrowerSummary, BorrowerDetailResponse } from "@/lib/api/types";
-
-function getConfidenceBadgeVariant(
-  score: number
-): "default" | "secondary" | "destructive" {
-  if (score >= 0.7) return "default";
-  if (score >= 0.5) return "secondary";
-  return "destructive";
-}
+import { getConfidenceBadgeVariant } from "@/lib/formatting";
 
 interface BorrowerCardProps {
   borrower: BorrowerSummary | BorrowerDetailResponse;
