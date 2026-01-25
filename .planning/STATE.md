@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-25)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Planning next milestone
+**Current focus:** v2.1 Production Deployment & Verification
 
 ## Current Position
 
-Milestone: Next milestone (TBD)
-Phase: Not started
-Plan: Not started
-Status: Ready to plan next milestone
-Last activity: 2026-01-25 - Completed quick task 003 (README update with ASCII art and emojis)
+Milestone: v2.1 Production Deployment & Verification
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-01-25 - Milestone v2.1 started
 
 Progress: [####################] 100% (v1.0 + v2.0 shipped)
 

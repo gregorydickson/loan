@@ -21,7 +21,16 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 - CloudBuild CI/CD with GitHub triggers replacing Terraform for application deployments
 - 86.98% test coverage, mypy strict compliance, 490 passing tests
 
-**Next Milestone:** TBD - Run `/gsd:new-milestone` to define
+## Current Milestone: v2.1 Production Deployment & Verification
+
+**Goal:** Deploy all services to GCP production and verify functionality through comprehensive Chrome-based testing.
+
+**Target features:**
+- Production deployment of all services (backend, frontend, GPU OCR) to GCP
+- Chrome-based end-to-end verification of upload and extraction flows
+- Testing of both extraction methods (Docling and LangExtract) in production
+- Verification of GPU OCR service with scanned documents
+- Validation of source attribution UI features
 
 ## Requirements
 
@@ -52,7 +61,10 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 
 ### Active
 
-(To be defined in next milestone - run `/gsd:new-milestone` to begin)
+#### v2.1 Requirements (In Progress)
+- Production deployment to GCP
+- Chrome-based verification testing
+- End-to-end flow validation
 
 ### Out of Scope
 
@@ -132,4 +144,4 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 | CloudBuild replaces Terraform (v2.0) | Application deployments via CloudBuild + GitHub triggers, infrastructure via gcloud CLI scripts. | ✓ Good — Separation of concerns (infra vs apps); GitHub integration for CI/CD; idempotent gcloud scripts; Terraform state archived for recovery |
 
 ---
-*Last updated: 2026-01-25 after v2.0 milestone completion*
+*Last updated: 2026-01-25 after v2.1 milestone initialization*
