@@ -13,7 +13,7 @@ Milestone: v2.0 LangExtract & CloudBuild
 Phase: 18 of 18 (Documentation & Frontend)
 Plan: 2 of 3 in current phase (18-01, 18-02 complete)
 Status: In Progress
-Last activity: 2026-01-25 - Completed 18-02-PLAN.md (v2.0 Architecture & Migration Documentation)
+Last activity: 2026-01-25 - Completed 18-01-PLAN.md (User-Facing Documentation)
 
 Progress: [###################=] 96% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 + Phase 17 + Phase 18 partial)
 
@@ -124,7 +124,7 @@ Progress: [###################=] 96% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
-| 18-01 | Developer Guides | 4 min | Complete |
+| 18-01 | User-Facing Documentation | 4 min | Complete |
 | 18-02 | v2.0 Architecture & Migration Documentation | 3 min | Complete |
 | 18-03 | Frontend Integration | - | Pending |
 
@@ -192,6 +192,7 @@ Recent decisions affecting v2.0 work:
 - [17-02]: Include regression tests for Docling default method (DUAL-09)
 - [17-03]: GPU cold start tests focus on scenarios not covered by lightonocr_client tests
 - [17-03]: Comprehensive TEST verification runs each test file individually
+- [18-01]: Documentation organized by audience (docs/api/ for users, docs/guides/ for operators)
 - [18-02]: ADRs follow existing MADR format for consistency with v1.0 documentation
 - [18-02]: System design includes Mermaid diagrams for dual pipeline visualization
 
@@ -281,9 +282,21 @@ None - Phase 17 complete.
 - docs/SYSTEM_DESIGN.md - v2.0 dual pipeline section with Mermaid diagrams
 - docs/migration/terraform-migration.md - Terraform to CloudBuild migration guide
 
+## Phase 18-01 Completion Summary
+
+**Plan:** 18-01 (User-Facing Documentation)
+**Duration:** 4 min
+**Requirements Satisfied:** DOCS-01, DOCS-02, DOCS-05, DOCS-08, DOCS-10, DOCS-11, DUAL-10
+
+**Deliverables:**
+- docs/api/extraction-method-guide.md - Method selection guide with curl examples
+- docs/guides/few-shot-examples.md - Few-shot example creation guide
+- docs/guides/gpu-service-cost.md - GPU cost management strategies
+- docs/guides/lightonocr-deployment.md - LightOnOCR deployment guide
+
 ## Session Continuity
 
-Last session: 2026-01-25T19:14:18Z
-Stopped at: Completed 18-02-PLAN.md (v2.0 Architecture & Migration Documentation)
+Last session: 2026-01-25T19:16:30Z
+Stopped at: Completed 18-01-PLAN.md (User-Facing Documentation)
 Resume file: None
 Next action: Phase 18-03 (Frontend Integration) if planned
