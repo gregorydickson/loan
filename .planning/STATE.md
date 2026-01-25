@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 12 - API Integration for Dual Pipeline
+**Current focus:** Phase 12 - LangExtract Advanced Features
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
-Phase: 11 of 18 (LangExtract Core Integration)
-Plan: 4 of 4 in current phase
-Status: Phase 11 Complete
-Last activity: 2026-01-25 - Completed 11-04-PLAN.md (Verification Tests)
+Phase: 12 of 18 (LangExtract Advanced Features)
+Plan: 2 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-25 - Completed 12-02-PLAN.md (HTML Visualization Wrapper)
 
-Progress: [##########=======...] 66% (v1.0 complete + Phase 10 + Phase 11)
+Progress: [##########========..] 68% (v1.0 complete + Phase 10 + Phase 11 + 12-01, 12-02)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 45 (v1.0: 36, v2.0: 9)
-- Average duration: 5.3 min
-- Total execution time: 4.3 hours
+- Total plans completed: 46 (v1.0: 36, v2.0: 10)
+- Average duration: 5.2 min
+- Total execution time: 4.35 hours
 
 **By Phase (v1.0):**
 
@@ -61,6 +61,14 @@ Progress: [##########=======...] 66% (v1.0 complete + Phase 10 + Phase 11)
 
 **Phase 11 Total:** 20 min (4 plans, avg 5.0 min/plan)
 
+**v2.0 Phase 12 In Progress:**
+
+| Plan | Name | Duration | Status |
+|------|------|----------|--------|
+| 12-01 | ExtractionConfig Dataclass | - | Pending |
+| 12-02 | HTML Visualization Wrapper | 3 min | Complete |
+| 12-03 | Extraction Router with Fallback | - | Pending |
+
 ## Accumulated Context
 
 ### Decisions
@@ -84,6 +92,8 @@ Recent decisions affecting v2.0 work:
 - [11-03]: OffsetTranslator uses difflib.SequenceMatcher for Docling markdown alignment
 - [11-03]: LangExtractProcessor maps GOOGLE_API_KEY to LANGEXTRACT_API_KEY
 - [11-04]: Unit tests use mock dataclasses for LangExtract API isolation
+- [12-02]: Use lx.visualize() directly - handles overlapping spans, animation, legend
+- [12-02]: Handle both Jupyter (.data) and standalone (str()) return contexts
 
 ### Pending Todos
 
@@ -91,27 +101,22 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 11 complete, all blockers resolved.
+None - plan 12-02 complete, proceeding to 12-03.
 
-## Phase 11 Completion Summary
+## Phase 12 Progress Summary
 
-**Plans:** 4 plans in 3 waves (all complete)
-**Requirements Satisfied:** LXTR-01, LXTR-02, LXTR-03, LXTR-04, LXTR-05, LXTR-08, LXTR-09, LXTR-12
+**Plans:** 3 plans (1 complete: 12-02)
+**Requirements Satisfied (so far):** LXTR-07
 
-**Deliverables:**
-- SourceReference model with char_start/char_end fields
-- Few-shot examples package for LangExtract
-- LangExtractProcessor with character-level source grounding
-- OffsetTranslator for Docling markdown position mapping
-- 37 unit tests with 84-88% coverage on new modules
-
-**Test Coverage:**
-- offset_translator.py: 88%
-- langextract_processor.py: 84%
+**Deliverables (12-02):**
+- LangExtractVisualizer class wrapping lx.visualize()
+- HTML visualization with highlighted source spans
+- Empty placeholder HTML for no-extraction cases
+- 8 unit tests with full mocking
 
 ## Session Continuity
 
-Last session: 2026-01-25
-Stopped at: Completed Phase 11 (11-04-PLAN.md)
+Last session: 2026-01-25T12:04:15Z
+Stopped at: Completed 12-02-PLAN.md (HTML Visualization Wrapper)
 Resume file: None
-Next action: `/gsd:execute-phase 12` (API Integration for Dual Pipeline)
+Next action: Execute 12-01-PLAN.md (ExtractionConfig Dataclass) or 12-03-PLAN.md (Extraction Router)
