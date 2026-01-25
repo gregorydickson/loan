@@ -21,6 +21,9 @@ This document captures the key architectural decisions made during the developme
 - [ADR-015: pytest-asyncio Auto Mode for Testing](#adr-015-pytest-asyncio-auto-mode-for-testing)
 - [ADR-016: In-Memory SQLite for Unit Tests](#adr-016-in-memory-sqlite-for-unit-tests)
 - [ADR-017: Income Anomaly Thresholds (50% drop, 300% spike)](#adr-017-income-anomaly-thresholds-50-drop-300-spike)
+- [ADR-018: Use LangExtract for Structured Extraction with Character Offsets](#adr-018-use-langextract-for-structured-extraction-with-character-offsets)
+- [ADR-019: Use LightOnOCR with Scale-to-Zero GPU Service](#adr-019-use-lightonocr-with-scale-to-zero-gpu-service)
+- [ADR-020: Migrate from Terraform to CloudBuild for Deployments](#adr-020-migrate-from-terraform-to-cloudbuild-for-deployments)
 
 ---
 
@@ -872,6 +875,160 @@ Cross-document checks use normalized names for matching.
 
 ---
 
+## ADR-018: Use LangExtract for Structured Extraction with Character Offsets
+
+### Status
+
+Accepted
+
+### Context
+
+v1.0 used Docling for text extraction followed by LLM processing, but lacked character-level source attribution. For audit-sensitive use cases, users need to trace extracted values back to exact positions in source documents. The system needed a way to provide precise source grounding beyond page-level attribution.
+
+### Decision
+
+Integrate LangExtract library for structured extraction with character-level source grounding:
+- Uses Gemini 3.0 Flash via langextract.data API
+- Returns char_start/char_end offsets for each extracted value
+- Few-shot examples in backend/examples/ define extraction patterns
+- Dual pipeline: Docling (fast, cheap) and LangExtract (precise, traceable)
+
+The system now offers two extraction methods:
+- **Docling** (default): Fast, cost-effective extraction for standard documents
+- **LangExtract**: Character-level source grounding for audit-sensitive use cases
+
+### Consequences
+
+**Positive:**
+- Character-level offsets enable precise source attribution for audit trails
+- Few-shot examples allow domain customization without fine-tuning
+- Dual pipeline provides cost/accuracy tradeoff options
+- Users can select method via API parameter based on use case
+
+**Negative:**
+- Additional API dependency (langextract library)
+- Requires maintaining few-shot examples in backend/examples/
+- Higher latency than Docling-only path
+- Increased complexity in extraction router logic
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Custom offset tracking | No new dependency | Complex, error-prone implementation |
+| Always use LangExtract | Simpler single path | Higher cost for simple documents |
+| Fine-tuned model | Better accuracy | Training data requirements, maintenance burden |
+
+---
+
+## ADR-019: Use LightOnOCR with Scale-to-Zero GPU Service
+
+### Status
+
+Accepted
+
+### Context
+
+Scanned loan documents require OCR before text extraction. Docling's built-in OCR is adequate for simple scans but struggles with poor-quality documents. LightOnOCR (via vLLM) provides superior accuracy for complex scans but requires GPU infrastructure.
+
+Key considerations:
+- GPU costs are significant (~$485/month for always-on L4)
+- OCR needs are intermittent, not constant
+- High-quality OCR is essential for poor-quality scans
+- Fallback mechanism needed for reliability
+
+### Decision
+
+Deploy LightOnOCR-2-1B on Cloud Run with L4 GPU:
+- Scale-to-zero (min_instances=0) eliminates baseline cost
+- vLLM serving with 80% GPU memory utilization
+- Circuit breaker with Docling OCR fallback (fail_max=3, timeout_duration=60s)
+- Internal-only authentication via service account
+- Configuration: 8 vCPU, 32Gi memory, L4 GPU, 240s startup probe
+
+OCR routing supports three modes:
+- **auto** (default): Detect scanned documents automatically
+- **force**: Always apply GPU OCR
+- **skip**: Never apply OCR (native text only)
+
+### Consequences
+
+**Positive:**
+- Superior OCR accuracy for poor-quality scans
+- Zero cost when idle (scale-to-zero)
+- Automatic fallback to Docling OCR maintains availability
+- Circuit breaker prevents cascade failures
+
+**Negative:**
+- 60-120 second cold start latency when scaling from zero
+- L4 GPU required (quota approval needed)
+- Additional service to maintain and monitor
+- Cold start affects first document in a batch
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Docling OCR only | Simpler, no GPU infrastructure | Lower accuracy on complex scans |
+| Always-on GPU | No cold start latency | $485/month baseline cost |
+| Cloud Vision API | No infrastructure to manage | Per-call cost, vendor lock-in |
+
+---
+
+## ADR-020: Migrate from Terraform to CloudBuild for Deployments
+
+### Status
+
+Accepted
+
+### Context
+
+v1.0 used Terraform for all infrastructure including Cloud Run deployments. For application deployments (not infrastructure), CloudBuild provides simpler CI/CD with native GitHub integration. Infrastructure changes are infrequent and handled separately.
+
+Key observations:
+- Cloud Run deployments are frequent (every code push)
+- Infrastructure changes are rare (once per environment setup)
+- Terraform state management adds complexity for simple deploys
+- CloudBuild provides native revision tracking and rollback
+
+### Decision
+
+Replace Terraform-managed Cloud Run deployments with CloudBuild:
+- cloudbuild.yaml configs for backend, frontend, GPU services
+- GitHub triggers for automatic builds on push to main
+- Terraform state archived to archive/terraform/ (not deleted for recovery)
+- Infrastructure provisioning via one-time gcloud CLI scripts
+
+Deployment artifacts:
+- `backend-cloudbuild.yaml` - Backend API with VPC egress and Secret Manager
+- `frontend-cloudbuild.yaml` - Frontend with NEXT_PUBLIC_API_URL
+- `gpu-cloudbuild.yaml` - LightOnOCR with L4 GPU configuration
+
+### Consequences
+
+**Positive:**
+- Simpler deployment pipeline (YAML vs HCL)
+- Native GitHub integration for CI/CD
+- No Terraform state management for deployments
+- Faster iteration on service changes
+- Built-in revision tracking and rollback via Cloud Run
+
+**Negative:**
+- Infrastructure changes require manual gcloud commands
+- Lost declarative infrastructure-as-code for Cloud Run
+- Team must learn new deployment patterns
+- Split tooling (gcloud for infra, CloudBuild for services)
+
+### Alternatives Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Keep Terraform | Declarative, existing patterns | Complex for simple deploys, state management |
+| Cloud Deploy | GCP native CD | Additional service, more complex |
+| GitHub Actions + gcloud | Familiar CI platform | Less GCP integration |
+
+---
+
 ## Decision Log by Phase
 
 This table maps each ADR to the development phase where the decision originated.
@@ -885,7 +1042,8 @@ This table maps each ADR to the development phase where the decision originated.
 | 05. Frontend Dashboard | (Covered by ADR-005) |
 | 06. GCP Infrastructure | ADR-004 (Cloud Run), ADR-013 (Private VPC), ADR-014 (Secret Manager) |
 | 07. Documentation & Testing | (Meta-documentation of all above) |
+| 10-18. v2.0 LangExtract & CloudBuild | ADR-018 (LangExtract), ADR-019 (LightOnOCR), ADR-020 (CloudBuild) |
 
 ---
 
-*Last updated: 2026-01-24*
+*Last updated: 2026-01-25*
