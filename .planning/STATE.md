@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 10 of 18 (v2.0 Setup & Preparation)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 10-02-PLAN.md (Terraform Archival)
+Last activity: 2026-01-24 - Completed 10-03-PLAN.md (CloudBuild Foundation)
 
-Progress: [##########=.........] 53% (v1.0 complete + 2/4 Phase 10 plans)
+Progress: [##########==........] 56% (v1.0 complete + 3/4 Phase 10 plans)
 
 ## Performance Metrics
 
@@ -44,7 +44,7 @@ Progress: [##########=.........] 53% (v1.0 complete + 2/4 Phase 10 plans)
 |------|------|----------|--------|
 | 10-01 | GPU Quota Check | 5 min | Complete |
 | 10-02 | Terraform Archival | 3 min | Complete |
-| 10-03 | CloudBuild Foundation | - | Pending |
+| 10-03 | CloudBuild Foundation | 8 min | Complete |
 | 10-04 | End-to-End Verification | - | Pending |
 
 ## Accumulated Context
@@ -61,6 +61,7 @@ Recent decisions affecting v2.0 work:
 - [v2.0]: LightOnOCR as dedicated GPU service with scale-to-zero for cost management
 - [v2.0]: CloudBuild replaces Terraform for application deployments
 - [10-02]: Terraform state remains in GCS, not copied locally for recovery capability
+- [10-03]: CloudBuild uses dedicated cloudbuild-deployer service account with 5 least-privilege IAM roles
 
 ### Pending Todos
 
@@ -76,6 +77,6 @@ From research (address in Phase 10):
 ## Session Continuity
 
 Last session: 2026-01-24
-Stopped at: Completed 10-02-PLAN.md (Terraform Archival)
+Stopped at: Completed 10-03-PLAN.md (CloudBuild Foundation)
 Resume file: None
-Next action: `/gsd:execute-plan 10-03`
+Next action: `/gsd:execute-plan 10-04`
