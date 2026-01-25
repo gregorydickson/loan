@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 17 of 18 (Testing & Quality)
-Plan: 2 of 3 in current phase
+Plan: 2 of 3 in current phase (17-01, 17-02 complete)
 Status: In progress
-Last activity: 2026-01-25 - Completed 17-02-PLAN.md (Few-shot & LangExtract Testing)
+Last activity: 2026-01-25 - Completed 17-01-PLAN.md (Test Baseline & mypy Strict)
 
-Progress: [#################=..] 89% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 + Phase 17 partial)
+Progress: [##################..] 91% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 + Phase 17 partial)
 
 ## Performance Metrics
 
@@ -114,11 +114,11 @@ Progress: [#################=..] 89% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
-| 17-01 | DocumentService Mocking & Unit Tests | - | Pending |
+| 17-01 | Test Baseline & mypy Strict | 9 min | Complete |
 | 17-02 | Few-shot & LangExtract Testing | 4 min | Complete |
 | 17-03 | Integration & API Tests | - | Pending |
 
-**Phase 17 Progress:** 1 of 3 plans complete
+**Phase 17 Progress:** 2 of 3 plans complete
 
 ## Accumulated Context
 
@@ -174,6 +174,9 @@ Recent decisions affecting v2.0 work:
 - [15-02]: ProcessDocumentRequest defaults ensure backward compat with queued tasks
 - [15-02]: OCR-then-extract pipeline pattern for dual pipeline
 - [16-02]: All gcloud commands use existence checks for idempotency
+- [17-01]: Use mypy overrides with follow_imports=skip for untyped libraries
+- [17-01]: Add type:ignore[untyped-decorator] for aiobreaker circuit breaker
+- [17-01]: Convert difflib Match namedtuples to explicit tuple[int,int,int] for type safety
 - [17-02]: Validate extraction_text as exact substring (not fuzzy match)
 - [17-02]: Mock ExtractionRouter for E2E tests to isolate from real LLM calls
 - [17-02]: Include regression tests for Docling default method (DUAL-09)
@@ -229,6 +232,17 @@ None - Phase 16 complete.
 
 ## Phase 17 Progress Summary
 
+**Plan 17-01 Complete:**
+- TEST-11: Coverage >= 80% (achieved 87%)
+- TEST-12: mypy strict mode passes (0 errors in 41 files)
+- All 17 tests in test_document_service.py fixed
+- Added mypy overrides for untyped libraries (pypdfium2, aiobreaker, google.oauth2.id_token)
+
+**Deliverables:**
+- backend/tests/unit/test_document_service.py - Fixed constructor calls
+- backend/pyproject.toml - mypy overrides configuration
+- 6 source files with type annotations/fixes
+
 **Plan 17-02 Complete:**
 - TEST-01: Few-shot example validation tests (17 tests)
 - TEST-05: E2E Docling extraction path regression tests
@@ -243,7 +257,7 @@ None - Phase 16 complete.
 
 ## Session Continuity
 
-Last session: 2026-01-25T18:10:50Z
-Stopped at: Completed 17-02-PLAN.md (Few-shot & LangExtract Testing)
+Last session: 2026-01-25T18:16:45Z
+Stopped at: Completed 17-01-PLAN.md (Test Baseline & mypy Strict)
 Resume file: None
 Next action: Phase 17 Plan 03 (Integration & API Tests)
