@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 17 - Testing & Quality
+**Current focus:** Phase 17 - Testing & Quality (Complete)
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 17 of 18 (Testing & Quality)
-Plan: 2 of 3 in current phase (17-01, 17-02 complete)
-Status: In progress
-Last activity: 2026-01-25 - Completed 17-01-PLAN.md (Test Baseline & mypy Strict)
+Plan: 3 of 3 in current phase (17-01, 17-02, 17-03 complete)
+Status: Phase Complete
+Last activity: 2026-01-25 - Completed 17-03-PLAN.md (GPU Cold Start & TEST Requirements)
 
-Progress: [##################..] 91% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 + Phase 17 partial)
+Progress: [##################==] 93% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 + Phase 17)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 58 (v1.0: 36, v2.0: 22)
-- Average duration: 4.6 min
-- Total execution time: 5.15 hours
+- Total plans completed: 61 (v1.0: 36, v2.0: 25)
+- Average duration: 4.5 min
+- Total execution time: 5.38 hours
 
 **By Phase (v1.0):**
 
@@ -110,15 +110,15 @@ Progress: [##################..] 91% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 16 Total:** 11 min (3 plans, avg 3.7 min/plan)
 
-**v2.0 Phase 17 In Progress:**
+**v2.0 Phase 17 Complete:**
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
 | 17-01 | Test Baseline & mypy Strict | 9 min | Complete |
 | 17-02 | Few-shot & LangExtract Testing | 4 min | Complete |
-| 17-03 | Integration & API Tests | - | Pending |
+| 17-03 | GPU Cold Start & TEST Requirements | 4 min | Complete |
 
-**Phase 17 Progress:** 2 of 3 plans complete
+**Phase 17 Total:** 17 min (3 plans, avg 5.7 min/plan)
 
 ## Accumulated Context
 
@@ -180,6 +180,8 @@ Recent decisions affecting v2.0 work:
 - [17-02]: Validate extraction_text as exact substring (not fuzzy match)
 - [17-02]: Mock ExtractionRouter for E2E tests to isolate from real LLM calls
 - [17-02]: Include regression tests for Docling default method (DUAL-09)
+- [17-03]: GPU cold start tests focus on scenarios not covered by lightonocr_client tests
+- [17-03]: Comprehensive TEST verification runs each test file individually
 
 ### Pending Todos
 
@@ -187,7 +189,33 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 16 complete.
+None - Phase 17 complete.
+
+## Phase 17 Completion Summary
+
+**Plans:** 3 of 3 complete
+**Requirements Satisfied:** All 12 TEST requirements (TEST-01 through TEST-12)
+
+**Deliverables (17-01):**
+- backend/tests/unit/test_document_service.py - Fixed constructor calls
+- backend/pyproject.toml - mypy overrides configuration
+- 6 source files with type annotations/fixes
+
+**Deliverables (17-02):**
+- backend/tests/unit/extraction/test_few_shot_examples.py (17 tests)
+- backend/tests/integration/test_e2e_langextract.py (8 tests)
+- Updated backend/tests/integration/conftest.py with LangExtract fixtures
+
+**Deliverables (17-03):**
+- backend/tests/unit/ocr/test_gpu_cold_start.py (14 tests)
+- Comprehensive TEST requirement verification
+
+**Final Metrics:**
+- Total tests: 490 passed, 1 skipped
+- Coverage: 86.98% (threshold: 80%)
+- mypy: Success - 0 errors in 41 source files
+
+**Total Phase 17:** 17 min (3 plans, avg 5.7 min/plan)
 
 ## Phase 16 Completion Summary
 
@@ -230,34 +258,9 @@ None - Phase 16 complete.
 
 **Total Phase 15:** 11 min, 6 integration tests
 
-## Phase 17 Progress Summary
-
-**Plan 17-01 Complete:**
-- TEST-11: Coverage >= 80% (achieved 87%)
-- TEST-12: mypy strict mode passes (0 errors in 41 files)
-- All 17 tests in test_document_service.py fixed
-- Added mypy overrides for untyped libraries (pypdfium2, aiobreaker, google.oauth2.id_token)
-
-**Deliverables:**
-- backend/tests/unit/test_document_service.py - Fixed constructor calls
-- backend/pyproject.toml - mypy overrides configuration
-- 6 source files with type annotations/fixes
-
-**Plan 17-02 Complete:**
-- TEST-01: Few-shot example validation tests (17 tests)
-- TEST-05: E2E Docling extraction path regression tests
-- TEST-06: E2E LangExtract extraction path (8 tests)
-- DUAL-08: LangExtract char offset verification
-- DUAL-09: Docling default method backward compatibility
-
-**Deliverables:**
-- backend/tests/unit/extraction/test_few_shot_examples.py
-- backend/tests/integration/test_e2e_langextract.py
-- Updated backend/tests/integration/conftest.py with LangExtract fixtures
-
 ## Session Continuity
 
-Last session: 2026-01-25T18:16:45Z
-Stopped at: Completed 17-01-PLAN.md (Test Baseline & mypy Strict)
+Last session: 2026-01-25T18:25:00Z
+Stopped at: Completed 17-03-PLAN.md (GPU Cold Start & TEST Requirements)
 Resume file: None
-Next action: Phase 17 Plan 03 (Integration & API Tests)
+Next action: Phase 18 (Frontend Integration) if needed
