@@ -37,7 +37,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 11: LangExtract Core Integration** - Character offset storage, Gemini integration, few-shot examples
 - [x] **Phase 12: LangExtract Advanced Features** - Multi-pass extraction, HTML visualization, parallel processing
 - [ ] **Phase 13: LightOnOCR GPU Service** - Cloud Run GPU deployment, vLLM serving, client integration
-- [ ] **Phase 14: OCR Routing & Fallback** - Scanned document detection, Docling OCR fallback
+- [x] **Phase 14: OCR Routing & Fallback** - Scanned document detection, Docling OCR fallback
 - [ ] **Phase 15: Dual Pipeline Integration** - Method selection API, output normalization, Cloud Tasks enhancement
 - [ ] **Phase 16: CloudBuild Deployment** - CloudBuild configs, GitHub triggers, rollback procedures
 - [ ] **Phase 17: Testing & Quality** - Comprehensive tests for all new features, >80% coverage
@@ -114,9 +114,10 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 13-01-PLAN.md - Docker image and deployment scripts (Dockerfile, deploy.sh, service account)
-- [ ] 13-02-PLAN.md - Deploy GPU service to Cloud Run (execution + verification)
-- [ ] 13-03-PLAN.md - LightOnOCRClient backend implementation with unit tests
+- [x] 13-01-PLAN.md - Docker image and deployment scripts (Dockerfile, deploy.sh, service account)
+- [x] 13-02-PLAN.md - Deploy GPU service to Cloud Run (execution + verification)
+- [x] 13-03-PLAN.md - LightOnOCRClient backend implementation with unit tests
+- [ ] 13-04-PLAN.md - API Integration (pending)
 
 ### Phase 14: OCR Routing & Fallback
 
@@ -145,7 +146,11 @@ Plans:
   4. Document model tracks extraction_method and ocr_processed metadata
   5. Both extraction methods produce normalized BorrowerRecord with SourceReference
   6. Existing v1.0 Docling extraction continues to work unchanged (regression safe)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 15-01-PLAN.md - Database schema + API query parameters
+- [ ] 15-02-PLAN.md - Cloud Tasks enhancement + service wiring
 
 ### Phase 16: CloudBuild Deployment
 
@@ -197,9 +202,9 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
 | 11. LangExtract Core Integration | v2.0 | 4/4 | Complete | 2026-01-25 |
 | 12. LangExtract Advanced Features | v2.0 | 3/3 | Complete | 2026-01-25 |
-| 13. LightOnOCR GPU Service | v2.0 | 0/3 | Ready | - |
+| 13. LightOnOCR GPU Service | v2.0 | 3/4 | In Progress | - |
 | 14. OCR Routing & Fallback | v2.0 | 2/2 | Complete | 2026-01-25 |
-| 15. Dual Pipeline Integration | v2.0 | 0/TBD | Not started | - |
+| 15. Dual Pipeline Integration | v2.0 | 0/2 | Planned | - |
 | 16. CloudBuild Deployment | v2.0 | 0/TBD | Not started | - |
 | 17. Testing & Quality | v2.0 | 0/TBD | Not started | - |
 | 18. Documentation & Frontend | v2.0 | 0/TBD | Not started | - |
