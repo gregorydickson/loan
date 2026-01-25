@@ -30,6 +30,8 @@ dependencies = [
     # Phase 3 validation dependencies
     "rapidfuzz>=3.0.0",
     "phonenumbers>=8.0.0",
+    # Phase 11 LangExtract integration
+    "langextract>=1.1.1",
 ]
 
 [project.optional-dependencies]
