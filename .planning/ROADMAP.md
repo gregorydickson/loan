@@ -39,7 +39,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 - [ ] **Phase 13: LightOnOCR GPU Service** - Cloud Run GPU deployment, vLLM serving, client integration
 - [x] **Phase 14: OCR Routing & Fallback** - Scanned document detection, Docling OCR fallback
 - [x] **Phase 15: Dual Pipeline Integration** - Method selection API, output normalization, Cloud Tasks enhancement
-- [ ] **Phase 16: CloudBuild Deployment** - CloudBuild configs, GitHub triggers, rollback procedures
+- [x] **Phase 16: CloudBuild Deployment** - CloudBuild configs, GitHub triggers, rollback procedures
 - [ ] **Phase 17: Testing & Quality** - Comprehensive tests for all new features, >80% coverage
 - [ ] **Phase 18: Documentation & Frontend** - Guides, ADRs, frontend method selection UI
 
@@ -166,9 +166,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 16-01-PLAN.md - CloudBuild configuration files (backend, frontend, GPU)
-- [ ] 16-02-PLAN.md - Infrastructure scripts (provision-infra.sh, rollback.sh, Terraform inventory)
-- [ ] 16-03-PLAN.md - GitHub triggers and deployment guide
+- [x] 16-01-PLAN.md - CloudBuild configuration files (backend, frontend, GPU)
+- [x] 16-02-PLAN.md - Infrastructure scripts (provision-infra.sh, rollback.sh, Terraform inventory)
+- [x] 16-03-PLAN.md - GitHub triggers and deployment guide
 
 ### Phase 17: Testing & Quality
 
@@ -181,7 +181,12 @@ Plans:
   3. E2E tests pass for both Docling and LangExtract extraction paths
   4. Dual pipeline method selection tests verify correct routing
   5. Test coverage maintained >80% for new code, mypy strict passes
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 17-01-PLAN.md - Fix broken tests and mypy errors
+- [ ] 17-02-PLAN.md - Few-shot validation tests and E2E LangExtract tests
+- [ ] 17-03-PLAN.md - GPU cold start tests and final verification
 
 ### Phase 18: Documentation & Frontend
 
@@ -211,7 +216,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 14. OCR Routing & Fallback | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 15. Dual Pipeline Integration | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 16. CloudBuild Deployment | v2.0 | 3/3 | Complete | 2026-01-25 |
-| 17. Testing & Quality | v2.0 | 0/TBD | Not started | - |
+| 17. Testing & Quality | v2.0 | 0/3 | Not started | - |
 | 18. Documentation & Frontend | v2.0 | 0/TBD | Not started | - |
 
 ---
