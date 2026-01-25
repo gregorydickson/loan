@@ -1,6 +1,8 @@
 """Fixtures for integration tests."""
 
+from decimal import Decimal
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -10,8 +12,11 @@ from src.api.dependencies import (
     get_borrower_extractor,
     get_cloud_tasks_client,
     get_docling_processor,
+    get_extraction_router,
     get_gcs_client,
 )
+from src.extraction.extraction_router import ExtractionRouter
+from src.extraction.langextract_processor import LangExtractProcessor, LangExtractResult
 from src.ingestion.docling_processor import (
     DoclingProcessor,
     DocumentContent,
@@ -19,6 +24,8 @@ from src.ingestion.docling_processor import (
     PageContent,
 )
 from src.main import app
+from src.models.borrower import Address, BorrowerRecord, IncomeRecord
+from src.models.document import SourceReference
 from src.storage.database import get_db_session
 from src.storage.models import Base
 
@@ -423,6 +430,147 @@ async def client_with_task_handler(
     app.dependency_overrides[get_gcs_client] = override_get_gcs_client
     app.dependency_overrides[get_docling_processor] = override_get_docling_processor
     app.dependency_overrides[get_borrower_extractor] = override_get_borrower_extractor
+    app.dependency_overrides[get_cloud_tasks_client] = override_cloud_tasks_client
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as test_client:
+        yield test_client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def mock_langextract_processor():
+    """Create mock LangExtractProcessor that returns borrowers with char offsets.
+
+    This fixture creates a mock LangExtractProcessor that returns a LangExtractResult
+    with SourceReference populated with char_start/char_end (DUAL-08).
+
+    Use this fixture for E2E tests verifying LangExtract path behavior.
+    """
+    processor = MagicMock(spec=LangExtractProcessor)
+
+    def create_mock_extract(document_text, document_id, document_name, **kwargs):
+        """Create LangExtractResult with char offsets populated."""
+        source = SourceReference(
+            document_id=document_id,
+            document_name=document_name,
+            page_number=1,
+            snippet="John Smith, SSN: 123-45-6789",
+            char_start=10,  # LangExtract populates char offsets
+            char_end=38,
+        )
+
+        borrower = BorrowerRecord(
+            id=uuid4(),
+            name="John Smith",
+            ssn="123-45-6789",
+            phone="(555) 123-4567",
+            email="john.smith@example.com",
+            address=Address(
+                street="123 Main St",
+                city="Austin",
+                state="TX",
+                zip_code="78701",
+            ),
+            income_history=[
+                IncomeRecord(
+                    amount=Decimal("75000.00"),
+                    period="annual",
+                    year=2024,
+                    source_type="employment",
+                    employer="Acme Corp",
+                ),
+            ],
+            account_numbers=["1234567890"],
+            loan_numbers=["LOAN-2024-001"],
+            sources=[source],
+            confidence_score=0.9,
+        )
+
+        return LangExtractResult(
+            borrowers=[borrower],
+            raw_extractions=None,
+            alignment_warnings=[],
+        )
+
+    processor.extract = MagicMock(side_effect=create_mock_extract)
+    return processor
+
+
+@pytest.fixture
+async def client_with_langextract(
+    async_engine,
+    mock_gcs_client,
+    mock_docling_processor,
+    mock_borrower_extractor_with_data,
+    mock_langextract_processor,
+):
+    """Test client with mock ExtractionRouter using LangExtract.
+
+    This fixture wires up a mock ExtractionRouter that uses the mock
+    LangExtractProcessor for langextract method calls, enabling E2E
+    testing of the LangExtract extraction path (TEST-06, DUAL-08).
+    """
+    session_factory = async_sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    async def override_get_db_session():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    def override_get_gcs_client():
+        return mock_gcs_client
+
+    def override_get_docling_processor():
+        return mock_docling_processor
+
+    def override_get_borrower_extractor():
+        return mock_borrower_extractor_with_data
+
+    def override_get_extraction_router(borrower_extractor=None):
+        """Return mock ExtractionRouter with LangExtract and Docling."""
+        # Use the mock_langextract_processor directly
+        router = MagicMock(spec=ExtractionRouter)
+
+        def mock_extract(document, document_id, document_name, method="auto", **kwargs):
+            """Route to appropriate extractor based on method."""
+            if method == "langextract":
+                # Use LangExtract - returns LangExtractResult with char offsets
+                return mock_langextract_processor.extract(
+                    document.text, document_id, document_name, **kwargs
+                )
+            elif method == "docling":
+                # Use Docling - returns ExtractionResult
+                return mock_borrower_extractor_with_data.extract(
+                    document, document_id, document_name
+                )
+            else:
+                # Auto mode - try LangExtract first
+                return mock_langextract_processor.extract(
+                    document.text, document_id, document_name, **kwargs
+                )
+
+        router.extract = MagicMock(side_effect=mock_extract)
+        return router
+
+    def override_cloud_tasks_client():
+        # Return None to simulate local dev (no async queueing)
+        return None
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_gcs_client] = override_get_gcs_client
+    app.dependency_overrides[get_docling_processor] = override_get_docling_processor
+    app.dependency_overrides[get_borrower_extractor] = override_get_borrower_extractor
+    app.dependency_overrides[get_extraction_router] = override_get_extraction_router
     app.dependency_overrides[get_cloud_tasks_client] = override_cloud_tasks_client
 
     transport = ASGITransport(app=app)
