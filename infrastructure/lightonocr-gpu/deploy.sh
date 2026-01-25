@@ -44,12 +44,19 @@ gcloud artifacts repositories create "$AR_REPO" \
 echo "Configuring Docker authentication..."
 gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
-# Step 1: Build and push Docker image
+# Step 1: Build and push Docker image using Cloud Build (avoids local disk space issues)
+# The vLLM base image is ~8GB+ which can exceed local Docker storage
 echo ""
-echo "Building Docker image (this may take 10+ minutes for model download)..."
+echo "Building Docker image using Cloud Build (this may take 15+ minutes)..."
 cd "$(dirname "$0")"
-docker build -t "$IMAGE" .
-docker push "$IMAGE"
+
+# Use Cloud Build for remote build - much more reliable for large images
+gcloud builds submit \
+    --project="$PROJECT_ID" \
+    --region="$REGION" \
+    --tag="$IMAGE" \
+    --timeout=3600s \
+    .
 
 # Step 2: Deploy to Cloud Run with GPU
 echo ""
