@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 15 - Dual Pipeline Integration (Complete)
+**Current focus:** Phase 16 - CloudBuild Deployment (In Progress)
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
-Phase: 15 of 18 (Dual Pipeline Integration)
-Plan: 2 of 2 in current phase
-Status: Phase Complete
-Last activity: 2026-01-25 - Completed 15-02-PLAN.md (Service Layer Integration)
+Phase: 16 of 18 (CloudBuild Deployment)
+Plan: 2 of 3 in current phase
+Status: In Progress
+Last activity: 2026-01-25 - Completed 16-02-PLAN.md (Infrastructure Scripts & Rollback)
 
-Progress: [##############====..] 83% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15)
+Progress: [###############===..] 85% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 partial)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 53 (v1.0: 36, v2.0: 17)
-- Average duration: 4.8 min
-- Total execution time: 4.88 hours
+- Total plans completed: 55 (v1.0: 36, v2.0: 19)
+- Average duration: 4.7 min
+- Total execution time: 4.97 hours
 
 **By Phase (v1.0):**
 
@@ -100,6 +100,16 @@ Progress: [##############====..] 83% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 15 Total:** 11 min (2 plans, avg 5.5 min/plan)
 
+**v2.0 Phase 16 In Progress:**
+
+| Plan | Name | Duration | Status |
+|------|------|----------|--------|
+| 16-01 | CloudBuild YAML Configs | 5 min | Complete |
+| 16-02 | Infrastructure Scripts & Rollback | 3 min | Complete |
+| 16-03 | GitHub Triggers & Build Verification | - | Pending |
+
+**Phase 16 Progress:** 2 of 3 plans complete
+
 ## Accumulated Context
 
 ### Decisions
@@ -153,6 +163,7 @@ Recent decisions affecting v2.0 work:
 - [15-02]: DUAL-04: OCRRouter runs BEFORE extraction when ocr != 'skip'
 - [15-02]: ProcessDocumentRequest defaults ensure backward compat with queued tasks
 - [15-02]: OCR-then-extract pipeline pattern for dual pipeline
+- [16-02]: All gcloud commands use existence checks for idempotency
 
 ### Pending Todos
 
@@ -160,7 +171,24 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 15 complete, ready for Phase 16 or Phase 13-04.
+None - Phase 16 in progress, 16-02 complete.
+
+## Phase 16 Progress Summary
+
+**Plans:** 2 of 3 complete
+**Requirements Satisfied:** CBLD-05, CBLD-06, CBLD-11
+
+**Deliverables (16-01):**
+- backend-cloudbuild.yaml with VPC egress and Secret Manager
+- frontend-cloudbuild.yaml with NEXT_PUBLIC_API_URL
+- gpu-cloudbuild.yaml with L4 GPU configuration
+
+**Deliverables (16-02):**
+- docs/terraform-to-gcloud-inventory.md (CBLD-05)
+- infrastructure/scripts/provision-infra.sh (CBLD-06)
+- infrastructure/scripts/rollback.sh (CBLD-11)
+
+**Total Phase 16 so far:** 8 min (2 plans)
 
 ## Phase 15 Completion Summary
 
@@ -184,7 +212,7 @@ None - Phase 15 complete, ready for Phase 16 or Phase 13-04.
 
 ## Session Continuity
 
-Last session: 2026-01-25T16:38:59Z
-Stopped at: Completed 15-02-PLAN.md (Service Layer Integration)
+Last session: 2026-01-25T17:18:00Z
+Stopped at: Completed 16-02-PLAN.md (Infrastructure Scripts & Rollback)
 Resume file: None
-Next action: Phase 16 (API Integration Testing) or Phase 13-04 (API Integration)
+Next action: Phase 16-03 (GitHub Triggers & Build Verification)
