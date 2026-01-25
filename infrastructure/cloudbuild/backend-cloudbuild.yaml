@@ -1,0 +1,75 @@
+# Backend CloudBuild Configuration
+# Builds and deploys the FastAPI backend service to Cloud Run
+#
+# Usage:
+#   Manual: gcloud builds submit --config=infrastructure/cloudbuild/backend-cloudbuild.yaml .
+#   Trigger: Set up GitHub trigger pointing to this file
+#
+# Prerequisites:
+#   - Artifact Registry repository 'loan-repo' exists
+#   - Secret Manager secrets: database-url, gemini-api-key
+#   - Service account: loan-cloud-run@PROJECT_ID.iam.gserviceaccount.com
+#   - VPC and subnet configured for Cloud SQL access
+
+steps:
+  # Build the backend Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:latest'
+      - './backend'
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'loan-backend-prod'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
+      - '--region'
+      - '${_REGION}'
+      - '--service-account'
+      - 'loan-cloud-run@${PROJECT_ID}.iam.gserviceaccount.com'
+      - '--network'
+      - '${PROJECT_ID}-vpc'
+      - '--subnet'
+      - 'cloud-run-subnet'
+      - '--vpc-egress'
+      - 'private-ranges-only'
+      - '--allow-unauthenticated'
+      - '--cpu'
+      - '1'
+      - '--memory'
+      - '1Gi'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '10'
+      - '--set-secrets'
+      - 'DATABASE_URL=database-url:latest,GEMINI_API_KEY=gemini-api-key:latest'
+
+substitutions:
+  _REGION: us-central1
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
