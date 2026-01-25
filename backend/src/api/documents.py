@@ -4,15 +4,29 @@ In production (Cloud Tasks configured): Upload returns immediately with PENDING 
 In development (no Cloud Tasks): Upload returns after synchronous processing completes.
 """
 
+from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel, Field
 
 from src.api.dependencies import DocumentRepoDep, DocumentServiceDep
 from src.ingestion.document_service import DocumentUploadError, DuplicateDocumentError
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
+
+# Type aliases for dual pipeline support (v2.0)
+# ExtractionMethod: Which extraction pipeline to use
+#   - "docling": Docling-based extraction (v1.0 default)
+#   - "langextract": LangExtract pipeline (v2.0 structured extraction)
+#   - "auto": Automatically select based on document type (future enhancement)
+ExtractionMethod = Literal["docling", "langextract", "auto"]
+
+# OCRMode: How to handle OCR for scanned documents
+#   - "auto": Detect scanned pages and apply OCR if needed
+#   - "force": Always apply OCR regardless of content
+#   - "skip": Never apply OCR (assume all text is extractable)
+OCRMode = Literal["auto", "force", "skip"]
 
 
 class DocumentUploadResponse(BaseModel):
@@ -30,6 +44,13 @@ class DocumentUploadResponse(BaseModel):
     page_count: int | None = Field(None, description="Number of pages (if processing succeeded)")
     error_message: str | None = Field(None, description="Error details (if processing failed)")
     message: str = Field(..., description="Status message")
+    # Extraction metadata (v2.0)
+    extraction_method: str | None = Field(
+        None, description="Extraction method used (docling/langextract)"
+    )
+    ocr_processed: bool | None = Field(
+        None, description="Whether OCR was applied to the document"
+    )
 
 
 class DocumentResponse(BaseModel):
@@ -71,6 +92,16 @@ class DocumentStatusResponse(BaseModel):
     summary="Upload a document",
     description="""Upload a document for processing. Supports PDF, DOCX, PNG, and JPG files.
 
+**Extraction Method (v2.0):**
+- `docling` (default): Docling-based extraction, preserves v1.0 behavior
+- `langextract`: LangExtract structured extraction pipeline
+- `auto`: Automatically select based on document type
+
+**OCR Mode:**
+- `auto` (default): Detect scanned pages and apply OCR if needed
+- `force`: Always apply OCR regardless of content
+- `skip`: Never apply OCR
+
 In production (Cloud Tasks configured): Returns immediately with status='pending'.
 Poll GET /api/documents/{id}/status to check processing progress.
 
@@ -80,12 +111,22 @@ Response will include status='completed' or status='failed'.""",
 async def upload_document(
     file: UploadFile,
     service: DocumentServiceDep,
+    method: ExtractionMethod = Query(
+        default="docling",
+        description="Extraction method: docling (default), langextract, or auto",
+    ),
+    ocr: OCRMode = Query(
+        default="auto",
+        description="OCR mode: auto (default), force, or skip",
+    ),
 ) -> DocumentUploadResponse:
     """Upload a document for processing.
 
     Args:
         file: Uploaded file (multipart form)
         service: DocumentService (injected)
+        method: Extraction method (docling/langextract/auto). Default 'docling' for backward compatibility.
+        ocr: OCR mode (auto/force/skip). Default 'auto' for automatic detection.
 
     Returns:
         DocumentUploadResponse with document ID and processing status
@@ -101,11 +142,14 @@ async def upload_document(
         # Read file content
         content = await file.read()
 
-        # Upload and process document (creates DB record + uploads to GCS + Docling)
+        # Upload and process document (creates DB record + uploads to GCS + extraction)
+        # Pass extraction method and OCR mode for dual pipeline support (v2.0)
         document = await service.upload(
             filename=file.filename or "unknown",
             content=content,
             content_type=file.content_type,
+            extraction_method=method,
+            ocr_mode=ocr,
         )
 
         # Generate processing-aware message
@@ -129,6 +173,8 @@ async def upload_document(
             page_count=document.page_count,
             error_message=document.error_message,
             message=message,
+            extraction_method=document.extraction_method,
+            ocr_processed=document.ocr_processed,
         )
 
     except ValueError as e:
