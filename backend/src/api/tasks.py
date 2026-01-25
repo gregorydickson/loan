@@ -17,7 +17,9 @@ from src.api.dependencies import (
     BorrowerRepoDep,
     DoclingProcessorDep,
     DocumentRepoDep,
+    ExtractionRouterDep,
     GCSClientDep,
+    OCRRouterDep,
 )
 from src.storage.models import DocumentStatus
 
@@ -74,17 +76,24 @@ async def process_document(
     borrower_extractor: BorrowerExtractorDep,
     borrower_repo: BorrowerRepoDep,
     gcs_client: GCSClientDep,
+    ocr_router: OCRRouterDep,
+    extraction_router: ExtractionRouterDep,
 ) -> ProcessDocumentResponse:
     """Process a document from Cloud Tasks callback.
 
+    DUAL-04: OCRRouter processes documents before extraction when ocr != "skip"
+    DUAL-05: ExtractionRouter routes to correct extraction method
+
     Args:
         request: FastAPI request (for headers)
-        payload: Task payload with document_id and filename
+        payload: Task payload with document_id, filename, method, ocr
         document_repo: Document repository
         docling_processor: Docling processor for text extraction
         borrower_extractor: LLM extractor for borrower data
         borrower_repo: Borrower repository for persistence
         gcs_client: GCS client for file download
+        ocr_router: OCRRouter for OCR routing (None if not configured)
+        extraction_router: ExtractionRouter for dual pipeline routing
 
     Returns:
         ProcessDocumentResponse with status
@@ -137,24 +146,60 @@ async def process_document(
         gcs_path = document.gcs_uri.replace(f"gs://{gcs_client.bucket_name}/", "")
         content = gcs_client.download(gcs_path)
 
-        # Process with Docling
         from src.ingestion.docling_processor import DocumentProcessingError
 
-        result = docling_processor.process_bytes(content, payload.filename)
+        # Step 1: OCR routing based on payload.ocr mode (DUAL-04)
+        ocr_processed = False
+        if ocr_router and payload.ocr != "skip":
+            ocr_result = await ocr_router.process(
+                pdf_bytes=content,
+                filename=payload.filename,
+                mode=payload.ocr,  # type: ignore[arg-type]
+            )
+            result = ocr_result.content
+            ocr_processed = ocr_result.ocr_method != "none"
+            logger.info(
+                "OCR routing for %s: method=%s, ocr_processed=%s",
+                payload.document_id,
+                ocr_result.ocr_method,
+                ocr_processed,
+            )
+        else:
+            # Skip OCR - use Docling directly
+            result = docling_processor.process_bytes(content, payload.filename)
 
-        # Update page count
+        # Update page count and ocr_processed status
         await document_repo.update_status(
             payload.document_id,
             DocumentStatus.PROCESSING,  # Still processing during extraction
             page_count=result.page_count,
         )
 
-        # Extract borrowers
-        extraction_result = borrower_extractor.extract(
-            document=result,
-            document_id=payload.document_id,
-            document_name=payload.filename,
-        )
+        # Update document ocr_processed field
+        document.ocr_processed = ocr_processed
+        await document_repo.session.flush()
+
+        # Step 2: Extraction routing based on payload.method (DUAL-05)
+        if extraction_router and payload.method != "docling":
+            # Use ExtractionRouter for langextract/auto methods
+            extraction_result = extraction_router.extract(
+                document=result,
+                document_id=payload.document_id,
+                document_name=payload.filename,
+                method=payload.method,  # type: ignore[arg-type]
+            )
+            logger.info(
+                "Extraction via router for %s: method=%s",
+                payload.document_id,
+                payload.method,
+            )
+        else:
+            # Use BorrowerExtractor directly for docling method
+            extraction_result = borrower_extractor.extract(
+                document=result,
+                document_id=payload.document_id,
+                document_name=payload.filename,
+            )
 
         # Persist extracted borrowers
         from src.ingestion.document_service import DocumentService
@@ -187,9 +232,11 @@ async def process_document(
         )
 
         logger.info(
-            "Document %s processed successfully: %d borrowers extracted",
+            "Document %s processed successfully: %d borrowers extracted (method=%s, ocr=%s)",
             payload.document_id,
             len(extraction_result.borrowers),
+            payload.method,
+            payload.ocr,
         )
 
         return ProcessDocumentResponse(status="completed")

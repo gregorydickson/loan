@@ -54,5 +54,10 @@ class Settings(BaseSettings):
         default="", description="Service account email for OIDC token"
     )
 
+    # LightOnOCR GPU Service configuration (Phase 13)
+    lightonocr_service_url: str = Field(
+        default="", description="LightOnOCR GPU service URL (Cloud Run)"
+    )
+
 
 settings = Settings()

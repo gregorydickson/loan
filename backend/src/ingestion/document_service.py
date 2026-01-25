@@ -6,6 +6,8 @@ Handles:
 - GCS upload
 - Database record creation
 - Docling document processing (synchronous)
+- OCR routing (auto/force/skip via OCRRouter)
+- Extraction routing (docling/langextract/auto via ExtractionRouter)
 - Borrower extraction via LLM
 - Borrower persistence with source attribution
 """
@@ -34,6 +36,8 @@ from src.storage.repositories import BorrowerRepository, DocumentRepository
 
 if TYPE_CHECKING:
     from src.extraction import BorrowerExtractor
+    from src.extraction.extraction_router import ExtractionRouter
+    from src.ocr.ocr_router import OCRRouter
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +104,8 @@ class DocumentService:
         borrower_extractor: BorrowerExtractor,
         borrower_repository: BorrowerRepository,
         cloud_tasks_client: CloudTasksClient | None = None,
+        ocr_router: OCRRouter | None = None,
+        extraction_router: ExtractionRouter | None = None,
     ) -> None:
         """Initialize DocumentService.
 
@@ -110,6 +116,8 @@ class DocumentService:
             borrower_extractor: BorrowerExtractor for LLM-based extraction
             borrower_repository: BorrowerRepository for persisting borrowers
             cloud_tasks_client: CloudTasksClient for async task queueing (None for sync mode)
+            ocr_router: OCRRouter for OCR routing (Phase 14-15, None for legacy mode)
+            extraction_router: ExtractionRouter for dual pipeline routing (Phase 12-15)
         """
         self.repository = repository
         self.gcs_client = gcs_client
@@ -117,6 +125,8 @@ class DocumentService:
         self.borrower_extractor = borrower_extractor
         self.borrower_repository = borrower_repository
         self.cloud_tasks_client = cloud_tasks_client
+        self.ocr_router = ocr_router
+        self.extraction_router = extraction_router
 
     @staticmethod
     def compute_file_hash(content: bytes) -> str:
@@ -179,6 +189,8 @@ class DocumentService:
         filename: str,
         content: bytes,
         content_type: str | None = None,
+        extraction_method: str = "docling",
+        ocr_mode: str = "auto",
     ) -> Document:
         """Upload a document: validate, hash check, store in GCS, queue/process.
 
@@ -186,12 +198,14 @@ class DocumentService:
             Queues Cloud Task and returns immediately with PENDING status.
 
         In sync mode (cloud_tasks_client is None):
-            Processes document with Docling and extracts borrowers before returning.
+            Processes document with OCRRouter then extracts borrowers before returning.
 
         Args:
             filename: Original filename
             content: File content as bytes
             content_type: MIME type of the file
+            extraction_method: Extraction method (docling/langextract/auto). Default 'docling'.
+            ocr_mode: OCR mode (auto/force/skip). Default 'auto'.
 
         Returns:
             Document record with status:
@@ -224,6 +238,7 @@ class DocumentService:
             file_type=file_type,
             file_size_bytes=len(content),
             status=DocumentStatus.PENDING,
+            extraction_method=extraction_method,  # Track selected method at upload time
         )
         document = await self.repository.create(document)
 
@@ -252,10 +267,14 @@ class DocumentService:
                 self.cloud_tasks_client.create_document_processing_task(
                     document_id=document_id,
                     filename=filename,
+                    extraction_method=extraction_method,
+                    ocr_mode=ocr_mode,
                 )
                 logger.info(
-                    "Queued document %s for async processing",
+                    "Queued document %s for async processing (method=%s, ocr=%s)",
                     document_id,
+                    extraction_method,
+                    ocr_mode,
                 )
             except Exception as e:
                 logger.error("Failed to queue task for document %s: %s", document_id, e)
@@ -274,21 +293,60 @@ class DocumentService:
             return document
 
         # Sync mode: Process immediately (for local development)
+        # DUAL-04: OCRRouter runs BEFORE extraction when ocr != "skip"
+        ocr_processed = False
         try:
-            result = self.docling_processor.process_bytes(content, filename)
+            # Step 1: OCR routing if needed
+            if self.ocr_router and ocr_mode != "skip":
+                ocr_result = await self.ocr_router.process(
+                    pdf_bytes=content,
+                    filename=filename,
+                    mode=ocr_mode,
+                )
+                result = ocr_result.content
+                ocr_processed = ocr_result.ocr_method != "none"
+                logger.info(
+                    "OCR routing for %s: method=%s, ocr_processed=%s",
+                    document_id,
+                    ocr_result.ocr_method,
+                    ocr_processed,
+                )
+            else:
+                # Skip OCR - use Docling directly
+                result = self.docling_processor.process_bytes(content, filename)
+
             await self.update_processing_result(
                 document_id,
                 success=True,
                 page_count=result.page_count,
             )
 
-            # Extract borrowers from processed document
+            # Update document with OCR status
+            document.ocr_processed = ocr_processed
+            await self.repository.session.flush()
+
+            # Step 2: Extract borrowers using ExtractionRouter or BorrowerExtractor
             try:
-                extraction_result = self.borrower_extractor.extract(
-                    document=result,
-                    document_id=document_id,
-                    document_name=filename,
-                )
+                if self.extraction_router and extraction_method != "docling":
+                    # Use ExtractionRouter for langextract/auto methods
+                    extraction_result = self.extraction_router.extract(
+                        document=result,
+                        document_id=document_id,
+                        document_name=filename,
+                        method=extraction_method,  # type: ignore[arg-type]
+                    )
+                    logger.info(
+                        "Extraction via router for %s: method=%s",
+                        document_id,
+                        extraction_method,
+                    )
+                else:
+                    # Original behavior - use direct BorrowerExtractor
+                    extraction_result = self.borrower_extractor.extract(
+                        document=result,
+                        document_id=document_id,
+                        document_name=filename,
+                    )
 
                 # Persist extracted borrowers
                 for borrower_record in extraction_result.borrowers:
@@ -306,14 +364,21 @@ class DocumentService:
                             str(e),
                         )
 
-                # Log extraction summary
+                # Log extraction summary - handle both ExtractionResult and LangExtractResult
+                borrower_count = len(extraction_result.borrowers)
+                # LangExtractResult has alignment_warnings, ExtractionResult has validation_errors
+                warnings_count = len(
+                    getattr(extraction_result, "validation_errors", [])
+                    or getattr(extraction_result, "alignment_warnings", [])
+                )
+                consistency_count = len(getattr(extraction_result, "consistency_warnings", []))
                 logger.info(
                     "Extraction complete for document %s: %d borrowers, "
-                    "%d validation errors, %d consistency warnings",
+                    "%d validation/alignment warnings, %d consistency warnings",
                     document_id,
-                    len(extraction_result.borrowers),
-                    len(extraction_result.validation_errors),
-                    len(extraction_result.consistency_warnings),
+                    borrower_count,
+                    warnings_count,
+                    consistency_count,
                 )
 
             except Exception as e:
