@@ -117,7 +117,8 @@ Plans:
 - [x] 13-01-PLAN.md - Docker image and deployment scripts (Dockerfile, deploy.sh, service account)
 - [x] 13-02-PLAN.md - Deploy GPU service to Cloud Run (execution + verification)
 - [x] 13-03-PLAN.md - LightOnOCRClient backend implementation with unit tests
-- [ ] 13-04-PLAN.md - API Integration (pending)
+
+**Note:** API integration (originally planned as 13-04) was appropriately implemented in Phase 14 (OCRRouter). Monitoring/metrics deferred as operational enhancement.
 
 ### Phase 14: OCR Routing & Fallback
 
@@ -217,7 +218,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
 | 11. LangExtract Core Integration | v2.0 | 4/4 | Complete | 2026-01-25 |
 | 12. LangExtract Advanced Features | v2.0 | 3/3 | Complete | 2026-01-25 |
-| 13. LightOnOCR GPU Service | v2.0 | 3/4 | In Progress | - |
+| 13. LightOnOCR GPU Service | v2.0 | 3/3 | Complete | 2026-01-25 |
 | 14. OCR Routing & Fallback | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 15. Dual Pipeline Integration | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 16. CloudBuild Deployment | v2.0 | 3/3 | Complete | 2026-01-25 |

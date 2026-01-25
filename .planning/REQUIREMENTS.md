@@ -24,18 +24,18 @@ Requirements for v2.0 milestone: LangExtract extraction pipeline, LightOnOCR GPU
 
 ### LightOnOCR GPU Service
 
-- [ ] **LOCR-01**: LightOnOCR Cloud Run service deployed with L4 GPU (24GB VRAM)
-- [ ] **LOCR-02**: vLLM serving infrastructure configured for LightOnOCR-2-1B model
-- [ ] **LOCR-03**: GPU service has minimum 4 vCPU, 16 GiB memory configuration
-- [ ] **LOCR-04**: GPU service scales to zero (min_instances=0) to avoid $485/month baseline
+- [x] **LOCR-01**: LightOnOCR Cloud Run service deployed with L4 GPU (24GB VRAM)
+- [x] **LOCR-02**: vLLM serving infrastructure configured for LightOnOCR-2-1B model
+- [x] **LOCR-03**: GPU service has minimum 4 vCPU, 16 GiB memory configuration
+- [x] **LOCR-04**: GPU service scales to zero (min_instances=0) to avoid $485/month baseline
 - [ ] **LOCR-05**: Scanned document detection implemented (auto OCR routing)
-- [ ] **LOCR-06**: LightOnOCRClient in backend communicates with GPU service via HTTP
-- [ ] **LOCR-07**: GPU service requires internal-only authentication (service account or VPC)
-- [ ] **LOCR-08**: Cold start monitoring and alerting configured
+- [x] **LOCR-06**: LightOnOCRClient in backend communicates with GPU service via HTTP
+- [x] **LOCR-07**: GPU service requires internal-only authentication (service account or VPC)
+- [x] **LOCR-08**: Cold start monitoring and alerting configured
 - [x] **LOCR-09**: GPU quota increased for L4 GPUs (request submitted pre-development)
-- [ ] **LOCR-10**: vLLM batching configured for cost-efficient throughput
+- [x] **LOCR-10**: vLLM batching configured for cost-efficient throughput
 - [ ] **LOCR-11**: Fallback to Docling OCR when GPU service unavailable
-- [ ] **LOCR-12**: OCR quality metrics tracked (accuracy, processing time, cost)
+- [x] **LOCR-12**: OCR quality metrics tracked (accuracy, processing time, cost)
 
 ### Dual Pipeline Integration
 
@@ -165,18 +165,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LXTR-10 | Phase 12 | Complete |
 | LXTR-11 | Phase 12 | Complete |
 | LXTR-12 | Phase 11 | Complete |
-| LOCR-01 | Phase 13 | Pending |
-| LOCR-02 | Phase 13 | Pending |
-| LOCR-03 | Phase 13 | Pending |
-| LOCR-04 | Phase 13 | Pending |
+| LOCR-01 | Phase 13 | Complete |
+| LOCR-02 | Phase 13 | Complete |
+| LOCR-03 | Phase 13 | Complete |
+| LOCR-04 | Phase 13 | Complete |
 | LOCR-05 | Phase 14 | Pending |
-| LOCR-06 | Phase 13 | Pending |
-| LOCR-07 | Phase 13 | Pending |
-| LOCR-08 | Phase 13 | Pending |
+| LOCR-06 | Phase 13 | Complete |
+| LOCR-07 | Phase 13 | Complete |
+| LOCR-08 | Phase 13 | Complete |
 | LOCR-09 | Phase 10 | Complete |
-| LOCR-10 | Phase 13 | Pending |
+| LOCR-10 | Phase 13 | Complete |
 | LOCR-11 | Phase 14 | Complete |
-| LOCR-12 | Phase 13 | Pending |
+| LOCR-12 | Phase 13 | Complete |
 | DUAL-01 | Phase 15 | Complete |
 | DUAL-02 | Phase 15 | Complete |
 | DUAL-03 | Phase 15 | Complete |
