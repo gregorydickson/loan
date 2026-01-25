@@ -1,7 +1,7 @@
 # Loan Document Extraction System - System Design
 
-**Version:** 1.0
-**Last Updated:** 2026-01-24
+**Version:** 2.0
+**Last Updated:** 2026-01-25
 **Authors:** Development Team
 
 ---
@@ -96,6 +96,106 @@ flowchart TB
 | **Cloud Platform** | Google Cloud | - | Cloud Run, Cloud SQL, Cloud Storage |
 | **Infrastructure** | Terraform | 1.6+ | Infrastructure as Code |
 | **Container Runtime** | Docker | - | Multi-stage builds for backend/frontend |
+| **v2.0: Structured Extraction** | LangExtract | Latest | Character-level source grounding |
+| **v2.0: GPU OCR** | LightOnOCR | 2-1B | Vision-language OCR model via vLLM |
+
+---
+
+## v2.0 Dual Extraction Pipeline
+
+### Overview
+
+v2.0 introduces a dual extraction pipeline allowing users to choose between:
+- **Docling** (default): Fast, cost-effective extraction for standard documents
+- **LangExtract**: Character-level source grounding for audit-sensitive use cases
+
+This dual approach provides flexibility between cost/speed and precision/traceability based on document requirements.
+
+### Pipeline Selection Flow
+
+```mermaid
+flowchart TD
+    A[Document Upload] --> B{method param?}
+    B -->|docling| C[Docling Pipeline]
+    B -->|langextract| D[LangExtract Pipeline]
+    B -->|auto| E{Document Analysis}
+    E -->|simple| C
+    E -->|complex| D
+
+    C --> F{ocr param?}
+    D --> F
+    F -->|skip| G[Direct Text Extraction]
+    F -->|auto| H[Scanned Detection]
+    F -->|force| I[GPU OCR]
+    H -->|scanned| I
+    H -->|native| G
+    I --> J[LightOnOCR Service]
+    J -->|success| K[OCR Text]
+    J -->|failure| L[Docling OCR Fallback]
+    L --> K
+    G --> M[Extraction]
+    K --> M
+    M --> N[BorrowerRecord + SourceReference]
+```
+
+### Character Offset Storage (DOCS-09)
+
+LangExtract extractions include character-level offsets for precise source attribution:
+
+```
+SourceReference:
+  - document_id: UUID
+  - page_number: int
+  - section_type: str
+  - char_start: int | null  # Character offset (LangExtract only)
+  - char_end: int | null    # Character offset (LangExtract only)
+  - extraction_text: str
+```
+
+For Docling extractions, `char_start` and `char_end` remain null (backward compatible with v1.0).
+
+**Usage:**
+- When `char_start`/`char_end` are populated, UI can highlight exact source text
+- Offsets are relative to the document's extracted markdown content
+- OffsetTranslator component handles coordinate transformation
+
+### OCR Service Architecture
+
+```mermaid
+flowchart LR
+    A[Backend] -->|HTTP| B[LightOnOCR Cloud Run]
+    B -->|vLLM| C[LightOnOCR-2-1B]
+    A -->|fallback| D[Docling OCR]
+    B -.->|scale-to-zero| E[0 instances when idle]
+```
+
+LightOnOCR runs on L4 GPU with scale-to-zero configuration:
+- **Cold start:** 60-120 seconds when scaling from zero
+- **Circuit breaker:** 3 failures triggers Docling fallback
+- **Memory:** 32Gi with 80% GPU utilization
+- **Authentication:** Internal-only via service account OIDC
+
+### v2.0 Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **ExtractionRouter** | `backend/src/extraction/router.py` | Dispatches to Docling or LangExtract based on method parameter |
+| **OCRRouter** | `backend/src/ocr/router.py` | Routes to LightOnOCR or Docling OCR based on mode and availability |
+| **LangExtractProcessor** | `backend/src/extraction/langextract_processor.py` | Wraps langextract library with few-shot examples |
+| **LightOnOCRClient** | `backend/src/ocr/lightonocr_client.py` | HTTP client for GPU OCR service with retry logic |
+| **ScannedDetector** | `backend/src/ocr/scanned_detector.py` | Detects scanned vs native PDF documents |
+| **OffsetTranslator** | `backend/src/extraction/offset_translator.py` | Translates LangExtract offsets to Docling markdown coordinates |
+
+### API Parameters
+
+Upload endpoint supports dual pipeline selection:
+
+```
+POST /api/documents?method={method}&ocr={ocr}
+
+method: "docling" (default) | "langextract" | "auto"
+ocr: "auto" (default) | "force" | "skip"
+```
 
 ---
 
