@@ -127,7 +127,11 @@ Plans:
   1. Scanned documents detected automatically and routed to GPU OCR
   2. Native PDFs skip GPU OCR (use direct text extraction)
   3. Docling OCR used as fallback when GPU service unavailable
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md - ScannedDocumentDetector with pypdfium2 text ratio detection
+- [ ] 14-02-PLAN.md - OCRRouter with circuit breaker and Docling fallback
 
 ### Phase 15: Dual Pipeline Integration
 
@@ -194,7 +198,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 11. LangExtract Core Integration | v2.0 | 4/4 | Complete | 2026-01-25 |
 | 12. LangExtract Advanced Features | v2.0 | 3/3 | Complete | 2026-01-25 |
 | 13. LightOnOCR GPU Service | v2.0 | 0/3 | Ready | - |
-| 14. OCR Routing & Fallback | v2.0 | 0/TBD | Not started | - |
+| 14. OCR Routing & Fallback | v2.0 | 0/2 | Ready | - |
 | 15. Dual Pipeline Integration | v2.0 | 0/TBD | Not started | - |
 | 16. CloudBuild Deployment | v2.0 | 0/TBD | Not started | - |
 | 17. Testing & Quality | v2.0 | 0/TBD | Not started | - |
