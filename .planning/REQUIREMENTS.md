@@ -153,18 +153,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LXTR-01 | Phase 11 | Pending |
-| LXTR-02 | Phase 11 | Pending |
-| LXTR-03 | Phase 11 | Pending |
-| LXTR-04 | Phase 11 | Pending |
-| LXTR-05 | Phase 11 | Pending |
+| LXTR-01 | Phase 11 | Complete |
+| LXTR-02 | Phase 11 | Complete |
+| LXTR-03 | Phase 11 | Complete |
+| LXTR-04 | Phase 11 | Complete |
+| LXTR-05 | Phase 11 | Complete |
 | LXTR-06 | Phase 12 | Pending |
 | LXTR-07 | Phase 12 | Pending |
-| LXTR-08 | Phase 11 | Pending |
-| LXTR-09 | Phase 11 | Pending |
+| LXTR-08 | Phase 11 | Complete |
+| LXTR-09 | Phase 11 | Complete |
 | LXTR-10 | Phase 12 | Pending |
 | LXTR-11 | Phase 12 | Pending |
-| LXTR-12 | Phase 11 | Pending |
+| LXTR-12 | Phase 11 | Complete |
 | LOCR-01 | Phase 13 | Pending |
 | LOCR-02 | Phase 13 | Pending |
 | LOCR-03 | Phase 13 | Pending |

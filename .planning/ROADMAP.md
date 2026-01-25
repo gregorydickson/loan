@@ -78,10 +78,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 11-01-PLAN.md - Schema updates (char_start/char_end in SourceReference)
-- [ ] 11-02-PLAN.md - Few-shot examples for LangExtract
-- [ ] 11-03-PLAN.md - LangExtractProcessor and OffsetTranslator
-- [ ] 11-04-PLAN.md - Verification tests for character offsets
+- [x] 11-01-PLAN.md - Schema updates (char_start/char_end in SourceReference)
+- [x] 11-02-PLAN.md - Few-shot examples for LangExtract
+- [x] 11-03-PLAN.md - LangExtractProcessor and OffsetTranslator
+- [x] 11-04-PLAN.md - Verification tests for character offsets
 
 ### Phase 12: LangExtract Advanced Features
 
@@ -181,7 +181,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
-| 11. LangExtract Core Integration | v2.0 | 0/4 | Planned | - |
+| 11. LangExtract Core Integration | v2.0 | 4/4 | Complete | 2026-01-25 |
 | 12. LangExtract Advanced Features | v2.0 | 0/TBD | Not started | - |
 | 13. LightOnOCR GPU Service | v2.0 | 0/TBD | Not started | - |
 | 14. OCR Routing & Fallback | v2.0 | 0/TBD | Not started | - |
@@ -192,4 +192,5 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 
 ---
 *Roadmap created: 2026-01-24*
+*Last updated: 2026-01-25*
 *Last updated: 2026-01-25*
