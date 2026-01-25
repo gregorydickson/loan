@@ -3,8 +3,8 @@
 LOCR-05: Scanned document detection implemented (auto OCR routing)
 """
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 import pypdfium2 as pdfium
 

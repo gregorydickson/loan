@@ -107,7 +107,7 @@ class OCRRouter:
         pil_image.save(buffer, format="PNG")
         return buffer.getvalue()
 
-    @_gpu_ocr_breaker
+    @_gpu_ocr_breaker  # type: ignore[untyped-decorator]
     async def _try_gpu_ocr(self, image_bytes: bytes) -> str:
         """Attempt GPU OCR with circuit breaker protection.
 
@@ -283,4 +283,6 @@ class OCRRouter:
         Returns:
             State string: "closed", "open", or "half_open"
         """
-        return _gpu_ocr_breaker.current_state.name.lower()
+        # aiobreaker.current_state returns an enum, .name is str
+        state_name: str = _gpu_ocr_breaker.current_state.name.lower()
+        return state_name

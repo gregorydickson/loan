@@ -5,7 +5,7 @@ LOCR-06: LightOnOCRClient in backend communicates with GPU service via HTTP
 
 import base64
 import logging
-from typing import Literal
+from typing import Literal, cast
 
 import httpx
 from google.auth.transport.requests import Request as AuthRequest
@@ -62,7 +62,8 @@ class LightOnOCRClient:
         Returns:
             ID token string for Authorization header
         """
-        return id_token.fetch_id_token(AuthRequest(), self.service_url)
+        # google.oauth2.id_token.fetch_id_token returns str but lacks type stubs
+        return cast(str, id_token.fetch_id_token(AuthRequest(), self.service_url))
 
     def _detect_content_type(self, image_bytes: bytes) -> Literal["image/png", "image/jpeg"]:
         """Detect image content type from magic bytes.
@@ -162,7 +163,7 @@ class LightOnOCRClient:
 
         # Extract text from vLLM response
         try:
-            text = result["choices"][0]["message"]["content"]
+            text: str = result["choices"][0]["message"]["content"]
             logger.info(
                 "LightOnOCR extracted %d characters from image",
                 len(text),

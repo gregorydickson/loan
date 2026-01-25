@@ -3,9 +3,11 @@
 Generates interactive HTML with highlighted source spans from extraction results.
 """
 
+from pathlib import Path
+from typing import Any
+
 import langextract as lx
 from langextract.core.data import AnnotatedDocument
-from pathlib import Path
 
 
 class LangExtractVisualizer:
@@ -32,7 +34,7 @@ class LangExtractVisualizer:
         if not raw_extractions:
             return self._generate_empty_visualization()
 
-        html_obj = lx.visualize(
+        html_obj: Any = lx.visualize(
             data_source=raw_extractions,
             animation_speed=animation_speed,
             show_legend=show_legend,
@@ -40,8 +42,10 @@ class LangExtractVisualizer:
         )
 
         # Handle both Jupyter and standalone contexts
+        # lx.visualize returns IPython.display.HTML or similar - lacks type stubs
         if hasattr(html_obj, 'data'):
-            return html_obj.data
+            result: str = html_obj.data
+            return result
         return str(html_obj)
 
     def save_html(

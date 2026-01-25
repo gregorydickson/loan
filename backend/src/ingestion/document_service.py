@@ -17,7 +17,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID, uuid4
 
 from src.ingestion.cloud_tasks_client import CloudTasksClient
@@ -298,10 +298,21 @@ class DocumentService:
         try:
             # Step 1: OCR routing if needed
             if self.ocr_router and ocr_mode != "skip":
+                # Validate and cast to OCRMode literal type for type safety
+                valid_modes: tuple[Literal["auto", "force", "skip"], ...] = (
+                    "auto",
+                    "force",
+                    "skip",
+                )
+                ocr_mode_literal: Literal["auto", "force", "skip"] = (
+                    ocr_mode  # type: ignore[assignment]
+                    if ocr_mode in valid_modes
+                    else "auto"
+                )
                 ocr_result = await self.ocr_router.process(
                     pdf_bytes=content,
                     filename=filename,
-                    mode=ocr_mode,
+                    mode=ocr_mode_literal,
                 )
                 result = ocr_result.content
                 ocr_processed = ocr_result.ocr_method != "none"

@@ -153,6 +153,9 @@ Extract data exactly as it appears in the document. If information is unclear or
         warnings: list[str] = []
         borrower_map: dict[str, dict[str, Any]] = {}  # name -> accumulated data
 
+        if result.extractions is None:
+            return [], warnings
+
         for extraction in result.extractions:
             # Get character offsets
             char_start: int | None = None
@@ -164,12 +167,13 @@ Extract data exactly as it appears in the document. If information is unclear or
                 char_end = char_interval.end_pos
 
                 # Verify offset (LXTR-08)
-                if not translator.verify_offset(
-                    char_start, char_end, extraction.extraction_text
-                ):
-                    warnings.append(
-                        f"Offset verification failed for '{extraction.extraction_text[:30]}...'"
-                    )
+                if char_start is not None and char_end is not None:
+                    if not translator.verify_offset(
+                        char_start, char_end, extraction.extraction_text
+                    ):
+                        warnings.append(
+                            f"Offset verification failed for '{extraction.extraction_text[:30]}...'"
+                        )
 
             # Track alignment status
             alignment = getattr(extraction, "alignment_status", None)

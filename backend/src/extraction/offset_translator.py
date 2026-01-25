@@ -43,7 +43,9 @@ class OffsetTranslator:
             return
 
         matcher = SequenceMatcher(None, self.markdown, self.raw, autojunk=False)
-        self._matches = matcher.get_matching_blocks()
+        # get_matching_blocks() returns list[Match] which is NamedTuple with a, b, size
+        # Convert to our tuple format for type safety
+        self._matches = [(m.a, m.b, m.size) for m in matcher.get_matching_blocks()]
 
     def markdown_to_raw(self, start: int, end: int) -> tuple[int | None, int | None]:
         """Convert markdown character positions to raw text positions.
