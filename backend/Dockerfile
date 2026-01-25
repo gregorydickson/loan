@@ -34,17 +34,20 @@ COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY src/ ./src/
+COPY examples/ ./examples/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
 
 # Pre-compile Python bytecode for faster startup
-RUN python -m compileall -q ./src/
+RUN python -m compileall -q ./src/ ./examples/
 
 # Switch to non-root user
 USER app
 
 # Cloud Run provides PORT environment variable
 ENV PORT=8080
+# Ensure /app is in PYTHONPATH for examples module import
+ENV PYTHONPATH=/app
 
 # Use exec form for proper signal handling
 CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8080"]
