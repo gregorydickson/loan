@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 12 - LangExtract Advanced Features
+**Current focus:** Phase 12 - LangExtract Advanced Features (COMPLETE)
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 12 of 18 (LangExtract Advanced Features)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-25 - Completed 12-01-PLAN.md (ExtractionConfig Dataclass)
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-01-25 - Completed 12-03-PLAN.md (Extraction Router with Fallback)
 
-Progress: [##########========..] 68% (v1.0 complete + Phase 10 + Phase 11 + 12-01, 12-02)
+Progress: [###########=======..] 70% (v1.0 complete + Phase 10 + Phase 11 + Phase 12)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 46 (v1.0: 36, v2.0: 10)
-- Average duration: 5.2 min
-- Total execution time: 4.35 hours
+- Total plans completed: 47 (v1.0: 36, v2.0: 11)
+- Average duration: 5.1 min
+- Total execution time: 4.42 hours
 
 **By Phase (v1.0):**
 
@@ -61,13 +61,15 @@ Progress: [##########========..] 68% (v1.0 complete + Phase 10 + Phase 11 + 12-0
 
 **Phase 11 Total:** 20 min (4 plans, avg 5.0 min/plan)
 
-**v2.0 Phase 12 In Progress:**
+**v2.0 Phase 12 Complete:**
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
 | 12-01 | ExtractionConfig Dataclass | 4 min | Complete |
 | 12-02 | HTML Visualization Wrapper | 3 min | Complete |
-| 12-03 | Extraction Router with Fallback | - | Pending |
+| 12-03 | Extraction Router with Fallback | 4 min | Complete |
+
+**Phase 12 Total:** 11 min (3 plans, avg 3.7 min/plan)
 
 ## Accumulated Context
 
@@ -96,6 +98,9 @@ Recent decisions affecting v2.0 work:
 - [12-01]: extraction_passes range 2-5, max_workers range 1-50, max_char_buffer range 500-5000
 - [12-02]: Use lx.visualize() directly - handles overlapping spans, animation, legend
 - [12-02]: Handle both Jupyter (.data) and standalone (str()) return contexts
+- [12-03]: Transient errors (503, 429, timeout, overloaded, rate limit) retry 3x with exponential backoff
+- [12-03]: Fatal errors trigger immediate fallback without retry
+- [12-03]: method='auto' (default) tries LangExtract first, falls back to Docling on failure
 
 ### Pending Todos
 
@@ -103,12 +108,12 @@ None yet.
 
 ### Blockers/Concerns
 
-None - plan 12-02 complete, proceeding to 12-03.
+None - Phase 12 complete.
 
-## Phase 12 Progress Summary
+## Phase 12 Completion Summary
 
-**Plans:** 3 plans (2 complete: 12-01, 12-02)
-**Requirements Satisfied (so far):** LXTR-06, LXTR-07, LXTR-10
+**Plans:** 3 plans (all complete)
+**Requirements Satisfied:** LXTR-06, LXTR-07, LXTR-10, LXTR-11
 
 **Deliverables (12-01):**
 - ExtractionConfig dataclass with validation
@@ -122,9 +127,15 @@ None - plan 12-02 complete, proceeding to 12-03.
 - Empty placeholder HTML for no-extraction cases
 - 8 unit tests with full mocking
 
+**Deliverables (12-03):**
+- ExtractionRouter with method selection (langextract, docling, auto)
+- Tenacity retry with exponential backoff for transient errors
+- Graceful fallback to Docling on LangExtract failures
+- 25 unit tests for all router scenarios
+
 ## Session Continuity
 
-Last session: 2026-01-25T12:05:06Z
-Stopped at: Completed 12-01-PLAN.md (ExtractionConfig Dataclass)
+Last session: 2026-01-25T12:13:25Z
+Stopped at: Completed 12-03-PLAN.md (Extraction Router with Fallback)
 Resume file: None
-Next action: Execute 12-03-PLAN.md (Extraction Router with Fallback)
+Next action: Phase 13 planning (API Integration)
