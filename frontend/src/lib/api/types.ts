@@ -95,3 +95,13 @@ export interface BorrowerSourcesResponse {
   borrower_name: string;
   sources: SourceReference[];
 }
+
+// Extraction method and OCR mode types for dual pipeline support
+export type ExtractionMethod = "docling" | "langextract" | "auto";
+export type OCRMode = "auto" | "force" | "skip";
+
+export interface UploadParams {
+  file: File;
+  method?: ExtractionMethod;
+  ocr?: OCRMode;
+}

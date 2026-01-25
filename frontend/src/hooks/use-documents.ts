@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   uploadDocument,
+  uploadDocumentWithParams,
   listDocuments,
   getDocumentStatus,
   getDocument,
@@ -12,21 +13,23 @@ import type {
   DocumentResponse,
   DocumentStatusResponse,
   DocumentListResponse,
+  UploadParams,
 } from "@/lib/api/types";
 
 /**
- * Hook for uploading documents.
+ * Hook for uploading documents with extraction method and OCR options.
  *
  * On success, invalidates the documents list query to trigger a refresh.
  */
 export function useUploadDocument() {
   const queryClient = useQueryClient();
 
-  return useMutation<DocumentUploadResponse, Error, File>({
-    mutationFn: async (file: File) => {
+  return useMutation<DocumentUploadResponse, Error, UploadParams>({
+    mutationFn: async ({ file, method = "docling", ocr = "auto" }) => {
       const formData = new FormData();
       formData.append("file", file);
-      return uploadDocument(formData);
+      const params = new URLSearchParams({ method, ocr });
+      return uploadDocumentWithParams(formData, params.toString());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });

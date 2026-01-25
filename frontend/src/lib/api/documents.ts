@@ -67,3 +67,20 @@ export async function listDocuments(
   });
   return apiClient<DocumentListResponse>(`/api/documents/?${params}`);
 }
+
+/**
+ * Upload a document with extraction method and OCR parameters.
+ *
+ * @param formData - FormData with file attached
+ * @param queryParams - Query string with method and ocr params
+ * @returns Upload response with document ID and status
+ */
+export async function uploadDocumentWithParams(
+  formData: FormData,
+  queryParams: string
+): Promise<DocumentUploadResponse> {
+  return apiClient<DocumentUploadResponse>(`/api/documents/?${queryParams}`, {
+    method: "POST",
+    body: formData,
+  });
+}
