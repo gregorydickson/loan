@@ -149,8 +149,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 15-01-PLAN.md - Database schema + API query parameters
-- [ ] 15-02-PLAN.md - Cloud Tasks enhancement + service wiring
+- [x] 15-01-PLAN.md - Database schema + API query parameters
+- [x] 15-02-PLAN.md - Cloud Tasks enhancement + service wiring
 
 ### Phase 16: CloudBuild Deployment
 
@@ -163,7 +163,12 @@ Plans:
   3. Secret Manager integration configured for CloudBuild
   4. Multi-service deployment orchestration works correctly
   5. Rollback procedures documented and tested
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 16-01-PLAN.md - CloudBuild configuration files (backend, frontend, GPU)
+- [ ] 16-02-PLAN.md - Infrastructure scripts (provision-infra.sh, rollback.sh, Terraform inventory)
+- [ ] 16-03-PLAN.md - GitHub triggers and deployment guide
 
 ### Phase 17: Testing & Quality
 
@@ -205,7 +210,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 13. LightOnOCR GPU Service | v2.0 | 3/4 | In Progress | - |
 | 14. OCR Routing & Fallback | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 15. Dual Pipeline Integration | v2.0 | 2/2 | Complete | 2026-01-25 |
-| 16. CloudBuild Deployment | v2.0 | 0/TBD | Not started | - |
+| 16. CloudBuild Deployment | v2.0 | 0/3 | Not started | - |
 | 17. Testing & Quality | v2.0 | 0/TBD | Not started | - |
 | 18. Documentation & Frontend | v2.0 | 0/TBD | Not started | - |
 
