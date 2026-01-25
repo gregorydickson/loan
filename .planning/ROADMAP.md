@@ -210,7 +210,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 13. LightOnOCR GPU Service | v2.0 | 3/4 | In Progress | - |
 | 14. OCR Routing & Fallback | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 15. Dual Pipeline Integration | v2.0 | 2/2 | Complete | 2026-01-25 |
-| 16. CloudBuild Deployment | v2.0 | 0/3 | Not started | - |
+| 16. CloudBuild Deployment | v2.0 | 3/3 | Complete | 2026-01-25 |
 | 17. Testing & Quality | v2.0 | 0/TBD | Not started | - |
 | 18. Documentation & Frontend | v2.0 | 0/TBD | Not started | - |
 
