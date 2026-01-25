@@ -70,6 +70,7 @@ Next action: Execute Phase 20 (Chrome-based Verification)
 
 ```
 BACKEND_URL=https://loan-backend-prod-793446666872.us-central1.run.app
+FRONTEND_URL=https://loan-frontend-prod-793446666872.us-central1.run.app
 GPU_URL=https://lightonocr-gpu-fjz2snvxjq-uc.a.run.app
 ```
 
