@@ -1,0 +1,70 @@
+# Frontend CloudBuild Configuration
+# Builds and deploys the Next.js frontend service to Cloud Run
+#
+# Usage:
+#   Manual: gcloud builds submit --config=infrastructure/cloudbuild/frontend-cloudbuild.yaml .
+#   Trigger: Set up GitHub trigger pointing to this file
+#
+# Note: NEXT_PUBLIC_API_URL must be set at build time for Next.js
+#       Set _BACKEND_URL in your trigger configuration or override at build time:
+#       gcloud builds submit --substitutions=_BACKEND_URL=https://loan-backend-prod-xxx.run.app
+#
+# Prerequisites:
+#   - Artifact Registry repository 'loan-repo' exists
+#   - Backend service URL known for NEXT_PUBLIC_API_URL
+
+steps:
+  # Build the frontend Docker image
+  # Note: NEXT_PUBLIC_API_URL is baked into the image at build time
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=${_BACKEND_URL}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/frontend:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/frontend:latest'
+      - './frontend'
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/frontend'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'loan-frontend-prod'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/frontend:${SHORT_SHA}'
+      - '--region'
+      - '${_REGION}'
+      - '--allow-unauthenticated'
+      - '--cpu'
+      - '1'
+      - '--memory'
+      - '512Mi'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '5'
+
+substitutions:
+  _REGION: us-central1
+  _BACKEND_URL: ''  # Set via trigger or at build time
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/frontend:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/frontend:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
