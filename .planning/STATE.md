@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 12 - LangExtract Advanced Features (COMPLETE)
+**Current focus:** Phase 13 - LightOnOCR GPU Service (In Progress)
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
-Phase: 12 of 18 (LangExtract Advanced Features)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-01-25 - Completed 12-03-PLAN.md (Extraction Router with Fallback)
+Phase: 13 of 18 (LightOnOCR GPU Service)
+Plan: 3 of 4 in current phase
+Status: In Progress
+Last activity: 2026-01-25 - Completed 13-03-PLAN.md (LightOnOCR Client)
 
-Progress: [###########=======..] 70% (v1.0 complete + Phase 10 + Phase 11 + Phase 12)
+Progress: [############======..] 72% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + 13-03)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47 (v1.0: 36, v2.0: 11)
-- Average duration: 5.1 min
-- Total execution time: 4.42 hours
+- Total plans completed: 48 (v1.0: 36, v2.0: 12)
+- Average duration: 5.0 min
+- Total execution time: 4.49 hours
 
 **By Phase (v1.0):**
 
@@ -71,6 +71,17 @@ Progress: [###########=======..] 70% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 12 Total:** 11 min (3 plans, avg 3.7 min/plan)
 
+**v2.0 Phase 13 In Progress:**
+
+| Plan | Name | Duration | Status |
+|------|------|----------|--------|
+| 13-01 | Dockerfile for LightOnOCR GPU Service | - | Pending |
+| 13-02 | Cloud Run Deployment Script | - | Pending |
+| 13-03 | LightOnOCR Client | 4 min | Complete |
+| 13-04 | API Integration | - | Pending |
+
+**Phase 13 Progress:** 1 of 4 plans complete
+
 ## Accumulated Context
 
 ### Decisions
@@ -101,6 +112,9 @@ Recent decisions affecting v2.0 work:
 - [12-03]: Transient errors (503, 429, timeout, overloaded, rate limit) retry 3x with exponential backoff
 - [12-03]: Fatal errors trigger immediate fallback without retry
 - [12-03]: method='auto' (default) tries LangExtract first, falls back to Docling on failure
+- [13-03]: Use id_token.fetch_id_token for Cloud Run OIDC authentication
+- [13-03]: 120s default timeout for GPU cold start tolerance
+- [13-03]: Detect PNG vs JPEG via magic bytes for proper data URI encoding
 
 ### Pending Todos
 
@@ -108,34 +122,27 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 12 complete.
+None - Phase 13 progressing normally.
 
-## Phase 12 Completion Summary
+## Phase 13 Progress Summary
 
-**Plans:** 3 plans (all complete)
-**Requirements Satisfied:** LXTR-06, LXTR-07, LXTR-10, LXTR-11
+**Plans:** 1 of 4 complete
+**Requirements Satisfied (so far):** LOCR-06, LOCR-07
 
-**Deliverables (12-01):**
-- ExtractionConfig dataclass with validation
-- Configurable multi-pass extraction (2-5 passes)
-- Configurable parallel processing (max_workers 1-50)
-- 12 unit tests for boundary validation
+**Deliverables (13-03):**
+- LightOnOCRClient HTTP client for GPU service
+- OIDC authentication using google-auth id_token
+- vLLM OpenAI-compatible chat completions API integration
+- 23 unit tests covering all client functionality
 
-**Deliverables (12-02):**
-- LangExtractVisualizer class wrapping lx.visualize()
-- HTML visualization with highlighted source spans
-- Empty placeholder HTML for no-extraction cases
-- 8 unit tests with full mocking
-
-**Deliverables (12-03):**
-- ExtractionRouter with method selection (langextract, docling, auto)
-- Tenacity retry with exponential backoff for transient errors
-- Graceful fallback to Docling on LangExtract failures
-- 25 unit tests for all router scenarios
+**Remaining Plans:**
+- 13-01: Dockerfile for LightOnOCR GPU Service
+- 13-02: Cloud Run Deployment Script
+- 13-04: API Integration
 
 ## Session Continuity
 
-Last session: 2026-01-25T12:13:25Z
-Stopped at: Completed 12-03-PLAN.md (Extraction Router with Fallback)
+Last session: 2026-01-25T12:57:53Z
+Stopped at: Completed 13-03-PLAN.md (LightOnOCR Client)
 Resume file: None
-Next action: Phase 13 planning (API Integration)
+Next action: Execute 13-01 or 13-02 (GPU service infrastructure)
