@@ -62,7 +62,7 @@ Plans:
 - [x] 10-02-PLAN.md - Terraform state archival
 - [x] 10-03-PLAN.md - CloudBuild service account setup (script created)
 - [x] 10-04-PLAN.md - vLLM validation scripts and testing
-- [ ] 10-05-PLAN.md - Gap closure: Execute CloudBuild service account script (CBLD-08)
+- [x] 10-05-PLAN.md - Gap closure: Execute CloudBuild service account script (CBLD-08)
 
 ### Phase 11: LangExtract Core Integration
 
@@ -174,7 +174,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 10. v2.0 Setup & Preparation | v2.0 | 4/5 | Gap closure needed | - |
+| 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
 | 11. LangExtract Core Integration | v2.0 | 0/TBD | Not started | - |
 | 12. LangExtract Advanced Features | v2.0 | 0/TBD | Not started | - |
 | 13. LightOnOCR GPU Service | v2.0 | 0/TBD | Not started | - |

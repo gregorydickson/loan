@@ -32,7 +32,7 @@ Requirements for v2.0 milestone: LangExtract extraction pipeline, LightOnOCR GPU
 - [ ] **LOCR-06**: LightOnOCRClient in backend communicates with GPU service via HTTP
 - [ ] **LOCR-07**: GPU service requires internal-only authentication (service account or VPC)
 - [ ] **LOCR-08**: Cold start monitoring and alerting configured
-- [ ] **LOCR-09**: GPU quota increased for L4 GPUs (request submitted pre-development)
+- [x] **LOCR-09**: GPU quota increased for L4 GPUs (request submitted pre-development)
 - [ ] **LOCR-10**: vLLM batching configured for cost-efficient throughput
 - [ ] **LOCR-11**: Fallback to Docling OCR when GPU service unavailable
 - [ ] **LOCR-12**: OCR quality metrics tracked (accuracy, processing time, cost)
@@ -57,15 +57,15 @@ Requirements for v2.0 milestone: LangExtract extraction pipeline, LightOnOCR GPU
 - [ ] **CBLD-01**: cloudbuild.yaml created for backend service deployment
 - [ ] **CBLD-02**: cloudbuild.yaml created for frontend service deployment
 - [ ] **CBLD-03**: cloudbuild.yaml created for LightOnOCR GPU service deployment
-- [ ] **CBLD-04**: Terraform state archived with documentation before migration
+- [x] **CBLD-04**: Terraform state archived with documentation before migration
 - [ ] **CBLD-05**: Terraform-managed resources inventoried and mapped to gcloud equivalents
 - [ ] **CBLD-06**: One-time gcloud CLI scripts created for infrastructure provisioning (Cloud SQL, VPC)
 - [ ] **CBLD-07**: GitHub trigger configured for automatic builds on push to main
-- [ ] **CBLD-08**: CloudBuild service account configured with necessary permissions
+- [x] **CBLD-08**: CloudBuild service account configured with necessary permissions
 - [ ] **CBLD-09**: Secret Manager integration configured for CloudBuild
 - [ ] **CBLD-10**: Multi-service deployment orchestration implemented
 - [ ] **CBLD-11**: Rollback procedures documented for CloudBuild deployments
-- [ ] **CBLD-12**: Terraform directory archived to /archive/terraform/ with migration date
+- [x] **CBLD-12**: Terraform directory archived to /archive/terraform/ with migration date
 
 ### Testing & Quality
 
@@ -173,7 +173,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOCR-06 | Phase 13 | Pending |
 | LOCR-07 | Phase 13 | Pending |
 | LOCR-08 | Phase 13 | Pending |
-| LOCR-09 | Phase 10 | Pending |
+| LOCR-09 | Phase 10 | Complete |
 | LOCR-10 | Phase 13 | Pending |
 | LOCR-11 | Phase 14 | Pending |
 | LOCR-12 | Phase 13 | Pending |
@@ -192,15 +192,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CBLD-01 | Phase 16 | Pending |
 | CBLD-02 | Phase 16 | Pending |
 | CBLD-03 | Phase 16 | Pending |
-| CBLD-04 | Phase 10 | Pending |
+| CBLD-04 | Phase 10 | Complete |
 | CBLD-05 | Phase 16 | Pending |
 | CBLD-06 | Phase 16 | Pending |
 | CBLD-07 | Phase 16 | Pending |
-| CBLD-08 | Phase 10 | Pending |
+| CBLD-08 | Phase 10 | Complete |
 | CBLD-09 | Phase 16 | Pending |
 | CBLD-10 | Phase 16 | Pending |
 | CBLD-11 | Phase 16 | Pending |
-| CBLD-12 | Phase 10 | Pending |
+| CBLD-12 | Phase 10 | Complete |
 | TEST-01 | Phase 17 | Pending |
 | TEST-02 | Phase 17 | Pending |
 | TEST-03 | Phase 17 | Pending |
