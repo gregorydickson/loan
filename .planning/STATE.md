@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 16 - CloudBuild Deployment (Complete)
+**Current focus:** Phase 17 - Testing & Quality
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
-Phase: 16 of 18 (CloudBuild Deployment)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-01-25 - Completed 16-03-PLAN.md (GitHub Triggers & Deployment Guide)
+Phase: 17 of 18 (Testing & Quality)
+Plan: 2 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-25 - Completed 17-02-PLAN.md (Few-shot & LangExtract Testing)
 
-Progress: [################==..] 87% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16)
+Progress: [#################=..] 89% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 + Phase 17 partial)
 
 ## Performance Metrics
 
@@ -110,6 +110,16 @@ Progress: [################==..] 87% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 16 Total:** 11 min (3 plans, avg 3.7 min/plan)
 
+**v2.0 Phase 17 In Progress:**
+
+| Plan | Name | Duration | Status |
+|------|------|----------|--------|
+| 17-01 | DocumentService Mocking & Unit Tests | - | Pending |
+| 17-02 | Few-shot & LangExtract Testing | 4 min | Complete |
+| 17-03 | Integration & API Tests | - | Pending |
+
+**Phase 17 Progress:** 1 of 3 plans complete
+
 ## Accumulated Context
 
 ### Decisions
@@ -164,6 +174,9 @@ Recent decisions affecting v2.0 work:
 - [15-02]: ProcessDocumentRequest defaults ensure backward compat with queued tasks
 - [15-02]: OCR-then-extract pipeline pattern for dual pipeline
 - [16-02]: All gcloud commands use existence checks for idempotency
+- [17-02]: Validate extraction_text as exact substring (not fuzzy match)
+- [17-02]: Mock ExtractionRouter for E2E tests to isolate from real LLM calls
+- [17-02]: Include regression tests for Docling default method (DUAL-09)
 
 ### Pending Todos
 
@@ -214,9 +227,23 @@ None - Phase 16 complete.
 
 **Total Phase 15:** 11 min, 6 integration tests
 
+## Phase 17 Progress Summary
+
+**Plan 17-02 Complete:**
+- TEST-01: Few-shot example validation tests (17 tests)
+- TEST-05: E2E Docling extraction path regression tests
+- TEST-06: E2E LangExtract extraction path (8 tests)
+- DUAL-08: LangExtract char offset verification
+- DUAL-09: Docling default method backward compatibility
+
+**Deliverables:**
+- backend/tests/unit/extraction/test_few_shot_examples.py
+- backend/tests/integration/test_e2e_langextract.py
+- Updated backend/tests/integration/conftest.py with LangExtract fixtures
+
 ## Session Continuity
 
-Last session: 2026-01-25T17:26:00Z
-Stopped at: Completed 16-03-PLAN.md (GitHub Triggers & Deployment Guide)
+Last session: 2026-01-25T18:10:50Z
+Stopped at: Completed 17-02-PLAN.md (Few-shot & LangExtract Testing)
 Resume file: None
-Next action: Phase 17 (Frontend Integration) or Phase 18 (Testing & Verification)
+Next action: Phase 17 Plan 03 (Integration & API Tests)
