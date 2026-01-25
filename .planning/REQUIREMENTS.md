@@ -30,26 +30,26 @@ Requirements for production deployment and Chrome-based verification testing.
 
 ## v1.0 Requirements (Shipped 2026-01-24)
 
-- ✓ Foundation & Data Models (17 requirements) — v1.0
-- ✓ Document Ingestion Pipeline (28 requirements) — v1.0
-- ✓ LLM Extraction & Validation (38 requirements) — v1.0
-- ✓ Data Storage & REST API (32 requirements) — v1.0
-- ✓ Frontend Dashboard (37 requirements) — v1.0
-- ✓ GCP Infrastructure (27 requirements) — v1.0
-- ✓ Documentation & Testing (48 requirements) — v1.0
-- ✓ Pipeline Integration (44 requirements) — v1.0
-- ✓ Async Background Processing (2 requirements) — v1.0
+- [x] Foundation & Data Models (17 requirements) - v1.0
+- [x] Document Ingestion Pipeline (28 requirements) - v1.0
+- [x] LLM Extraction & Validation (38 requirements) - v1.0
+- [x] Data Storage & REST API (32 requirements) - v1.0
+- [x] Frontend Dashboard (37 requirements) - v1.0
+- [x] GCP Infrastructure (27 requirements) - v1.0
+- [x] Documentation & Testing (48 requirements) - v1.0
+- [x] Pipeline Integration (44 requirements) - v1.0
+- [x] Async Background Processing (2 requirements) - v1.0
 
 **Total v1.0:** 222/222 requirements (100%)
 
 ## v2.0 Requirements (Shipped 2026-01-25)
 
-- ✓ LangExtract Integration (12 requirements) — v2.0
-- ✓ LightOnOCR GPU Service (12 requirements) — v2.0
-- ✓ Dual Pipeline Integration (12 requirements) — v2.0
-- ✓ CloudBuild Deployment (12 requirements) — v2.0
-- ✓ Testing & Quality (12 requirements) — v2.0
-- ✓ Documentation (12 requirements) — v2.0
+- [x] LangExtract Integration (12 requirements) - v2.0
+- [x] LightOnOCR GPU Service (12 requirements) - v2.0
+- [x] Dual Pipeline Integration (12 requirements) - v2.0
+- [x] CloudBuild Deployment (12 requirements) - v2.0
+- [x] Testing & Quality (12 requirements) - v2.0
+- [x] Documentation (12 requirements) - v2.0
 
 **Total v2.0:** 72/72 requirements (100%)
 
@@ -70,27 +70,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEPLOY-01 | TBD | Pending |
-| DEPLOY-02 | TBD | Pending |
-| DEPLOY-03 | TBD | Pending |
-| DEPLOY-04 | TBD | Pending |
-| DEPLOY-05 | TBD | Pending |
-| DEPLOY-06 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
-| TEST-05 | TBD | Pending |
-| TEST-06 | TBD | Pending |
-| TEST-07 | TBD | Pending |
-| TEST-08 | TBD | Pending |
-| TEST-09 | TBD | Pending |
+| DEPLOY-01 | Phase 19 | Pending |
+| DEPLOY-02 | Phase 19 | Pending |
+| DEPLOY-03 | Phase 19 | Pending |
+| DEPLOY-04 | Phase 19 | Pending |
+| DEPLOY-05 | Phase 19 | Pending |
+| DEPLOY-06 | Phase 19 | Pending |
+| TEST-01 | Phase 20 | Pending |
+| TEST-02 | Phase 20 | Pending |
+| TEST-03 | Phase 20 | Pending |
+| TEST-04 | Phase 20 | Pending |
+| TEST-05 | Phase 20 | Pending |
+| TEST-06 | Phase 21 | Pending |
+| TEST-07 | Phase 21 | Pending |
+| TEST-08 | Phase 21 | Pending |
+| TEST-09 | Phase 21 | Pending |
 
 **Coverage:**
 - v2.1 requirements: 15 total
-- Mapped to phases: 0 (awaiting roadmap)
-- Unmapped: 15
+- Mapped to phases: 15 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-25*
-*Last updated: 2026-01-25 after initial definition*
+*Last updated: 2026-01-25 - Traceability updated with phase mappings*
