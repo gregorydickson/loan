@@ -162,6 +162,8 @@ class SourceReference(Base):
     page_number: Mapped[int] = mapped_column(Integer, nullable=False)
     section: Mapped[str | None] = mapped_column(String(100), nullable=True)
     snippet: Mapped[str] = mapped_column(Text, nullable=False)
+    char_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    char_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
     borrower: Mapped["Borrower"] = relationship("Borrower", back_populates="source_references")
