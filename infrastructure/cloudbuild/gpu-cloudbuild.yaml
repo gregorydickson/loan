@@ -1,0 +1,83 @@
+# GPU Service CloudBuild Configuration
+# Builds and deploys the LightOnOCR GPU service to Cloud Run with L4 GPU
+#
+# Usage:
+#   Manual: gcloud builds submit --config=infrastructure/cloudbuild/gpu-cloudbuild.yaml .
+#   Trigger: Set up GitHub trigger pointing to this file
+#
+# Build time: ~30-60 minutes due to vLLM base image (~8GB) and model download (~2GB)
+#
+# Prerequisites:
+#   - Artifact Registry repository 'loan-repo' exists
+#   - Service account: lightonocr-gpu@PROJECT_ID.iam.gserviceaccount.com
+#   - GPU quota approved in us-central1
+
+steps:
+  # Build the GPU service Docker image
+  # Extended timeout for model download during build
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-gpu'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/lightonocr-gpu:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/lightonocr-gpu:latest'
+      - './infrastructure/lightonocr-gpu'
+    timeout: '3600s'
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-gpu'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/lightonocr-gpu'
+
+  # Deploy to Cloud Run with L4 GPU
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-gpu'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'lightonocr-gpu'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/lightonocr-gpu:${SHORT_SHA}'
+      - '--region'
+      - '${_REGION}'
+      - '--service-account'
+      - 'lightonocr-gpu@${PROJECT_ID}.iam.gserviceaccount.com'
+      - '--no-allow-unauthenticated'
+      - '--cpu'
+      - '8'
+      - '--memory'
+      - '32Gi'
+      - '--gpu'
+      - '1'
+      - '--gpu-type'
+      - 'nvidia-l4'
+      - '--port'
+      - '8000'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '3'
+      - '--no-cpu-throttling'
+      - '--no-gpu-zonal-redundancy'
+      - '--startup-probe'
+      - 'tcpSocket.port=8000,initialDelaySeconds=240,failureThreshold=1,timeoutSeconds=240,periodSeconds=240'
+
+substitutions:
+  _REGION: us-central1
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/lightonocr-gpu:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/lightonocr-gpu:latest'
+
+# Total build timeout: 80 minutes for full GPU image build and deploy
+timeout: '4800s'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_32'
