@@ -42,10 +42,13 @@ Dual extraction pipelines (Docling + LangExtract), LightOnOCR GPU service with s
   3. Backend connects successfully to Cloud SQL database
   4. Frontend loads in browser and communicates with backend API
   5. GPU OCR service is configured with L4 GPU and scale-to-zero enabled
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 19-01: TBD
+- [ ] 19-01-PLAN.md - Check deployments and deploy backend
+- [ ] 19-02-PLAN.md - Deploy frontend with backend URL
+- [ ] 19-03-PLAN.md - Deploy GPU service with L4 GPU
+- [ ] 19-04-PLAN.md - Verify secrets and comprehensive health check
 
 ### Phase 20: Core Extraction Verification
 **Goal**: End-to-end document extraction flows work correctly in production
@@ -82,10 +85,10 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 19. Production Deployment Verification | v2.1 | 0/TBD | Not started | - |
+| 19. Production Deployment Verification | v2.1 | 0/4 | Ready | - |
 | 20. Core Extraction Verification | v2.1 | 0/TBD | Not started | - |
 | 21. UI Feature Verification | v2.1 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-25 - v2.1 milestone roadmap created*
+*Last updated: 2026-01-25 - Phase 19 planned (4 plans in 3 waves)*
