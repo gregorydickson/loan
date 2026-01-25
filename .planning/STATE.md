@@ -13,7 +13,7 @@ Milestone: v2.0 LangExtract & CloudBuild
 Phase: 12 of 18 (LangExtract Advanced Features)
 Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 12-02-PLAN.md (HTML Visualization Wrapper)
+Last activity: 2026-01-25 - Completed 12-01-PLAN.md (ExtractionConfig Dataclass)
 
 Progress: [##########========..] 68% (v1.0 complete + Phase 10 + Phase 11 + 12-01, 12-02)
 
@@ -65,7 +65,7 @@ Progress: [##########========..] 68% (v1.0 complete + Phase 10 + Phase 11 + 12-0
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
-| 12-01 | ExtractionConfig Dataclass | - | Pending |
+| 12-01 | ExtractionConfig Dataclass | 4 min | Complete |
 | 12-02 | HTML Visualization Wrapper | 3 min | Complete |
 | 12-03 | Extraction Router with Fallback | - | Pending |
 
@@ -92,6 +92,8 @@ Recent decisions affecting v2.0 work:
 - [11-03]: OffsetTranslator uses difflib.SequenceMatcher for Docling markdown alignment
 - [11-03]: LangExtractProcessor maps GOOGLE_API_KEY to LANGEXTRACT_API_KEY
 - [11-04]: Unit tests use mock dataclasses for LangExtract API isolation
+- [12-01]: ExtractionConfig uses dataclass with __post_init__ validation (not Pydantic)
+- [12-01]: extraction_passes range 2-5, max_workers range 1-50, max_char_buffer range 500-5000
 - [12-02]: Use lx.visualize() directly - handles overlapping spans, animation, legend
 - [12-02]: Handle both Jupyter (.data) and standalone (str()) return contexts
 
@@ -105,8 +107,14 @@ None - plan 12-02 complete, proceeding to 12-03.
 
 ## Phase 12 Progress Summary
 
-**Plans:** 3 plans (1 complete: 12-02)
-**Requirements Satisfied (so far):** LXTR-07
+**Plans:** 3 plans (2 complete: 12-01, 12-02)
+**Requirements Satisfied (so far):** LXTR-06, LXTR-07, LXTR-10
+
+**Deliverables (12-01):**
+- ExtractionConfig dataclass with validation
+- Configurable multi-pass extraction (2-5 passes)
+- Configurable parallel processing (max_workers 1-50)
+- 12 unit tests for boundary validation
 
 **Deliverables (12-02):**
 - LangExtractVisualizer class wrapping lx.visualize()
@@ -116,7 +124,7 @@ None - plan 12-02 complete, proceeding to 12-03.
 
 ## Session Continuity
 
-Last session: 2026-01-25T12:04:15Z
-Stopped at: Completed 12-02-PLAN.md (HTML Visualization Wrapper)
+Last session: 2026-01-25T12:05:06Z
+Stopped at: Completed 12-01-PLAN.md (ExtractionConfig Dataclass)
 Resume file: None
-Next action: Execute 12-01-PLAN.md (ExtractionConfig Dataclass) or 12-03-PLAN.md (Extraction Router)
+Next action: Execute 12-03-PLAN.md (Extraction Router with Fallback)
