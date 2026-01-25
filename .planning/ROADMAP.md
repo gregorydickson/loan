@@ -216,7 +216,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 14. OCR Routing & Fallback | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 15. Dual Pipeline Integration | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 16. CloudBuild Deployment | v2.0 | 3/3 | Complete | 2026-01-25 |
-| 17. Testing & Quality | v2.0 | 0/3 | Not started | - |
+| 17. Testing & Quality | v2.0 | 3/3 | Complete | 2026-01-25 |
 | 18. Documentation & Frontend | v2.0 | 0/TBD | Not started | - |
 
 ---
