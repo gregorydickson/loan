@@ -38,7 +38,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 12: LangExtract Advanced Features** - Multi-pass extraction, HTML visualization, parallel processing
 - [ ] **Phase 13: LightOnOCR GPU Service** - Cloud Run GPU deployment, vLLM serving, client integration
 - [x] **Phase 14: OCR Routing & Fallback** - Scanned document detection, Docling OCR fallback
-- [ ] **Phase 15: Dual Pipeline Integration** - Method selection API, output normalization, Cloud Tasks enhancement
+- [x] **Phase 15: Dual Pipeline Integration** - Method selection API, output normalization, Cloud Tasks enhancement
 - [ ] **Phase 16: CloudBuild Deployment** - CloudBuild configs, GitHub triggers, rollback procedures
 - [ ] **Phase 17: Testing & Quality** - Comprehensive tests for all new features, >80% coverage
 - [ ] **Phase 18: Documentation & Frontend** - Guides, ADRs, frontend method selection UI
@@ -204,7 +204,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 12. LangExtract Advanced Features | v2.0 | 3/3 | Complete | 2026-01-25 |
 | 13. LightOnOCR GPU Service | v2.0 | 3/4 | In Progress | - |
 | 14. OCR Routing & Fallback | v2.0 | 2/2 | Complete | 2026-01-25 |
-| 15. Dual Pipeline Integration | v2.0 | 0/2 | Planned | - |
+| 15. Dual Pipeline Integration | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 16. CloudBuild Deployment | v2.0 | 0/TBD | Not started | - |
 | 17. Testing & Quality | v2.0 | 0/TBD | Not started | - |
 | 18. Documentation & Frontend | v2.0 | 0/TBD | Not started | - |
