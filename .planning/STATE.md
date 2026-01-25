@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 11 of 18 (LangExtract Core Integration)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 11-02-PLAN.md (few-shot examples)
+Last activity: 2026-01-25 - Completed 11-03-PLAN.md (LangExtractProcessor + OffsetTranslator)
 
-Progress: [##########=====.....] 63% (v1.0 complete + Phase 10 + 11-01 + 11-02)
+Progress: [##########======....] 65% (v1.0 complete + Phase 10 + 11-01 + 11-02 + 11-03)
 
 ## Performance Metrics
 
@@ -70,6 +70,8 @@ Recent decisions affecting v2.0 work:
 - [10-05]: Gap closure executed setup-service-account.sh, CBLD-08 now satisfied
 - [11-02]: Few-shot examples use ExampleData/Extraction from langextract.data
 - [11-02]: All extraction_text values must be verbatim substrings (validated programmatically)
+- [11-03]: OffsetTranslator uses difflib.SequenceMatcher for Docling markdown alignment
+- [11-03]: LangExtractProcessor maps GOOGLE_API_KEY to LANGEXTRACT_API_KEY
 
 ### Pending Todos
 
@@ -78,7 +80,7 @@ None yet.
 ### Blockers/Concerns
 
 From research (address in Phase 11):
-- LangExtract offset alignment with Docling markdown - addressed in 11-03 OffsetTranslator
+- LangExtract offset alignment with Docling markdown - RESOLVED in 11-03 OffsetTranslator
 
 ## Phase 11 Planning Summary
 
@@ -101,6 +103,6 @@ From research (address in Phase 11):
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 11-02-PLAN.md (few-shot examples)
+Stopped at: Completed 11-03-PLAN.md (LangExtractProcessor + OffsetTranslator)
 Resume file: None
-Next action: Continue Phase 11 execution (11-03, 11-04)
+Next action: Continue Phase 11 execution (11-04 verification tests)
