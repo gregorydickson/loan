@@ -1,0 +1,10 @@
+# Exclude files not needed in Docker build context
+.git
+*.md
+*.txt
+*.log
+.DS_Store
+__pycache__
+*.pyc
+.env
+.env.*
