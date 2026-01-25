@@ -8,6 +8,7 @@ This module provides format validation for extracted fields:
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
@@ -45,6 +46,51 @@ class ValidationResult:
     is_valid: bool
     errors: list[ValidationError] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+
+
+def _validate_with_pattern(
+    value: str | None,
+    field_name: str,
+    pattern: re.Pattern[str],
+    error_message: str,
+    warning_check: Callable[[str], str | None] | None = None,
+) -> ValidationResult:
+    """Generic pattern-based validation with optional warning check.
+
+    Args:
+        value: Value to validate, or None
+        field_name: Name of the field for error reporting
+        pattern: Compiled regex pattern to match against
+        error_message: Message to use if pattern doesn't match
+        warning_check: Optional function that returns a warning message or None
+
+    Returns:
+        ValidationResult with is_valid=True if None or pattern matches.
+    """
+    if value is None:
+        return ValidationResult(is_valid=True)
+
+    if not pattern.match(value):
+        return ValidationResult(
+            is_valid=False,
+            errors=[
+                ValidationError(
+                    field=field_name,
+                    value=value,
+                    error_type="FORMAT",
+                    message=error_message,
+                )
+            ],
+        )
+
+    result = ValidationResult(is_valid=True)
+
+    if warning_check:
+        warning = warning_check(value)
+        if warning:
+            result.warnings.append(warning)
+
+    return result
 
 
 class FieldValidator:
@@ -85,31 +131,19 @@ class FieldValidator:
             ValidationResult with is_valid=True if None or valid format.
             Adds warning if SSN doesn't have dashes.
         """
-        if ssn is None:
-            return ValidationResult(is_valid=True)
 
-        if not self.SSN_PATTERN.match(ssn):
-            return ValidationResult(
-                is_valid=False,
-                errors=[
-                    ValidationError(
-                        field="ssn",
-                        value=ssn,
-                        error_type="FORMAT",
-                        message="SSN must be in XXX-XX-XXXX format (dashes optional)",
-                    )
-                ],
-            )
+        def check_ssn_format(value: str) -> str | None:
+            if not self.SSN_FORMATTED.match(value):
+                return f"SSN '{value}' should include dashes (XXX-XX-XXXX format)"
+            return None
 
-        result = ValidationResult(is_valid=True)
-
-        # Add warning if not properly formatted with dashes
-        if not self.SSN_FORMATTED.match(ssn):
-            result.warnings.append(
-                f"SSN '{ssn}' should include dashes (XXX-XX-XXXX format)"
-            )
-
-        return result
+        return _validate_with_pattern(
+            ssn,
+            "ssn",
+            self.SSN_PATTERN,
+            "SSN must be in XXX-XX-XXXX format (dashes optional)",
+            check_ssn_format,
+        )
 
     def validate_phone(self, phone: str | None) -> ValidationResult:
         """Validate US phone number format.
@@ -165,23 +199,12 @@ class FieldValidator:
             ValidationResult with is_valid=True if None or valid format.
             Accepts both 5-digit (12345) and 5+4 (12345-6789) formats.
         """
-        if zip_code is None:
-            return ValidationResult(is_valid=True)
-
-        if not self.ZIP_PATTERN.match(zip_code):
-            return ValidationResult(
-                is_valid=False,
-                errors=[
-                    ValidationError(
-                        field="zip_code",
-                        value=zip_code,
-                        error_type="FORMAT",
-                        message="ZIP code must be XXXXX or XXXXX-XXXX format",
-                    )
-                ],
-            )
-
-        return ValidationResult(is_valid=True)
+        return _validate_with_pattern(
+            zip_code,
+            "zip_code",
+            self.ZIP_PATTERN,
+            "ZIP code must be XXXXX or XXXXX-XXXX format",
+        )
 
     def validate_year(self, year: int | None) -> ValidationResult:
         """Validate income year is within reasonable range.
