@@ -33,6 +33,8 @@ dependencies = [
     "phonenumbers>=8.0.0",
     # Phase 11 LangExtract integration
     "langextract>=1.1.1",
+    # Phase 14 OCR routing circuit breaker
+    "aiobreaker>=1.2.0",
 ]
 
 [project.optional-dependencies]
