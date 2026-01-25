@@ -48,9 +48,9 @@ Requirements for v2.0 milestone: LangExtract extraction pipeline, LightOnOCR GPU
 - [ ] **DUAL-07**: Both extraction methods produce BorrowerRecord with SourceReference
 - [ ] **DUAL-08**: LangExtract path populates character offsets, Docling path leaves null
 - [ ] **DUAL-09**: Existing v1.0 Docling extraction continues to work unchanged
-- [ ] **DUAL-10**: API documentation includes method and OCR selection examples
+- [x] **DUAL-10**: API documentation includes method and OCR selection examples
 - [ ] **DUAL-11**: Cloud Tasks payload enhanced with method and OCR parameters
-- [ ] **DUAL-12**: Frontend supports extraction method selection in upload UI
+- [x] **DUAL-12**: Frontend supports extraction method selection in upload UI
 
 ### CloudBuild Deployment
 
@@ -84,18 +84,18 @@ Requirements for v2.0 milestone: LangExtract extraction pipeline, LightOnOCR GPU
 
 ### Documentation & Migration
 
-- [ ] **DOCS-01**: Extraction method selection guide for API users
-- [ ] **DOCS-02**: Few-shot example creation guide with loan document patterns
-- [ ] **DOCS-03**: CloudBuild deployment guide with step-by-step instructions
-- [ ] **DOCS-04**: Terraform migration guide with state archival procedures
-- [ ] **DOCS-05**: LightOnOCR GPU service deployment guide
-- [ ] **DOCS-06**: Architecture documentation updated with dual pipeline diagrams
-- [ ] **DOCS-07**: ADRs created for LangExtract, LightOnOCR, CloudBuild decisions
-- [ ] **DOCS-08**: API documentation updated with method and OCR parameters
-- [ ] **DOCS-09**: Character offset storage schema documented
-- [ ] **DOCS-10**: GPU service cost management guide
-- [ ] **DOCS-11**: Few-shot example versioning and update procedures
-- [ ] **DOCS-12**: v2.0 system design updates committed
+- [x] **DOCS-01**: Extraction method selection guide for API users
+- [x] **DOCS-02**: Few-shot example creation guide with loan document patterns
+- [x] **DOCS-03**: CloudBuild deployment guide with step-by-step instructions
+- [x] **DOCS-04**: Terraform migration guide with state archival procedures
+- [x] **DOCS-05**: LightOnOCR GPU service deployment guide
+- [x] **DOCS-06**: Architecture documentation updated with dual pipeline diagrams
+- [x] **DOCS-07**: ADRs created for LangExtract, LightOnOCR, CloudBuild decisions
+- [x] **DOCS-08**: API documentation updated with method and OCR parameters
+- [x] **DOCS-09**: Character offset storage schema documented
+- [x] **DOCS-10**: GPU service cost management guide
+- [x] **DOCS-11**: Few-shot example versioning and update procedures
+- [x] **DOCS-12**: v2.0 system design updates committed
 
 ## v1.0 Requirements (Validated)
 
@@ -186,9 +186,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DUAL-07 | Phase 15 | Complete |
 | DUAL-08 | Phase 15 | Complete |
 | DUAL-09 | Phase 15 | Complete |
-| DUAL-10 | Phase 18 | Pending |
+| DUAL-10 | Phase 18 | Complete |
 | DUAL-11 | Phase 15 | Complete |
-| DUAL-12 | Phase 18 | Pending |
+| DUAL-12 | Phase 18 | Complete |
 | CBLD-01 | Phase 16 | Complete |
 | CBLD-02 | Phase 16 | Complete |
 | CBLD-03 | Phase 16 | Complete |
@@ -213,18 +213,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-10 | Phase 17 | Complete |
 | TEST-11 | Phase 17 | Complete |
 | TEST-12 | Phase 17 | Complete |
-| DOCS-01 | Phase 18 | Pending |
-| DOCS-02 | Phase 18 | Pending |
-| DOCS-03 | Phase 18 | Pending |
-| DOCS-04 | Phase 18 | Pending |
-| DOCS-05 | Phase 18 | Pending |
-| DOCS-06 | Phase 18 | Pending |
-| DOCS-07 | Phase 18 | Pending |
-| DOCS-08 | Phase 18 | Pending |
-| DOCS-09 | Phase 18 | Pending |
-| DOCS-10 | Phase 18 | Pending |
-| DOCS-11 | Phase 18 | Pending |
-| DOCS-12 | Phase 18 | Pending |
+| DOCS-01 | Phase 18 | Complete |
+| DOCS-02 | Phase 18 | Complete |
+| DOCS-03 | Phase 18 | Complete |
+| DOCS-04 | Phase 18 | Complete |
+| DOCS-05 | Phase 18 | Complete |
+| DOCS-06 | Phase 18 | Complete |
+| DOCS-07 | Phase 18 | Complete |
+| DOCS-08 | Phase 18 | Complete |
+| DOCS-09 | Phase 18 | Complete |
+| DOCS-10 | Phase 18 | Complete |
+| DOCS-11 | Phase 18 | Complete |
+| DOCS-12 | Phase 18 | Complete |
 
 ### Coverage Summary
 
