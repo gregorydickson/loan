@@ -54,12 +54,16 @@ class CloudTasksClient:
         self,
         document_id: UUID,
         filename: str,
+        extraction_method: str = "docling",
+        ocr_mode: str = "auto",
     ) -> tasks_v2.Task:
         """Create a task to process a document.
 
         Args:
             document_id: Document UUID to process
             filename: Original filename (for logging)
+            extraction_method: Extraction method (docling/langextract/auto). Default 'docling'.
+            ocr_mode: OCR mode (auto/force/skip). Default 'auto'.
 
         Returns:
             Created Cloud Task
@@ -67,6 +71,8 @@ class CloudTasksClient:
         payload = json.dumps({
             "document_id": str(document_id),
             "filename": filename,
+            "method": extraction_method,
+            "ocr": ocr_mode,
         }).encode()
 
         # Construct target URL

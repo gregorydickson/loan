@@ -30,10 +30,22 @@ MAX_RETRY_COUNT = 4
 
 
 class ProcessDocumentRequest(BaseModel):
-    """Request payload from Cloud Tasks."""
+    """Request payload from Cloud Tasks.
+
+    Fields method/ocr have defaults for backward compatibility with
+    tasks queued before Phase 15.
+    """
 
     document_id: UUID = Field(..., description="Document UUID to process")
     filename: str = Field(..., description="Original filename")
+    method: str = Field(
+        default="docling",
+        description="Extraction method: docling|langextract|auto. Default 'docling' for backward compat.",
+    )
+    ocr: str = Field(
+        default="auto",
+        description="OCR mode: auto|force|skip. Default 'auto'.",
+    )
 
 
 class ProcessDocumentResponse(BaseModel):
