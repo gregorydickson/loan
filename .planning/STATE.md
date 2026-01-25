@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 13 of 18 (LightOnOCR GPU Service)
-Plan: 2 of 4 in current phase (13-02 merged into 13-01)
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-01-25 - Completed 13-01-PLAN.md (LightOnOCR GPU Infrastructure)
+Last activity: 2026-01-25 - Completed 13-02-PLAN.md (Cloud Run GPU Deployment)
 
-Progress: [############======..] 73% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + 13-01 + 13-03)
+Progress: [############======..] 75% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + 13-01 + 13-02 + 13-03)
 
 ## Performance Metrics
 
@@ -76,11 +76,11 @@ Progress: [############======..] 73% (v1.0 complete + Phase 10 + Phase 11 + Phas
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
 | 13-01 | LightOnOCR GPU Infrastructure | 3 min | Complete |
-| 13-02 | Cloud Run Deployment Script | - | Merged into 13-01 |
+| 13-02 | Cloud Run GPU Deployment | 45 min | Complete |
 | 13-03 | LightOnOCR Client | 4 min | Complete |
 | 13-04 | API Integration | - | Pending |
 
-**Phase 13 Progress:** 2 of 4 plans complete (13-02 merged into 13-01)
+**Phase 13 Progress:** 3 of 4 plans complete
 
 ## Accumulated Context
 
@@ -118,6 +118,9 @@ Recent decisions affecting v2.0 work:
 - [13-01]: vLLM v0.11.2 base image with transformers from source for LightOnOCR-2-1B
 - [13-01]: Model baked into Docker image for faster cold starts
 - [13-01]: 8 vCPU, 32Gi memory, L4 GPU, 240s startup probe
+- [13-02]: Cloud Build used for GPU image build (local disk space constraints)
+- [13-02]: Transformers pinned to 4.57.1 for vLLM compatibility
+- [13-02]: GPU memory utilization 80%, max_seqs=8 to prevent OOM on L4
 
 ### Pending Todos
 
@@ -129,13 +132,19 @@ None - Phase 13 progressing normally.
 
 ## Phase 13 Progress Summary
 
-**Plans:** 2 of 4 complete (13-02 merged into 13-01)
+**Plans:** 3 of 4 complete
 **Requirements Satisfied (so far):** LOCR-01, LOCR-02, LOCR-03, LOCR-04, LOCR-06, LOCR-07
 
 **Deliverables (13-01):**
 - LightOnOCR Dockerfile with vLLM base and model baked in
 - Cloud Run GPU deployment script with L4 configuration
 - Service account setup script for GPU service
+
+**Deliverables (13-02):**
+- Running LightOnOCR GPU service at https://lightonocr-gpu-fjz2snvxjq-uc.a.run.app
+- Cloud Build configuration for GPU image builds
+- Health endpoint verified and responding
+- Scale-to-zero enabled (min_instances=0)
 
 **Deliverables (13-03):**
 - LightOnOCRClient HTTP client for GPU service
@@ -148,7 +157,7 @@ None - Phase 13 progressing normally.
 
 ## Session Continuity
 
-Last session: 2026-01-25T12:59:31Z
-Stopped at: Completed 13-01-PLAN.md (LightOnOCR GPU Infrastructure)
+Last session: 2026-01-25T13:45:00Z
+Stopped at: Completed 13-02-PLAN.md (Cloud Run GPU Deployment)
 Resume file: None
 Next action: Execute 13-04 (API Integration)
