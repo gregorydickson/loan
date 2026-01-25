@@ -281,6 +281,6 @@ class OCRRouter:
         """Get current circuit breaker state.
 
         Returns:
-            State string: "closed", "open", or "half-open"
+            State string: "closed", "open", or "half_open"
         """
-        return _gpu_ocr_breaker.current_state
+        return _gpu_ocr_breaker.current_state.name.lower()
