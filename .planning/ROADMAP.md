@@ -35,7 +35,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 
 - [x] **Phase 10: v2.0 Setup & Preparation** - GPU quota, Terraform archival, CloudBuild foundation
 - [x] **Phase 11: LangExtract Core Integration** - Character offset storage, Gemini integration, few-shot examples
-- [ ] **Phase 12: LangExtract Advanced Features** - Multi-pass extraction, HTML visualization, parallel processing
+- [x] **Phase 12: LangExtract Advanced Features** - Multi-pass extraction, HTML visualization, parallel processing
 - [ ] **Phase 13: LightOnOCR GPU Service** - Cloud Run GPU deployment, vLLM serving, client integration
 - [ ] **Phase 14: OCR Routing & Fallback** - Scanned document detection, Docling OCR fallback
 - [ ] **Phase 15: Dual Pipeline Integration** - Method selection API, output normalization, Cloud Tasks enhancement
@@ -111,7 +111,12 @@ Plans:
   3. GPU service scales to zero (min_instances=0) to minimize baseline costs
   4. Backend LightOnOCRClient communicates with GPU service via HTTP
   5. Cold start monitoring and OCR quality metrics tracked
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 13-01-PLAN.md - Docker image and deployment scripts (Dockerfile, deploy.sh, service account)
+- [ ] 13-02-PLAN.md - Deploy GPU service to Cloud Run (execution + verification)
+- [ ] 13-03-PLAN.md - LightOnOCRClient backend implementation with unit tests
 
 ### Phase 14: OCR Routing & Fallback
 
@@ -188,7 +193,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 10. v2.0 Setup & Preparation | v2.0 | 5/5 | Complete | 2026-01-25 |
 | 11. LangExtract Core Integration | v2.0 | 4/4 | Complete | 2026-01-25 |
 | 12. LangExtract Advanced Features | v2.0 | 3/3 | Complete | 2026-01-25 |
-| 13. LightOnOCR GPU Service | v2.0 | 0/TBD | Not started | - |
+| 13. LightOnOCR GPU Service | v2.0 | 0/3 | Ready | - |
 | 14. OCR Routing & Fallback | v2.0 | 0/TBD | Not started | - |
 | 15. Dual Pipeline Integration | v2.0 | 0/TBD | Not started | - |
 | 16. CloudBuild Deployment | v2.0 | 0/TBD | Not started | - |
@@ -197,4 +202,4 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 
 ---
 *Roadmap created: 2026-01-24*
-*Last updated: 2026-01-25 17:12 UTC*
+*Last updated: 2026-01-25*
