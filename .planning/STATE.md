@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 18 - Documentation & Frontend (In Progress)
+**Current focus:** v2.0 Milestone Complete
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 18 of 18 (Documentation & Frontend)
-Plan: 2 of 3 in current phase (18-01, 18-02 complete)
-Status: In Progress
-Last activity: 2026-01-25 - Completed 18-01-PLAN.md (User-Facing Documentation)
+Plan: 3 of 3 in current phase (18-01, 18-02, 18-03 complete)
+Status: Milestone Complete
+Last activity: 2026-01-25 - Completed 18-03-PLAN.md (Frontend Integration)
 
-Progress: [###################=] 96% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 + Phase 16 + Phase 17 + Phase 18 partial)
+Progress: [####################] 100% (v1.0 complete + v2.0 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 63 (v1.0: 36, v2.0: 27)
+- Total plans completed: 64 (v1.0: 36, v2.0: 28)
 - Average duration: 4.5 min
-- Total execution time: 5.45 hours
+- Total execution time: 5.52 hours
 
 **By Phase (v1.0):**
 
@@ -120,15 +120,15 @@ Progress: [###################=] 96% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 17 Total:** 17 min (3 plans, avg 5.7 min/plan)
 
-**v2.0 Phase 18 In Progress:**
+**v2.0 Phase 18 Complete:**
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
 | 18-01 | User-Facing Documentation | 4 min | Complete |
 | 18-02 | v2.0 Architecture & Migration Documentation | 3 min | Complete |
-| 18-03 | Frontend Integration | - | Pending |
+| 18-03 | Frontend Integration | 4 min | Complete |
 
-**Phase 18 Progress:** 2 of 3 plans complete
+**Phase 18 Total:** 11 min (3 plans, avg 3.7 min/plan)
 
 ## Accumulated Context
 
@@ -195,14 +195,17 @@ Recent decisions affecting v2.0 work:
 - [18-01]: Documentation organized by audience (docs/api/ for users, docs/guides/ for operators)
 - [18-02]: ADRs follow existing MADR format for consistency with v1.0 documentation
 - [18-02]: System design includes Mermaid diagrams for dual pipeline visualization
+- [18-03]: Default values (docling, auto) match v1.0 behavior for backward compatibility
+- [18-03]: Select dropdowns disabled during upload pending state
+- [18-03]: Dynamic description text updates based on method selection
 
 ### Pending Todos
 
-None yet.
+None - v2.0 milestone complete.
 
 ### Blockers/Concerns
 
-None - Phase 17 complete.
+None - v2.0 milestone complete.
 
 ## Phase 17 Completion Summary
 
@@ -294,9 +297,38 @@ None - Phase 17 complete.
 - docs/guides/gpu-service-cost.md - GPU cost management strategies
 - docs/guides/lightonocr-deployment.md - LightOnOCR deployment guide
 
+## Phase 18-03 Completion Summary
+
+**Plan:** 18-03 (Frontend Integration)
+**Duration:** 4 min
+**Requirements Satisfied:** DUAL-12
+
+**Deliverables:**
+- frontend/src/components/ui/select.tsx - shadcn Select component
+- frontend/src/lib/api/types.ts - ExtractionMethod, OCRMode types
+- frontend/src/lib/api/documents.ts - uploadDocumentWithParams function
+- frontend/src/hooks/use-documents.ts - Extended useUploadDocument with params
+- frontend/src/components/documents/upload-zone.tsx - Method/OCR Select dropdowns
+
+**User Verification:** UI tested and approved via checkpoint
+
+## v2.0 Milestone Complete
+
+**Phases:** 10 through 18 (9 phases, 28 plans)
+**Total Duration:** ~2 hours
+**Requirements Satisfied:** All DUAL, CBLD, TEST, DOCS requirements
+
+**Key Deliverables:**
+- Dual extraction pipelines (Docling + LangExtract)
+- LightOnOCR GPU service with scale-to-zero
+- CloudBuild deployment replacing Terraform
+- Comprehensive test coverage (86.98%)
+- Full documentation suite
+- Frontend extraction method selection
+
 ## Session Continuity
 
-Last session: 2026-01-25T19:16:30Z
-Stopped at: Completed 18-01-PLAN.md (User-Facing Documentation)
+Last session: 2026-01-25T19:27:00Z
+Stopped at: Completed 18-03-PLAN.md (Frontend Integration)
 Resume file: None
-Next action: Phase 18-03 (Frontend Integration) if planned
+Next action: v2.0 milestone complete - ready for production deployment
