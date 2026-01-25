@@ -40,7 +40,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 14: OCR Routing & Fallback** - Scanned document detection, Docling OCR fallback
 - [x] **Phase 15: Dual Pipeline Integration** - Method selection API, output normalization, Cloud Tasks enhancement
 - [x] **Phase 16: CloudBuild Deployment** - CloudBuild configs, GitHub triggers, rollback procedures
-- [ ] **Phase 17: Testing & Quality** - Comprehensive tests for all new features, >80% coverage
+- [x] **Phase 17: Testing & Quality** - Comprehensive tests for all new features, >80% coverage
 - [ ] **Phase 18: Documentation & Frontend** - Guides, ADRs, frontend method selection UI
 
 ## Phase Details
@@ -184,9 +184,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 17-01-PLAN.md - Fix broken tests and mypy errors
-- [ ] 17-02-PLAN.md - Few-shot validation tests and E2E LangExtract tests
-- [ ] 17-03-PLAN.md - GPU cold start tests and final verification
+- [x] 17-01-PLAN.md - Fix broken tests and mypy errors
+- [x] 17-02-PLAN.md - Few-shot validation tests and E2E LangExtract tests
+- [x] 17-03-PLAN.md - GPU cold start tests and final verification
 
 ### Phase 18: Documentation & Frontend
 
@@ -199,7 +199,12 @@ Plans:
   3. CloudBuild deployment guide provides step-by-step instructions
   4. ADRs created for LangExtract, LightOnOCR, CloudBuild decisions
   5. Frontend supports extraction method and OCR mode selection in upload UI
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — User guides (method selection, few-shot, GPU cost, deployment)
+- [ ] 18-02-PLAN.md — ADRs and architecture documentation updates
+- [ ] 18-03-PLAN.md — Frontend method/OCR selection UI
 
 ## Progress
 
@@ -217,7 +222,7 @@ Note: Phases 11-12 (LangExtract) and Phase 13 (LightOnOCR) can be developed in p
 | 15. Dual Pipeline Integration | v2.0 | 2/2 | Complete | 2026-01-25 |
 | 16. CloudBuild Deployment | v2.0 | 3/3 | Complete | 2026-01-25 |
 | 17. Testing & Quality | v2.0 | 3/3 | Complete | 2026-01-25 |
-| 18. Documentation & Frontend | v2.0 | 0/TBD | Not started | - |
+| 18. Documentation & Frontend | v2.0 | 0/3 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-24*
