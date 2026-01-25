@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** Phase 15 - Dual Pipeline Integration (In Progress)
+**Current focus:** Phase 15 - Dual Pipeline Integration (Complete)
 
 ## Current Position
 
 Milestone: v2.0 LangExtract & CloudBuild
 Phase: 15 of 18 (Dual Pipeline Integration)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-01-25 - Completed 15-01-PLAN.md (Schema & API Parameters)
+Plan: 2 of 2 in current phase
+Status: Phase Complete
+Last activity: 2026-01-25 - Completed 15-02-PLAN.md (Service Layer Integration)
 
-Progress: [#############=====..] 81% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15 partial)
+Progress: [##############====..] 83% (v1.0 complete + Phase 10 + Phase 11 + Phase 12 + Phase 13 partial + Phase 14 + Phase 15)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 52 (v1.0: 36, v2.0: 16)
+- Total plans completed: 53 (v1.0: 36, v2.0: 17)
 - Average duration: 4.8 min
-- Total execution time: 4.74 hours
+- Total execution time: 4.88 hours
 
 **By Phase (v1.0):**
 
@@ -91,14 +91,14 @@ Progress: [#############=====..] 81% (v1.0 complete + Phase 10 + Phase 11 + Phas
 
 **Phase 14 Total:** 10 min (2 plans, avg 5.0 min/plan)
 
-**v2.0 Phase 15 In Progress:**
+**v2.0 Phase 15 Complete:**
 
 | Plan | Name | Duration | Status |
 |------|------|----------|--------|
 | 15-01 | Schema & API Parameters | 3 min | Complete |
-| 15-02 | Service Layer Integration | - | Pending |
+| 15-02 | Service Layer Integration | 8 min | Complete |
 
-**Phase 15 Progress:** 1 of 2 plans complete
+**Phase 15 Total:** 11 min (2 plans, avg 5.5 min/plan)
 
 ## Accumulated Context
 
@@ -150,6 +150,9 @@ Recent decisions affecting v2.0 work:
 - [15-01]: Default method=docling preserves v1.0 backward compatibility (DUAL-09)
 - [15-01]: Nullable columns allow legacy documents to coexist without migration
 - [15-01]: ExtractionMethod includes 'auto' option for future auto-detection
+- [15-02]: DUAL-04: OCRRouter runs BEFORE extraction when ocr != 'skip'
+- [15-02]: ProcessDocumentRequest defaults ensure backward compat with queued tasks
+- [15-02]: OCR-then-extract pipeline pattern for dual pipeline
 
 ### Pending Todos
 
@@ -157,11 +160,12 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Plan 15-01 complete, ready for Plan 15-02.
+None - Phase 15 complete, ready for Phase 16 or Phase 13-04.
 
-## Phase 15 Progress Summary
+## Phase 15 Completion Summary
 
-**Plans:** 1 of 2 complete
+**Plans:** 2 of 2 complete
+**Requirements Satisfied:** DUAL-04, DUAL-05, DUAL-08, DUAL-09
 
 **Deliverables (15-01):**
 - Document model with extraction_method and ocr_processed columns
@@ -169,11 +173,18 @@ None - Plan 15-01 complete, ready for Plan 15-02.
 - Upload endpoint with method and ocr query parameters
 - ExtractionMethod and OCRMode type aliases
 
-**Next:** Plan 15-02 will wire service layer to use these parameters
+**Deliverables (15-02):**
+- Cloud Tasks payload with method/ocr parameters
+- DocumentService wired to OCRRouter and ExtractionRouter
+- Task handler using OCRRouter before extraction (DUAL-04)
+- Full dual pipeline wiring from API to extraction
+- 6 integration tests for DUAL-08 character offset verification
+
+**Total Phase 15:** 11 min, 6 integration tests
 
 ## Session Continuity
 
-Last session: 2026-01-25T16:24:58Z
-Stopped at: Completed 15-01-PLAN.md (Schema & API Parameters)
+Last session: 2026-01-25T16:38:59Z
+Stopped at: Completed 15-02-PLAN.md (Service Layer Integration)
 Resume file: None
-Next action: Phase 15 Plan 02 (Service Layer Integration)
+Next action: Phase 16 (API Integration Testing) or Phase 13-04 (API Integration)
