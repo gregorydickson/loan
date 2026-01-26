@@ -47,21 +47,15 @@ A production-grade system for extracting structured borrower data from loan docu
 
 ## ✨ Features
 
-### 🎯 Core Capabilities
-
 - 📄 **Document Processing** — Parse PDF, DOCX, and scanned images with intelligent layout understanding
 - 🤖 **AI Extraction** — Extract borrower information using Google Gemini 3.0 with dynamic model selection
-- 🔍 **Source Attribution** — Every extracted field traces back to source document and page
-- ✅ **Validation** — Automated format validation (SSN, phone, zip) with confidence scoring
-- 🖥️ **Web Dashboard** — React-based UI for document upload and borrower management
-
-### 🆕 v2.0 Dual Pipeline Architecture
-
-- ⚡ **Docling Pipeline** — Fast page-level attribution, built-in OCR
-- 🎯 **LangExtract Pipeline** — Precise character-level attribution with few-shot examples
+- ⚡ **Dual Pipeline Architecture** — Choose between Docling (fast page-level attribution) or LangExtract (precise character-level offsets)
 - 🔄 **Auto-Selection** — Intelligent routing or manual method selection via API
 - 🖼️ **LightOnOCR GPU** — High-quality OCR for scanned documents (scale-to-zero enabled)
 - 🔁 **Circuit Breaker** — Automatic fallback from LangExtract → Docling on errors
+- 🔍 **Source Attribution** — Every extracted field traces back to source document and page (or character position)
+- ✅ **Validation** — Automated format validation (SSN, phone, zip) with confidence scoring
+- 🖥️ **Web Dashboard** — React-based UI for document upload and borrower management
 
 ---
 
