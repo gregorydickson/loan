@@ -48,28 +48,10 @@ app = FastAPI(
 )
 
 # CORS middleware - MUST be added first, before exception handlers and routers
-allowed_origins = [
-    "http://localhost:3000",  # Next.js dev
-    "http://localhost:5173",  # Vite dev
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-]
-
-# Add production frontend URLs if provided
-# Cloud Run provides two URL formats for the same service:
-# 1. Hash-based: service-randomhash-region.run.app
-# 2. Project-based: service-projectnumber.region.run.app
-frontend_url = os.getenv("FRONTEND_URL")
-if frontend_url:
-    allowed_origins.append(frontend_url)
-
-frontend_url_alt = os.getenv("FRONTEND_URL_ALT")
-if frontend_url_alt:
-    allowed_origins.append(frontend_url_alt)
-
+# Temporarily use regex to match all Cloud Run URLs while debugging
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.run\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
