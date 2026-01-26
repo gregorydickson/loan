@@ -59,15 +59,26 @@ app.add_middleware(
 
 
 # Custom exception handlers
+def _add_cors_headers(response: JSONResponse, request: Request) -> JSONResponse:
+    """Add CORS headers to response for error responses."""
+    origin = request.headers.get("origin", "")
+    # Match all .run.app origins (Cloud Run services)
+    if ".run.app" in origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+
 @app.exception_handler(EntityNotFoundError)
 async def entity_not_found_handler(
     request: Request, exc: EntityNotFoundError
 ) -> JSONResponse:
     """Handle EntityNotFoundError with 404 response."""
-    return JSONResponse(
+    response = JSONResponse(
         status_code=404,
         content={"detail": f"{exc.entity_type} not found: {exc.entity_id}"},
     )
+    return _add_cors_headers(response, request)
 
 
 @app.exception_handler(Exception)
@@ -76,10 +87,11 @@ async def generic_exception_handler(
 ) -> JSONResponse:
     """Handle unhandled exceptions with 500 response and logging."""
     logger.error("Unhandled exception", exc_info=exc, path=request.url.path)
-    return JSONResponse(
+    response = JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
     )
+    return _add_cors_headers(response, request)
 
 
 # Include routers
