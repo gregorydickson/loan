@@ -26,7 +26,7 @@ Dual extraction pipelines (Docling + LangExtract), LightOnOCR GPU service with s
 
 **Milestone Goal:** Deploy all services to GCP production and verify functionality through comprehensive Chrome-based testing.
 
-- [ ] **Phase 19: Production Deployment Verification** - Verify and deploy all services to GCP production
+- [x] **Phase 19: Production Deployment Verification** - Verify and deploy all services to GCP production
 - [ ] **Phase 20: Core Extraction Verification** - Verify upload and extraction flows via Chrome
 - [ ] **Phase 21: UI Feature Verification** - Verify source attribution and dashboard features
 
@@ -45,10 +45,10 @@ Dual extraction pipelines (Docling + LangExtract), LightOnOCR GPU service with s
 **Plans**: 4 plans
 
 Plans:
-- [ ] 19-01-PLAN.md - Check deployments and deploy backend
-- [ ] 19-02-PLAN.md - Deploy frontend with backend URL
-- [ ] 19-03-PLAN.md - Deploy GPU service with L4 GPU
-- [ ] 19-04-PLAN.md - Verify secrets and comprehensive health check
+- [x] 19-01-PLAN.md - Check deployments and deploy backend
+- [x] 19-02-PLAN.md - Deploy frontend with backend URL
+- [x] 19-03-PLAN.md - Deploy GPU service with L4 GPU
+- [x] 19-04-PLAN.md - Verify secrets and comprehensive health check
 
 ### Phase 20: Core Extraction Verification
 **Goal**: End-to-end document extraction flows work correctly in production
@@ -60,10 +60,12 @@ Plans:
   3. Docling extraction method processes document and returns structured borrower data
   4. LangExtract extraction method processes document and returns data with character offsets
   5. Scanned document triggers GPU OCR service and extracts text successfully
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 20-01: TBD
+- [ ] 20-01-PLAN.md - Configure database and Gemini API key prerequisites
+- [ ] 20-02-PLAN.md - Verify frontend loads and document upload (TEST-01, TEST-02)
+- [ ] 20-03-PLAN.md - Verify extraction methods and GPU OCR (TEST-03, TEST-04, TEST-05)
 
 ### Phase 21: UI Feature Verification
 **Goal**: All frontend features display extraction results correctly
@@ -86,9 +88,9 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 19. Production Deployment Verification | v2.1 | 4/4 | ✓ Complete | 2026-01-26 |
-| 20. Core Extraction Verification | v2.1 | 0/TBD | Ready | - |
+| 20. Core Extraction Verification | v2.1 | 0/3 | Ready | - |
 | 21. UI Feature Verification | v2.1 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-26 - Phase 19 complete (all services deployed and verified)*
+*Last updated: 2026-01-26 - Phase 20 planned (3 plans in 3 waves)*
