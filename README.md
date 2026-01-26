@@ -25,6 +25,14 @@
 
 A production-grade system for extracting structured borrower data from loan documents (PDF, DOCX, images) using AI-powered document processing with **complete source traceability**.
 
+<div align="center">
+
+### 🚀 [**Try the Live Demo**](https://loan-frontend-prod-793446666872.us-central1.run.app/) 🚀
+
+**Production deployment running on Google Cloud Run**
+
+</div>
+
 ---
 
 ## 🌟 Highlights
