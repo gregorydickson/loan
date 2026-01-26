@@ -172,6 +172,102 @@ class OCRRouter:
 
         return results
 
+    def _merge_gpu_ocr_results(
+        self,
+        pdf_bytes: bytes,
+        filename: str,
+        ocr_texts: dict[int, str],
+        detection: DetectionResult,
+    ) -> DocumentContent:
+        """Merge GPU OCR results with native PDF text extraction.
+
+        Strategy:
+        - For scanned pages: Use GPU OCR text from ocr_texts dict
+        - For native pages: Use Docling without OCR to extract text
+        - Combine into unified DocumentContent
+
+        Args:
+            pdf_bytes: Raw PDF bytes
+            filename: Original filename
+            ocr_texts: Dict mapping page index (0-based) to GPU OCR'd text
+            detection: Detection result with page classification
+
+        Returns:
+            DocumentContent with merged text from all pages
+        """
+        from src.ingestion.docling_processor import PageContent
+
+        # Build page content list
+        pages: list[PageContent] = []
+        all_text_parts: list[str] = []
+
+        # Get total page count from detection
+        total_pages = detection.total_pages
+        scanned_set = set(detection.scanned_pages)
+
+        # For native pages, extract via Docling without OCR
+        native_content: DocumentContent | None = None
+        if len(scanned_set) < total_pages:
+            # Some pages are native - extract them via Docling without OCR
+            # Create temporary processor with OCR disabled, using self.docling config
+            no_ocr_processor = DoclingProcessor(
+                enable_ocr=False,
+                enable_tables=self.docling.enable_tables,
+                max_pages=self.docling.max_pages,
+            )
+            native_content = no_ocr_processor.process_bytes(pdf_bytes, filename)
+
+        # Build merged content page by page
+        for page_idx in range(total_pages):
+            page_num = page_idx + 1  # 1-indexed for PageContent
+
+            if page_idx in scanned_set:
+                # Scanned page - use GPU OCR text
+                page_text = ocr_texts.get(page_idx, "")
+                pages.append(PageContent(
+                    page_number=page_num,
+                    text=page_text,
+                    tables=[],  # GPU OCR doesn't extract tables
+                ))
+                all_text_parts.append(f"## Page {page_num}\n\n{page_text}")
+            else:
+                # Native page - use Docling extraction
+                if native_content and page_idx < len(native_content.pages):
+                    native_page = native_content.pages[page_idx]
+                    pages.append(PageContent(
+                        page_number=page_num,
+                        text=native_page.text,
+                        tables=native_page.tables,
+                    ))
+                    all_text_parts.append(f"## Page {page_num}\n\n{native_page.text}")
+                else:
+                    # Fallback: empty page
+                    pages.append(PageContent(
+                        page_number=page_num,
+                        text="",
+                        tables=[],
+                    ))
+
+        # Combine all text
+        full_text = "\n\n".join(all_text_parts)
+
+        # Collect all tables from native pages
+        all_tables = []
+        if native_content:
+            all_tables = native_content.tables
+
+        return DocumentContent(
+            text=full_text,
+            pages=pages,
+            page_count=total_pages,
+            tables=all_tables,
+            metadata={
+                "ocr_method": "gpu",
+                "scanned_pages": detection.scanned_pages,
+                "native_pages": [i for i in range(total_pages) if i not in scanned_set],
+            },
+        )
+
     async def process(
         self,
         pdf_bytes: bytes,
@@ -243,23 +339,20 @@ class OCRRouter:
         )
 
         try:
-            # For now, use full-document GPU OCR via Docling fallback pattern
-            # Page-level GPU OCR would require more complex text merging
-            # which is deferred to Phase 15 (Dual Pipeline Integration)
-            #
             # Try GPU health check first
             is_healthy = await self.gpu_client.health_check()
             if not is_healthy:
                 raise LightOnOCRError("GPU service unhealthy")
 
-            # GPU is healthy - but for full document OCR, we still use Docling
-            # as the orchestrator and let it handle the complexity
-            # This plan sets up the routing; Phase 15 will wire full integration
-            logger.info("GPU service healthy, using Docling OCR for full document")
-            content = self._docling_with_ocr(pdf_bytes, filename)
+            # GPU is healthy - use GPU OCR for scanned pages
+            logger.info("GPU service healthy, using GPU OCR for %d pages", len(detection.scanned_pages))
+            ocr_texts = await self._ocr_pages_with_gpu(pdf_bytes, detection.scanned_pages)
+
+            # Merge GPU OCR results into DocumentContent
+            content = self._merge_gpu_ocr_results(pdf_bytes, filename, ocr_texts, detection)
             return OCRResult(
                 content=content,
-                ocr_method="docling",  # Using Docling's OCR engine for now
+                ocr_method="gpu",
                 pages_ocrd=detection.scanned_pages,
             )
 
