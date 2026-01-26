@@ -81,10 +81,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-03 | Phase 20 | Pending |
 | TEST-04 | Phase 20 | Pending |
 | TEST-05 | Phase 20 | Pending |
-| TEST-06 | Phase 21 | Pending |
-| TEST-07 | Phase 21 | Pending |
-| TEST-08 | Phase 21 | Pending |
-| TEST-09 | Phase 21 | Pending |
+| TEST-06 | Phase 21 | Complete |
+| TEST-07 | Phase 21 | Complete |
+| TEST-08 | Phase 21 | Complete |
+| TEST-09 | Phase 21 | Complete |
 
 **Coverage:**
 - v2.1 requirements: 15 total
