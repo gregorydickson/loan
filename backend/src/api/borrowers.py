@@ -50,6 +50,8 @@ class SourceReferenceResponse(BaseModel):
     page_number: int
     section: str | None
     snippet: str
+    char_start: int | None
+    char_end: int | None
 
 
 class BorrowerSummaryResponse(BaseModel):

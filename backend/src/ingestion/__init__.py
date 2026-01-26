@@ -9,7 +9,6 @@ from src.ingestion.docling_processor import (
 from src.ingestion.document_service import (
     DocumentService,
     DocumentUploadError,
-    DuplicateDocumentError,
 )
 
 __all__ = [
@@ -19,5 +18,4 @@ __all__ = [
     "PageContent",
     "DocumentService",
     "DocumentUploadError",
-    "DuplicateDocumentError",
 ]
