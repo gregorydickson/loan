@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project configuration
-COPY pyproject.toml ./
+COPY backend/pyproject.toml ./
 
 # Install Python dependencies to /install prefix
 RUN pip install --prefix=/install --no-cache-dir .
@@ -42,10 +42,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /install /usr/local
 
 # Copy application code
-COPY src/ ./src/
-COPY examples/ ./examples/
-COPY alembic/ ./alembic/
-COPY alembic.ini ./
+COPY backend/src/ ./src/
+COPY backend/examples/ ./examples/
+COPY backend/alembic/ ./alembic/
+COPY backend/alembic.ini ./
 
 # Pre-compile Python bytecode for faster startup
 RUN python -m compileall -q ./src/ ./examples/
@@ -55,6 +55,7 @@ RUN python -m compileall -q ./src/ ./examples/
 # Docling requires two model sets with specific folder names:
 # 1. docling-project--docling-layout-heron (layout analysis)
 # 2. docling-project--docling-models (table structure v2.3.0)
+# Note: RapidOCR fallback requires GPU service - no embedded models needed
 RUN mkdir -p /app/artifacts && \
     python -c "from huggingface_hub import snapshot_download; \
     from pathlib import Path; \
