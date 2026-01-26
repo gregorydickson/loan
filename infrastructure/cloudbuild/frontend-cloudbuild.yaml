@@ -60,7 +60,9 @@ steps:
 
 substitutions:
   _REGION: us-central1
-  _BACKEND_URL: ''  # Set via trigger or at build time
+  # CRITICAL: _BACKEND_URL must be set for frontend to communicate with backend
+  # Default to production backend URL - override for other environments
+  _BACKEND_URL: 'https://loan-backend-prod-fjz2snvxjq-uc.a.run.app'
 
 images:
   - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/frontend:${SHORT_SHA}'
