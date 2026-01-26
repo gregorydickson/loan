@@ -181,7 +181,8 @@ class DocumentRepository:
         # Delete borrowers (cascade will handle income_records, account_numbers, source_references)
         if borrower_ids:
             for borrower_id in borrower_ids:
-                borrower = await self.session.get(Borrower, borrower_id)
+                with self.session.no_autoflush:
+                    borrower = await self.session.get(Borrower, borrower_id)
                 if borrower:
                     await self.session.delete(borrower)
 

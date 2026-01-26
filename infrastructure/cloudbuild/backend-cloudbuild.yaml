@@ -53,9 +53,9 @@ steps:
       - 'private-ranges-only'
       - '--allow-unauthenticated'
       - '--cpu'
-      - '1'
+      - '2'
       - '--memory'
-      - '1Gi'
+      - '2Gi'
       - '--min-instances'
       - '0'
       - '--max-instances'
@@ -63,7 +63,7 @@ steps:
       - '--set-secrets'
       - 'DATABASE_URL=database-url:latest,GEMINI_API_KEY=gemini-api-key:latest'
       - '--set-env-vars'
-      - 'FRONTEND_URL=${_FRONTEND_URL},LIGHTONOCR_SERVICE_URL=${_LIGHTONOCR_SERVICE_URL},GCP_PROJECT_ID=${PROJECT_ID},GCP_LOCATION=${_REGION},CLOUD_TASKS_QUEUE=document-processing,CLOUD_RUN_SERVICE_URL=https://loan-backend-prod-HASH-uc.a.run.app,CLOUD_RUN_SERVICE_ACCOUNT=loan-cloud-run@${PROJECT_ID}.iam.gserviceaccount.com,GCS_BUCKET=${_GCS_BUCKET}'
+      - 'FRONTEND_URL=${_FRONTEND_URL},LIGHTONOCR_SERVICE_URL=${_LIGHTONOCR_SERVICE_URL},GCP_PROJECT_ID=${PROJECT_ID},GCP_LOCATION=${_REGION},CLOUD_TASKS_QUEUE=document-processing,CLOUD_RUN_SERVICE_URL=https://loan-backend-prod-fjz2snvxjq-uc.a.run.app,CLOUD_RUN_SERVICE_ACCOUNT=loan-cloud-run@${PROJECT_ID}.iam.gserviceaccount.com,GCS_BUCKET=${_GCS_BUCKET}'
 
 substitutions:
   _REGION: us-central1
