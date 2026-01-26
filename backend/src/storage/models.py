@@ -101,13 +101,13 @@ class Borrower(Base):
 
     # Relationships
     income_records: Mapped[list["IncomeRecord"]] = relationship(
-        "IncomeRecord", back_populates="borrower"
+        "IncomeRecord", back_populates="borrower", cascade="all, delete-orphan"
     )
     account_numbers: Mapped[list["AccountNumber"]] = relationship(
-        "AccountNumber", back_populates="borrower"
+        "AccountNumber", back_populates="borrower", cascade="all, delete-orphan"
     )
     source_references: Mapped[list["SourceReference"]] = relationship(
-        "SourceReference", back_populates="borrower"
+        "SourceReference", back_populates="borrower", cascade="all, delete-orphan"
     )
 
 
