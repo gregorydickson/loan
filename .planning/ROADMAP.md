@@ -60,12 +60,13 @@ Plans:
   3. Docling extraction method processes document and returns structured borrower data
   4. LangExtract extraction method processes document and returns data with character offsets
   5. Scanned document triggers GPU OCR service and extracts text successfully
-**Plans**: 3 plans
+**Plans**: 4 plans (3 original + 1 gap closure)
 
 Plans:
-- [ ] 20-01-PLAN.md - Configure database and Gemini API key prerequisites
-- [ ] 20-02-PLAN.md - Verify frontend loads and document upload (TEST-01, TEST-02)
-- [ ] 20-03-PLAN.md - Verify extraction methods and GPU OCR (TEST-03, TEST-04, TEST-05)
+- [x] 20-01-PLAN.md - Configure database and Gemini API key prerequisites
+- [x] 20-02-PLAN.md - Verify frontend loads and document upload (TEST-01, TEST-02)
+- [x] 20-03-PLAN.md - Verify extraction methods and GPU OCR (TEST-03, TEST-04, TEST-05 partial)
+- [ ] 20-04-PLAN.md - Wire GPU OCR integration (gap closure for TEST-05)
 
 ### Phase 21: UI Feature Verification
 **Goal**: All frontend features display extraction results correctly
@@ -87,10 +88,10 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 19. Production Deployment Verification | v2.1 | 4/4 | ✓ Complete | 2026-01-26 |
-| 20. Core Extraction Verification | v2.1 | 0/3 | Ready | - |
+| 19. Production Deployment Verification | v2.1 | 4/4 | Complete | 2026-01-26 |
+| 20. Core Extraction Verification | v2.1 | 3/4 | Gap closure | - |
 | 21. UI Feature Verification | v2.1 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-26 - Phase 20 planned (3 plans in 3 waves)*
+*Last updated: 2026-01-26 - Phase 20 gap closure plan added (20-04-PLAN.md for GPU OCR integration)*
