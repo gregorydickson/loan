@@ -110,17 +110,21 @@ class TestDocumentUpload:
         response1 = await client.post("/api/documents/", files=files)
         assert response1.status_code == 201
 
-        # Second upload with same content fails
+        # Second upload with same content succeeds (overwrites existing)
         files2 = {
             "file": ("second.pdf", content, "application/pdf")
         }
         response2 = await client.post("/api/documents/", files=files2)
 
-        # Should return 409, not crash
-        assert response2.status_code == 409
-        data = response2.json()["detail"]
-        assert data["message"] == "Duplicate document detected"
-        assert "existing_id" in data
+        # Should succeed and create a new document (old one deleted)
+        assert response2.status_code == 201
+        data2 = response2.json()
+
+        # New document has different ID (old one was deleted)
+        assert data2["id"] != response1.json()["id"]
+
+        # But same file hash
+        assert data2["file_hash"] == response1.json()["file_hash"]
 
 
 class TestDocumentUploadErrorHandling:

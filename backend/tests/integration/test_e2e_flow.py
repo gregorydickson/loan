@@ -92,7 +92,7 @@ async def test_document_not_found_flow(client: AsyncClient):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_duplicate_document_detection_flow(client: AsyncClient):
-    """Test that duplicate documents are properly rejected."""
+    """Test that duplicate documents are automatically replaced."""
     content = b"%PDF-1.4 duplicate test content unique"
 
     # First upload succeeds
@@ -101,15 +101,18 @@ async def test_duplicate_document_detection_flow(client: AsyncClient):
     assert response1.status_code == 201
     original_id = response1.json()["id"]
 
-    # Second upload with same content fails
+    # Second upload with same content succeeds (replaces original)
     files2 = {"file": ("duplicate.pdf", content, "application/pdf")}
     response2 = await client.post("/api/documents/", files=files2)
-    assert response2.status_code == 409
+    assert response2.status_code == 201
 
-    # Error response includes original document ID
-    error_data = response2.json()["detail"]
-    assert error_data["existing_id"] == original_id
-    assert error_data["message"] == "Duplicate document detected"
+    # New document has different ID (original was deleted)
+    new_id = response2.json()["id"]
+    assert new_id != original_id
+
+    # Verify original document was deleted
+    response_check = await client.get(f"/api/documents/{original_id}")
+    assert response_check.status_code == 404
 
 
 @pytest.mark.integration

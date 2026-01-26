@@ -105,3 +105,10 @@ export interface UploadParams {
   method?: ExtractionMethod;
   ocr?: OCRMode;
 }
+
+// Duplicate document error response (409)
+export interface DuplicateDocumentError {
+  message: string;
+  existing_id: string;
+  file_hash: string;
+}

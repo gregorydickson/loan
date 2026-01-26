@@ -131,9 +131,12 @@ async def upload_document(
     Returns:
         DocumentUploadResponse with document ID and processing status
 
+    Note:
+        If a duplicate file (same hash) is uploaded, the existing document
+        is automatically deleted and replaced with the new upload.
+
     Raises:
         400: Invalid file type or size
-        409: Duplicate file (same hash exists)
         500: Upload failed
     """
     from src.storage.models import DocumentStatus
@@ -182,16 +185,6 @@ async def upload_document(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        ) from e
-
-    except DuplicateDocumentError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={
-                "message": "Duplicate document detected",
-                "existing_id": str(e.existing_id),
-                "file_hash": e.file_hash,
-            },
         ) from e
 
     except DocumentUploadError as e:

@@ -224,10 +224,17 @@ class DocumentService:
         # 2. Compute hash for duplicate detection
         file_hash = self.compute_file_hash(content)
 
-        # 3. Check for existing document with same hash
+        # 3. Check for existing document with same hash - if found, delete it
         existing = await self.repository.get_by_hash(file_hash)
         if existing:
-            raise DuplicateDocumentError(existing.id, file_hash)
+            logger.info(
+                "Duplicate file detected (hash=%s, existing_id=%s). Deleting and re-uploading.",
+                file_hash,
+                existing.id,
+            )
+            # Delete existing document and associated data
+            await self.repository.delete(existing.id)
+            await self.repository.session.flush()
 
         # 4. Create document record with PENDING status
         document_id = uuid4()
