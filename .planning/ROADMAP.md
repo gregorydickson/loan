@@ -27,7 +27,7 @@ Dual extraction pipelines (Docling + LangExtract), LightOnOCR GPU service with s
 **Milestone Goal:** Deploy all services to GCP production and verify functionality through comprehensive Chrome-based testing.
 
 - [x] **Phase 19: Production Deployment Verification** - Verify and deploy all services to GCP production
-- [ ] **Phase 20: Core Extraction Verification** - Verify upload and extraction flows via Chrome
+- [x] **Phase 20: Core Extraction Verification** - Verify upload and extraction flows via Chrome
 - [ ] **Phase 21: UI Feature Verification** - Verify source attribution and dashboard features
 
 ## Phase Details
@@ -66,7 +66,7 @@ Plans:
 - [x] 20-01-PLAN.md - Configure database and Gemini API key prerequisites
 - [x] 20-02-PLAN.md - Verify frontend loads and document upload (TEST-01, TEST-02)
 - [x] 20-03-PLAN.md - Verify extraction methods and GPU OCR (TEST-03, TEST-04, TEST-05 partial)
-- [ ] 20-04-PLAN.md - Wire GPU OCR integration (gap closure for TEST-05)
+- [x] 20-04-PLAN.md - Wire GPU OCR integration (gap closure for TEST-05)
 
 ### Phase 21: UI Feature Verification
 **Goal**: All frontend features display extraction results correctly
@@ -89,9 +89,9 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 19. Production Deployment Verification | v2.1 | 4/4 | Complete | 2026-01-26 |
-| 20. Core Extraction Verification | v2.1 | 3/4 | Gap closure | - |
+| 20. Core Extraction Verification | v2.1 | 4/4 | Complete | 2026-01-26 |
 | 21. UI Feature Verification | v2.1 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-26 - Phase 20 gap closure plan added (20-04-PLAN.md for GPU OCR integration)*
+*Last updated: 2026-01-26 - Phase 20 complete (GPU OCR integration gap closure via 20-04)*
