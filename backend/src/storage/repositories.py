@@ -154,6 +154,42 @@ class DocumentRepository:
         result = await self.session.execute(select(func.count()).select_from(Document))
         return result.scalar_one()
 
+    async def delete(self, document_id: UUID) -> bool:
+        """Delete a document by ID.
+
+        Also deletes associated borrowers via cascade (source_references FK).
+
+        Args:
+            document_id: UUID of the document to delete
+
+        Returns:
+            True if document was deleted, False if not found
+        """
+        document = await self.get_by_id(document_id)
+        if not document:
+            return False
+
+        # Delete associated borrowers first (via their source references)
+        # Find borrowers that only reference this document
+        borrowers_result = await self.session.execute(
+            select(SourceReference.borrower_id)
+            .where(SourceReference.document_id == document_id)
+            .distinct()
+        )
+        borrower_ids = [row[0] for row in borrowers_result.fetchall()]
+
+        # Delete borrowers (cascade will handle income_records, account_numbers, source_references)
+        if borrower_ids:
+            for borrower_id in borrower_ids:
+                borrower = await self.session.get(Borrower, borrower_id)
+                if borrower:
+                    await self.session.delete(borrower)
+
+        # Delete the document
+        await self.session.delete(document)
+        await self.session.flush()
+        return True
+
 
 class BorrowerRepository:
     """Repository for Borrower database operations.

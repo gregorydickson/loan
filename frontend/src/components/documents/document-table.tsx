@@ -15,7 +15,9 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./status-badge";
+import { useDeleteDocument } from "@/hooks/use-documents";
 import type { DocumentResponse } from "@/lib/api/types";
 
 /**
@@ -27,41 +29,6 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * Column definitions for the document table.
- */
-const columns: ColumnDef<DocumentResponse>[] = [
-  {
-    accessorKey: "filename",
-    header: "Filename",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.getValue("filename")}</span>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <StatusBadge status={row.getValue("status")} />,
-  },
-  {
-    accessorKey: "page_count",
-    header: "Pages",
-    cell: ({ row }) => {
-      const pageCount = row.getValue("page_count") as number | null;
-      return pageCount !== null ? pageCount : "-";
-    },
-  },
-  {
-    accessorKey: "file_size_bytes",
-    header: "Size",
-    cell: ({ row }) => formatBytes(row.getValue("file_size_bytes")),
-  },
-  {
-    accessorKey: "file_type",
-    header: "Type",
-  },
-];
-
 interface DocumentTableProps {
   documents: DocumentResponse[];
 }
@@ -70,8 +37,78 @@ interface DocumentTableProps {
  * Table component for displaying document list.
  *
  * Each row is clickable and navigates to the document detail page.
+ * Includes delete button for each document.
  */
 export function DocumentTable({ documents }: DocumentTableProps) {
+  const deleteDocument = useDeleteDocument();
+
+  /**
+   * Handle document deletion with confirmation.
+   */
+  const handleDelete = (
+    e: React.MouseEvent,
+    documentId: string,
+    filename: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm(`Delete "${filename}"? This will also remove extracted borrowers.`)) {
+      deleteDocument.mutate(documentId);
+    }
+  };
+
+  /**
+   * Column definitions for the document table.
+   */
+  const columns: ColumnDef<DocumentResponse>[] = [
+    {
+      accessorKey: "filename",
+      header: "Filename",
+      cell: ({ row }) => (
+        <span className="font-medium">{row.getValue("filename")}</span>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => <StatusBadge status={row.getValue("status")} />,
+    },
+    {
+      accessorKey: "page_count",
+      header: "Pages",
+      cell: ({ row }) => {
+        const pageCount = row.getValue("page_count") as number | null;
+        return pageCount !== null ? pageCount : "-";
+      },
+    },
+    {
+      accessorKey: "file_size_bytes",
+      header: "Size",
+      cell: ({ row }) => formatBytes(row.getValue("file_size_bytes")),
+    },
+    {
+      accessorKey: "file_type",
+      header: "Type",
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={(e) =>
+            handleDelete(e, row.original.id, row.original.filename)
+          }
+          disabled={deleteDocument.isPending}
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ];
+
   const table = useReactTable({
     data: documents,
     columns,

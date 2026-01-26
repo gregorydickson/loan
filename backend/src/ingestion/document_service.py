@@ -486,6 +486,24 @@ class DocumentService:
         """
         return await self.repository.get_by_id(document_id)
 
+    async def delete_document(self, document_id: UUID) -> bool:
+        """Delete a document by ID.
+
+        Removes document from database (and associated borrowers via cascade).
+        Note: Does NOT delete file from GCS (kept for audit trail).
+
+        Args:
+            document_id: Document UUID
+
+        Returns:
+            True if deleted, False if document not found
+        """
+        deleted = await self.repository.delete(document_id)
+        if deleted:
+            await self.repository.session.commit()
+            logger.info("Deleted document %s", document_id)
+        return deleted
+
     async def update_processing_result(
         self,
         document_id: UUID,

@@ -84,3 +84,20 @@ export async function uploadDocumentWithParams(
     body: formData,
   });
 }
+
+/**
+ * Delete a document by ID.
+ *
+ * @param id - Document UUID
+ * @returns Delete response with status
+ */
+export async function deleteDocument(
+  id: string
+): Promise<{ id: string; deleted: boolean; message: string }> {
+  return apiClient<{ id: string; deleted: boolean; message: string }>(
+    `/api/documents/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+}

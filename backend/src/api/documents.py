@@ -283,6 +283,50 @@ async def get_document(
     )
 
 
+class DocumentDeleteResponse(BaseModel):
+    """Response for document deletion."""
+
+    id: UUID
+    deleted: bool
+    message: str
+
+
+@router.delete(
+    "/{document_id}",
+    response_model=DocumentDeleteResponse,
+    summary="Delete a document",
+    description="Delete a document by ID. Also removes associated borrowers extracted from this document.",
+)
+async def delete_document(
+    document_id: UUID,
+    service: DocumentServiceDep,
+) -> DocumentDeleteResponse:
+    """Delete a document by ID.
+
+    Args:
+        document_id: Document UUID
+        service: DocumentService (injected)
+
+    Returns:
+        DocumentDeleteResponse with deletion status
+
+    Raises:
+        404: Document not found
+    """
+    deleted = await service.delete_document(document_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document not found: {document_id}",
+        )
+
+    return DocumentDeleteResponse(
+        id=document_id,
+        deleted=True,
+        message="Document deleted successfully",
+    )
+
+
 @router.get(
     "/",
     response_model=DocumentListResponse,

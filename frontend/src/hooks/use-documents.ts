@@ -7,6 +7,7 @@ import {
   listDocuments,
   getDocumentStatus,
   getDocument,
+  deleteDocument,
 } from "@/lib/api/documents";
 import type {
   DocumentUploadResponse,
@@ -84,5 +85,25 @@ export function useDocument(id: string) {
     queryKey: ["document", id],
     queryFn: () => getDocument(id),
     enabled: !!id,
+  });
+}
+
+/**
+ * Hook for deleting a document.
+ *
+ * On success, invalidates the documents list query to trigger a refresh.
+ */
+export function useDeleteDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { id: string; deleted: boolean; message: string },
+    Error,
+    string
+  >({
+    mutationFn: (documentId: string) => deleteDocument(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
   });
 }
