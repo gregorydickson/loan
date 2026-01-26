@@ -77,11 +77,12 @@ Plans:
   2. Character-level offsets display correctly for LangExtract results (highlighting works)
   3. Borrower data appears in dashboard list with correct field values
   4. Extraction visualizations render without errors (charts, timelines, confidence indicators)
-**Plans**: 2 plans
+**Plans**: 3 plans (2 original + 1 gap closure)
 
 Plans:
-- [ ] 21-01-PLAN.md - Expose char_start/char_end in API and implement UI highlighting
-- [ ] 21-02-PLAN.md - Comprehensive UI verification (TEST-06, TEST-07, TEST-08, TEST-09)
+- [x] 21-01-PLAN.md - Expose char_start/char_end in API and implement UI highlighting
+- [x] 21-02-PLAN.md - Comprehensive UI verification (TEST-06, TEST-07, TEST-08, TEST-09)
+- [ ] 21-03-PLAN.md - Fix dashboard badge colors (gap closure for TEST-08)
 
 ## Progress
 
@@ -91,7 +92,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 19. Production Deployment Verification | v2.1 | 4/4 | Complete | 2026-01-26 |
 | 20. Core Extraction Verification | v2.1 | 4/4 | Complete | 2026-01-26 |
-| 21. UI Feature Verification | v2.1 | 0/2 | Not started | - |
+| 21. UI Feature Verification | v2.1 | 2/3 | In progress | - |
 
 ---
 *Roadmap created: 2026-01-25*
