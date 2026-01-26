@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-25)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** v2.1 Production Deployment & Verification - Phase 20 Plan 01 COMPLETE
+**Current focus:** v2.1 Production Deployment & Verification - Phase 20 Plan 02 COMPLETE
 
 ## Current Position
 
 Milestone: v2.1 Production Deployment & Verification
 Phase: 20 of 21 (Core Extraction Verification)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-01-26 - Completed 20-01-PLAN.md (Production Configuration Resolution)
+Plan: 2 of 2 complete (Phase 20 COMPLETE)
+Status: In progress - ready for Phase 21
+Last activity: 2026-01-26 - Completed 20-02-PLAN.md (Frontend and Upload Verification)
 
-Progress: [####################] 100% (v1.0 + v2.0) | v2.1: [##############------] 70% (20-01 complete, 20-02 and 21 remaining)
+Progress: [####################] 100% (v1.0 + v2.0) | v2.1: [################----] 80% (20-01, 20-02 complete, 20-03 and 21 remaining)
 
 ## Performance Metrics
 
@@ -49,22 +49,24 @@ Recent decisions affecting v2.1 work:
 - [19-04]: Application config (database, API key) deferred - deployment verification complete
 - [20-01]: Created new loan_extraction database (option-a) instead of reusing existing database
 - [20-01]: Used postgres user with password auth for database connectivity
+- [20-02]: Pre-download Docling models during Docker build (not at runtime) for Cloud Run reliability
+- [20-02]: Increased Cloud Run memory to 4Gi for Docling processing requirements
 
 ### Pending Todos
 
-- Execute Phase 20-02 (Extraction Testing)
+- Execute Phase 20-03 (Extraction Results Verification - TEST-03)
 - Execute Phase 21 (Final Verification)
 
 ### Blockers/Concerns
 
-None - all configuration blockers resolved in 20-01.
+None - frontend loads and upload mechanism working in production.
 
 ## Session Continuity
 
-Last session: 2026-01-26T03:47:00Z
-Stopped at: Completed 20-01-PLAN.md (Production Configuration Resolution)
+Last session: 2026-01-26T06:15:00Z
+Stopped at: Completed 20-02-PLAN.md (Frontend and Upload Verification)
 Resume file: None
-Next action: Execute Phase 20-02 (Extraction Testing)
+Next action: Execute Phase 20-03 (Extraction Results Verification - TEST-03)
 
 ## Production Service URLs
 
@@ -86,15 +88,23 @@ Model: LightOnOCR-2-1B via vLLM
 Health: /health returns 200
 ```
 
-## Phase 20-01 Completion Summary
+## Phase 20-02 Completion Summary
 
-Production configuration blockers resolved:
+Frontend and upload mechanism verified in production:
 
-| Configuration | Status | Details |
-|---------------|--------|---------|
-| Database | CONFIGURED | loan_extraction database created |
-| database-url secret | v5 | Valid connection string |
-| gemini-api-key secret | v2 | Real API key (placeholder disabled) |
-| API /documents/ | 200 | Returns empty list (working) |
+| Test | Status | Details |
+|------|--------|---------|
+| TEST-01: Frontend loads | PASS | User verified in Chrome |
+| TEST-02: Upload works | PASS | 201 response, "completed" status |
+| Backend health | PASS | /health returns 200 |
+| API documents endpoint | PASS | /api/documents/ returns JSON |
 
-Ready for extraction verification testing in 20-02.
+**Production fixes applied:**
+- dc6925d0: DocumentStatus enum mapping
+- afa19566: Tesseract OCR dependencies
+- 98873b1b: Disabled RapidOCR downloads
+- 088b1d24: Error logging + memory increase
+- d5f5a2f4: Partial borrower persistence
+- 404cc975: Pre-download Docling models
+
+Ready for extraction results verification in 20-03.
