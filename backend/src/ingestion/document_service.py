@@ -251,7 +251,17 @@ class DocumentService:
             document.gcs_uri = gcs_uri
             await self.repository.session.flush()
 
+            # Commit document creation before processing to prevent rollback if processing fails
+            await self.repository.session.commit()
+
         except Exception as e:
+            logger.error(
+                "GCS upload failed for document %s (%s): %s",
+                document_id,
+                filename,
+                e,
+                exc_info=True,
+            )
             # Mark as failed if GCS upload fails
             await self.repository.update_status(
                 document_id,
@@ -277,7 +287,12 @@ class DocumentService:
                     ocr_mode,
                 )
             except Exception as e:
-                logger.error("Failed to queue task for document %s: %s", document_id, e)
+                logger.error(
+                    "Failed to queue task for document %s: %s",
+                    document_id,
+                    e,
+                    exc_info=True,
+                )
                 # Mark as failed if we can't queue
                 await self.repository.update_status(
                     document_id,
@@ -317,15 +332,14 @@ class DocumentService:
                 result = ocr_result.content
                 ocr_processed = ocr_result.ocr_method != "none"
                 logger.info(
-                    "OCR routing for %s: method=%s, ocr_processed=%s",
+                    "OCR routing for %s: method=%s, pages=%d",
                     document_id,
                     ocr_result.ocr_method,
-                    ocr_processed,
+                    result.page_count,
                 )
             else:
                 # Skip OCR - use Docling directly
                 result = self.docling_processor.process_bytes(content, filename)
-
             await self.update_processing_result(
                 document_id,
                 success=True,
@@ -359,28 +373,36 @@ class DocumentService:
                         document_name=filename,
                     )
 
-                # Persist extracted borrowers
-                # Collect errors - if ANY borrower fails, the whole document should fail
-                persistence_errors = []
+                # Persist extracted borrowers with partial success handling
+                persistence_errors: list[str] = []
                 for borrower_record in extraction_result.borrowers:
                     try:
                         await self._persist_borrower(borrower_record, document_id)
-                        logger.info(
-                            "Persisted borrower '%s' from document %s",
+                    except Exception as e:
+                        logger.error(
+                            "Failed to persist borrower '%s' from document %s: %s",
                             borrower_record.name,
                             document_id,
+                            e,
+                            exc_info=True,
                         )
-                    except Exception as e:
-                        error_msg = f"Failed to persist borrower '{borrower_record.name}': {e}"
-                        logger.error(error_msg)
-                        persistence_errors.append(error_msg)
+                        persistence_errors.append(borrower_record.name)
 
-                # If any borrower failed to persist, fail the entire document
-                # Raise BEFORE logging success so it's caught by outer handler
+                persisted_count = len(extraction_result.borrowers) - len(persistence_errors)
+
+                # Allow partial success - mark as completed with warning if some failed
                 if persistence_errors:
-                    error_summary = "; ".join(persistence_errors)
-                    # Don't update status to COMPLETED - let outer handler mark as FAILED
-                    raise ValueError(f"Borrower persistence failed: {error_summary}")
+                    logger.warning(
+                        "Document %s completed with partial borrower persistence: %d/%d succeeded",
+                        document_id,
+                        persisted_count,
+                        len(extraction_result.borrowers),
+                    )
+                    await self.repository.update_status(
+                        document_id,
+                        DocumentStatus.COMPLETED,
+                        error_message=f"Partial success: {persisted_count}/{len(extraction_result.borrowers)} borrowers persisted. Failed: {', '.join(persistence_errors[:5])}{'...' if len(persistence_errors) > 5 else ''}",
+                    )
 
                 # Log extraction summary - handle both ExtractionResult and LangExtractResult
                 borrower_count = len(extraction_result.borrowers)
@@ -400,6 +422,12 @@ class DocumentService:
                 )
 
             except ValueError as e:
+                logger.error(
+                    "ValueError during extraction/persistence for document %s: %s",
+                    document_id,
+                    e,
+                    exc_info=True,
+                )
                 # Persistence failure - mark document as FAILED
                 if "persistence failed" in str(e).lower():
                     await self.update_processing_result(
@@ -416,13 +444,10 @@ class DocumentService:
                 raise
 
             except Exception as e:
-                # Extraction failure should not fail the document - log and continue
-                # Document is COMPLETED (Docling worked), extraction just didn't find borrowers
                 logger.warning(
-                    "Extraction failed for document %s: %s. "
-                    "Document marked completed anyway.",
+                    "Extraction failed for document %s: %s (document marked completed anyway)",
                     document_id,
-                    str(e),
+                    e,
                 )
 
             # Refresh document to get updated status
@@ -430,15 +455,13 @@ class DocumentService:
             if refreshed is not None:
                 document = refreshed
         except DocumentProcessingError as e:
-            # Include both message and details for debugging
             error_msg = f"Document processing failed: {e.message}"
             if e.details:
                 error_msg += f" ({e.details})"
             logger.error(
-                "Document processing failed for %s: %s (details: %s)",
+                "Document processing failed for %s: %s",
                 document_id,
-                e.message,
-                e.details,
+                error_msg,
             )
             await self.update_processing_result(
                 document_id,
