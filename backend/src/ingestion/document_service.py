@@ -360,6 +360,8 @@ class DocumentService:
                     )
 
                 # Persist extracted borrowers
+                # Collect errors - if ANY borrower fails, the whole document should fail
+                persistence_errors = []
                 for borrower_record in extraction_result.borrowers:
                     try:
                         await self._persist_borrower(borrower_record, document_id)
@@ -369,11 +371,16 @@ class DocumentService:
                             document_id,
                         )
                     except Exception as e:
-                        logger.warning(
-                            "Failed to persist borrower '%s': %s",
-                            borrower_record.name,
-                            str(e),
-                        )
+                        error_msg = f"Failed to persist borrower '{borrower_record.name}': {e}"
+                        logger.error(error_msg)
+                        persistence_errors.append(error_msg)
+
+                # If any borrower failed to persist, fail the entire document
+                # Raise BEFORE logging success so it's caught by outer handler
+                if persistence_errors:
+                    error_summary = "; ".join(persistence_errors)
+                    # Don't update status to COMPLETED - let outer handler mark as FAILED
+                    raise ValueError(f"Borrower persistence failed: {error_summary}")
 
                 # Log extraction summary - handle both ExtractionResult and LangExtractResult
                 borrower_count = len(extraction_result.borrowers)
@@ -391,6 +398,22 @@ class DocumentService:
                     warnings_count,
                     consistency_count,
                 )
+
+            except ValueError as e:
+                # Persistence failure - mark document as FAILED
+                if "persistence failed" in str(e).lower():
+                    await self.update_processing_result(
+                        document_id,
+                        success=False,
+                        error_message=str(e),
+                    )
+                    # Refresh and return failed document
+                    refreshed = await self.repository.get_by_id(document_id)
+                    if refreshed is not None:
+                        document = refreshed
+                    return document
+                # Other ValueErrors fall through to generic handler
+                raise
 
             except Exception as e:
                 # Extraction failure should not fail the document - log and continue

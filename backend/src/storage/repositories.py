@@ -145,6 +145,15 @@ class DocumentRepository:
         )
         return result.scalars().all()
 
+    async def count(self) -> int:
+        """Get total count of documents in database.
+
+        Returns:
+            Total number of documents
+        """
+        result = await self.session.execute(select(func.count()).select_from(Document))
+        return result.scalar_one()
+
 
 class BorrowerRepository:
     """Repository for Borrower database operations.

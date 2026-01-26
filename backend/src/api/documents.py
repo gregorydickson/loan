@@ -290,20 +290,21 @@ async def get_document(
 )
 async def list_documents(
     repository: DocumentRepoDep,
-    limit: int = 100,
-    offset: int = 0,
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
 ) -> DocumentListResponse:
     """List documents with pagination.
 
     Args:
         repository: DocumentRepository (injected)
-        limit: Maximum documents to return (default 100)
-        offset: Number of documents to skip (default 0)
+        limit: Maximum documents to return (1-1000, default 100)
+        offset: Number of documents to skip (>= 0, default 0)
 
     Returns:
         DocumentListResponse with documents and pagination info
     """
     documents = await repository.list_documents(limit=limit, offset=offset)
+    total = await repository.count()
 
     return DocumentListResponse(
         documents=[
@@ -320,7 +321,7 @@ async def list_documents(
             )
             for doc in documents
         ],
-        total=len(documents),  # Simplified - would need count query for true total
+        total=total,
         limit=limit,
         offset=offset,
     )

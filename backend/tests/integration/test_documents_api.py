@@ -278,6 +278,33 @@ class TestDocumentList:
         assert data["total"] == 0
 
     @pytest.mark.asyncio
+    async def test_list_documents_rejects_negative_offset(self, client: AsyncClient):
+        """Test that negative offset is rejected (TDD Issue #3)."""
+        response = await client.get("/api/documents/?offset=-1")
+
+        # Should return 422 validation error, not crash
+        assert response.status_code == 422
+        assert "detail" in response.json()
+
+    @pytest.mark.asyncio
+    async def test_list_documents_rejects_excessive_limit(self, client: AsyncClient):
+        """Test that limit > 1000 is rejected (TDD Issue #3)."""
+        response = await client.get("/api/documents/?limit=999999")
+
+        # Should return 422 validation error, not try to load 999999 documents
+        assert response.status_code == 422
+        assert "detail" in response.json()
+
+    @pytest.mark.asyncio
+    async def test_list_documents_rejects_zero_limit(self, client: AsyncClient):
+        """Test that limit=0 is rejected (TDD Issue #3)."""
+        response = await client.get("/api/documents/?limit=0")
+
+        # Should return 422 validation error
+        assert response.status_code == 422
+        assert "detail" in response.json()
+
+    @pytest.mark.asyncio
     async def test_list_documents_with_data(self, client: AsyncClient):
         """Test listing documents after uploads."""
         # Upload two documents
@@ -314,6 +341,46 @@ class TestDocumentList:
         response = await client.get("/api/documents/?limit=2&offset=2")
         data = response.json()
         assert len(data["documents"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_list_documents_total_is_accurate(self, client: AsyncClient):
+        """Test that 'total' reflects total count in DB, not just page size.
+
+        TDD: This test should fail initially because current implementation
+        returns len(documents) instead of total count from database.
+        """
+        # Upload 5 documents
+        for i in range(5):
+            files = {
+                "file": (f"total{i}.pdf", f"total content {i}".encode(), "application/pdf")
+            }
+            await client.post("/api/documents/", files=files)
+
+        # Request first page with limit=2
+        response = await client.get("/api/documents/?limit=2&offset=0")
+        data = response.json()
+
+        # CRITICAL: total should be 5 (all docs), not 2 (page size)
+        assert data["total"] == 5, f"Expected total=5, got total={data['total']}"
+        assert len(data["documents"]) == 2  # Page contains 2
+        assert data["limit"] == 2
+        assert data["offset"] == 0
+
+        # Request second page
+        response = await client.get("/api/documents/?limit=2&offset=2")
+        data = response.json()
+
+        # total should still be 5 on every page
+        assert data["total"] == 5
+        assert len(data["documents"]) == 2  # Page contains 2
+
+        # Request third page (last page, only 1 doc)
+        response = await client.get("/api/documents/?limit=2&offset=4")
+        data = response.json()
+
+        # total should still be 5
+        assert data["total"] == 5
+        assert len(data["documents"]) == 1  # Last page has remainder
 
 
 class TestDocumentStatus:
@@ -364,6 +431,66 @@ class TestDocumentStatus:
         data = response.json()
         assert data["status"] == "failed"
         assert data["error_message"] is not None
+
+
+class TestBorrowerPersistenceTransaction:
+    """Tests for borrower persistence transaction boundaries (TDD Issue #2)."""
+
+    @pytest.mark.asyncio
+    async def test_partial_borrower_failure_marks_document_failed(
+        self, client_with_three_borrowers, monkeypatch
+    ):
+        """Test that if any borrower fails to persist, document is marked FAILED.
+
+        TDD: This test should fail initially because current implementation
+        logs the error and continues, leaving document as COMPLETED even when
+        borrower persistence fails.
+        """
+        from src.ingestion.document_service import DocumentService
+
+        # Track calls to _persist_borrower
+        persist_call_count = 0
+        original_persist = DocumentService._persist_borrower
+
+        async def mock_persist_borrower(self, borrower_record, document_id):
+            nonlocal persist_call_count
+            persist_call_count += 1
+
+            # Fail on second borrower to simulate partial failure
+            if persist_call_count == 2:
+                raise ValueError("Simulated database constraint violation for borrower 2")
+
+            # Call original for other borrowers
+            return await original_persist(self, borrower_record, document_id)
+
+        monkeypatch.setattr(
+            DocumentService, "_persist_borrower", mock_persist_borrower
+        )
+
+        # Upload a PDF (will extract 3 borrowers via fixture)
+        pdf_content = b"%PDF-1.4 test content"
+        files = {"file": ("test.pdf", pdf_content, "application/pdf")}
+
+        response = await client_with_three_borrowers.post("/api/documents/", files=files)
+
+        # The upload endpoint should catch the persistence failure
+        # and mark document as FAILED (not COMPLETED)
+        assert response.status_code == 201
+        data = response.json()
+
+        # CRITICAL: If any borrower fails to persist, document should be FAILED
+        # Current implementation: status='completed' (BUG!)
+        # Expected behavior: status='failed'
+        assert data["status"] == "failed", (
+            f"Expected document to be marked FAILED when borrower persistence fails, "
+            f"got status='{data['status']}'. "
+            f"Persistence was called {persist_call_count} times, "
+            f"simulated failure on call #2."
+        )
+        assert data.get("error_message") is not None
+        assert ("persist" in data["error_message"].lower()
+                or "borrower" in data["error_message"].lower()
+                or "database" in data["error_message"].lower())
 
 
 class TestHealthCheck:

@@ -336,6 +336,75 @@ async def client_with_failing_docling(
 
 
 @pytest.fixture
+def mock_borrower_extractor_three_borrowers():
+    """Create mock BorrowerExtractor that returns 3 borrowers for testing partial persistence failure.
+
+    Returns 3 borrowers so we can test what happens when one fails to persist mid-transaction.
+    """
+    from src.extraction import BorrowerExtractor, ExtractionResult
+    from src.extraction.complexity_classifier import ComplexityAssessment, ComplexityLevel
+
+    def create_mock_extract(document, document_id, document_name):
+        """Create extraction result with 3 borrowers."""
+        borrowers = []
+        for i in range(3):
+            source = SourceReference(
+                document_id=document_id,
+                document_name=document_name,
+                page_number=1,
+                snippet=f"Borrower {i+1} information",
+            )
+
+            borrower = BorrowerRecord(
+                id=uuid4(),
+                name=f"Borrower {i+1}",
+                ssn=f"{i+1}{i+1}{i+1}-{i+1}{i+1}-{i+1}{i+1}{i+1}{i+1}",
+                phone="(555) 123-4567",
+                email=f"borrower{i+1}@example.com",
+                address=Address(
+                    street=f"{i+1}23 Main St",
+                    city="Austin",
+                    state="TX",
+                    zip_code="78701",
+                ),
+                income_history=[
+                    IncomeRecord(
+                        amount=Decimal("75000.00"),
+                        period="annual",
+                        year=2024,
+                        source_type="employment",
+                        employer="Acme Corp",
+                    ),
+                ],
+                account_numbers=[f"ACC{i+1}"],
+                loan_numbers=[f"LOAN-{i+1}"],
+                sources=[source],
+                confidence_score=0.85,
+            )
+            borrowers.append(borrower)
+
+        return ExtractionResult(
+            borrowers=borrowers,
+            complexity=ComplexityAssessment(
+                level=ComplexityLevel.STANDARD,
+                reasons=["Three borrower document"],
+                page_count=1,
+                estimated_borrowers=3,
+                has_handwritten=False,
+                has_poor_quality=False,
+            ),
+            chunks_processed=1,
+            total_tokens=500,
+            validation_errors=[],
+            consistency_warnings=[],
+        )
+
+    extractor = MagicMock(spec=BorrowerExtractor)
+    extractor.extract = MagicMock(side_effect=create_mock_extract)
+    return extractor
+
+
+@pytest.fixture
 async def client_with_extraction(
     async_engine, db_session, mock_gcs_client, mock_docling_processor, mock_borrower_extractor_with_data
 ):
@@ -367,6 +436,47 @@ async def client_with_extraction(
 
     def override_get_borrower_extractor():
         return mock_borrower_extractor_with_data
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_gcs_client] = override_get_gcs_client
+    app.dependency_overrides[get_docling_processor] = override_get_docling_processor
+    app.dependency_overrides[get_borrower_extractor] = override_get_borrower_extractor
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def client_with_three_borrowers(
+    async_engine, db_session, mock_gcs_client, mock_docling_processor, mock_borrower_extractor_three_borrowers
+):
+    """Create test client with extractor that returns 3 borrowers for partial failure testing."""
+    session_factory = async_sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    async def override_get_db_session():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    def override_get_gcs_client():
+        return mock_gcs_client
+
+    def override_get_docling_processor():
+        return mock_docling_processor
+
+    def override_get_borrower_extractor():
+        return mock_borrower_extractor_three_borrowers
 
     app.dependency_overrides[get_db_session] = override_get_db_session
     app.dependency_overrides[get_gcs_client] = override_get_gcs_client
