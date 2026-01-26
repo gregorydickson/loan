@@ -76,6 +76,11 @@ export function SourceReferences({
                             <span>{source.section}</span>
                           </>
                         )}
+                        {source.char_start !== null && source.char_end !== null && (
+                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded">
+                            Exact Match
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm">
                         {truncateSnippet(source.snippet)}

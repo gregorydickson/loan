@@ -77,6 +77,8 @@ export interface SourceReference {
   page_number: number;
   section: string | null;
   snippet: string;
+  char_start: number | null;
+  char_end: number | null;
 }
 
 export interface BorrowerDetailResponse {
