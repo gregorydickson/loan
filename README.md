@@ -107,6 +107,176 @@ flowchart LR
 
 ---
 
+## 🎯 Key Architectural Decisions
+
+This section highlights the most important architectural and implementation decisions that shaped the system. Each decision was made to balance competing concerns like cost, accuracy, performance, and maintainability.
+
+### 📄 Document Processing: Docling
+
+**Decision:** Use Docling as the primary document processing engine for PDF, DOCX, and image parsing.
+
+**Why:**
+- Production-grade multi-format support with unified API
+- Built-in OCR for scanned documents without external dependencies
+- Table extraction with structure preservation (critical for income data in loan docs)
+- Page-level provenance metadata enables source attribution
+- Active IBM development with regular updates
+
+**Tradeoff:** Heavy dependency (~500MB) causes slower Cloud Run cold starts, but the unified API and table support justify the cost.
+
+📖 [ADR-001: Docling](docs/ARCHITECTURE_DECISIONS.md#adr-001-use-docling-for-document-processing)
+
+### 🤖 LLM: Gemini 3.0 with Dynamic Model Selection
+
+**Decision:** Use Google Gemini 3.0 with automatic model selection between Flash (fast/cheap) and Pro (complex/accurate).
+
+**Why:**
+- State-of-the-art reasoning for complex multi-borrower document extraction
+- Dynamic selection optimizes cost: Flash for standard docs, Pro for complex/poor-quality scans
+- Native structured output support eliminates JSON parsing errors
+- GCP integration simplifies auth and deployment
+
+**Tradeoff:** API costs scale with volume, but accuracy gains and cost optimization through model selection justify the expense over local models.
+
+**Critical config:** Temperature=1.0 (lower values cause response looping), no max_output_tokens limit (causes None response).
+
+📖 [ADR-002: Gemini 3.0](docs/ARCHITECTURE_DECISIONS.md#adr-002-use-gemini-30-with-dynamic-model-selection)
+
+### 🎯 Dual Extraction Pipeline: Docling vs. LangExtract
+
+**Decision:** Implement two extraction methods with different tradeoffs, selectable via API parameter.
+
+**Pipelines:**
+- **Docling** (default): Fast page-level attribution, lower cost, mature processing
+- **LangExtract**: Precise character-level offsets (char_start/char_end), audit-ready grounding
+
+**Why:**
+- Audit-sensitive use cases require precise source grounding beyond page numbers
+- Standard documents don't need character offsets, save cost with Docling
+- User choice based on use case (fast vs. traceable)
+- Few-shot examples in LangExtract allow domain customization without fine-tuning
+
+**Tradeoff:** Dual pipeline adds complexity but provides flexibility for different accuracy/cost requirements.
+
+📖 [ADR-018: LangExtract](docs/ARCHITECTURE_DECISIONS.md#adr-018-use-langextract-for-structured-extraction-with-character-offsets)
+
+### 🖼️ OCR: LightOnOCR with Scale-to-Zero GPU
+
+**Decision:** Deploy LightOnOCR-2-1B on Cloud Run with L4 GPU, scale-to-zero for cost optimization.
+
+**Why:**
+- Superior OCR accuracy for poor-quality scans vs. Docling's built-in OCR
+- Scale-to-zero (min_instances=0) eliminates $485/month baseline GPU cost
+- Circuit breaker with Docling OCR fallback maintains availability
+- Internal-only auth prevents unauthorized GPU usage
+
+**Tradeoff:** 60-120s cold start latency when scaling from zero, but $0 baseline cost vs. $485/month always-on justifies the tradeoff for intermittent OCR workloads.
+
+📖 [ADR-019: LightOnOCR](docs/ARCHITECTURE_DECISIONS.md#adr-019-use-lightonocr-with-scale-to-zero-gpu-service)
+
+### 💾 Database: PostgreSQL with Repository Pattern
+
+**Decision:** Use PostgreSQL with async SQLAlchemy ORM and repository pattern with caller-controlled transactions.
+
+**Why:**
+- ACID transactions ensure data integrity across borrower, income, and source attribution records
+- Foreign keys maintain referential integrity
+- Efficient joins for complex source attribution queries
+- Cloud SQL provides managed backups and point-in-time recovery
+- Repository pattern enables atomic multi-repository operations
+
+**Key patterns:**
+- Repositories use `flush()` not `commit()` - caller controls transaction boundaries
+- `expire_on_commit=False` for async compatibility
+- `selectinload()` for eager loading prevents N+1 queries
+
+**Tradeoff:** Schema migrations required for changes, but relational model fits borrower/income/source relationships better than document stores.
+
+📖 [ADR-003: PostgreSQL](docs/ARCHITECTURE_DECISIONS.md#adr-003-use-postgresql-for-relational-storage) | [ADR-007: Repository Pattern](docs/ARCHITECTURE_DECISIONS.md#adr-007-repository-pattern-with-caller-controlled-transactions)
+
+### ☁️ Deployment: Cloud Run Serverless
+
+**Decision:** Deploy on Cloud Run with serverless auto-scaling and direct VPC egress.
+
+**Why:**
+- Auto-scaling (0-10 instances) handles variable document upload workloads
+- Pay-per-use pricing: scale to zero when idle eliminates baseline compute costs
+- No cluster management overhead vs. GKE
+- Direct VPC egress for Cloud SQL private IP (no VPC Connector cost)
+
+**Configuration:**
+- Backend: 1Gi memory for Docling processing
+- Frontend: 512Mi memory
+- Startup probe on /health with 10s initial delay
+
+**Tradeoff:** Cold start latency (especially with Docling model loading), but zero-idle cost and no ops overhead justify the tradeoff.
+
+📖 [ADR-004: Cloud Run](docs/ARCHITECTURE_DECISIONS.md#adr-004-deploy-on-cloud-run-with-serverless-architecture)
+
+### 🔧 CI/CD: CloudBuild vs. Terraform
+
+**Decision:** Migrate from Terraform to CloudBuild for application deployments (infrastructure provisioned via one-time gcloud scripts).
+
+**Why:**
+- Cloud Run deployments are frequent (every code push), infrastructure changes are rare
+- CloudBuild provides simpler YAML configs vs. Terraform HCL
+- Native GitHub triggers for automatic builds on push to main
+- No Terraform state management complexity for simple service deploys
+- Built-in revision tracking and rollback via Cloud Run console
+
+**Tradeoff:** Lost declarative infrastructure-as-code for Cloud Run services, but faster iteration and simpler CI/CD justify the trade.
+
+📖 [ADR-020: CloudBuild](docs/ARCHITECTURE_DECISIONS.md#adr-020-migrate-from-terraform-to-cloudbuild-for-deployments)
+
+### 🔒 Security: Private VPC + Secret Manager
+
+**Decision:** Cloud SQL with private IP only (no public internet access) and credentials stored in Secret Manager.
+
+**Why:**
+- Database contains sensitive PII (SSN, income history) - no internet exposure
+- VPC peering isolates database from public internet
+- Secret Manager provides audit trail for credential access
+- Secret rotation without redeployment via secret versions
+
+**Tradeoff:** Cannot connect directly from local dev (requires Cloud SQL Auth Proxy), but security posture for PII data justifies the complexity.
+
+📖 [ADR-013: Private VPC](docs/ARCHITECTURE_DECISIONS.md#adr-013-private-vpc-for-cloud-sql-no-public-ip) | [ADR-014: Secret Manager](docs/ARCHITECTURE_DECISIONS.md#adr-014-secret-manager-for-credentials)
+
+### 🎨 Frontend: Next.js 14 App Router
+
+**Decision:** Use Next.js 14+ with App Router and shadcn/ui components.
+
+**Why:**
+- Server components reduce client bundle size
+- App router provides file-based routing and better code organization
+- shadcn/ui provides high-quality, accessible components (new-york style)
+- Standalone build mode produces optimized Docker images (~100MB vs ~500MB)
+
+**Tradeoff:** App router has learning curve vs. pages router, but server components and modern patterns justify the migration.
+
+📖 [ADR-005: Next.js 14](docs/ARCHITECTURE_DECISIONS.md#adr-005-use-nextjs-14-app-router-for-frontend)
+
+### 📊 Data Quality: Deduplication + Anomaly Detection
+
+**Decision:** Multi-tier deduplication (SSN > Account > Fuzzy Name) and income anomaly flagging (50% drop, 300% spike).
+
+**Why:**
+- Same borrower appears across multiple documents/chunks
+- Unique identifiers (SSN, account) prevent false merges
+- Fuzzy name matching (90%+) handles variations ("John Smith" vs. "J. Smith")
+- Income anomaly detection catches data errors and potential fraud
+- Flags for review, doesn't auto-reject (human in the loop)
+
+**Tradeoff:** May miss sophisticated manipulation, but balance between automation and accuracy is appropriate for financial documents.
+
+📖 [ADR-009: Deduplication](docs/ARCHITECTURE_DECISIONS.md#adr-009-deduplication-priority-order-ssn--account--fuzzy-name) | [ADR-017: Anomaly Thresholds](docs/ARCHITECTURE_DECISIONS.md#adr-017-income-anomaly-thresholds-50-drop-300-spike)
+
+---
+
+**📚 Complete Decision Records:** See [docs/ARCHITECTURE_DECISIONS.md](docs/ARCHITECTURE_DECISIONS.md) for all 20 ADRs with full context, alternatives considered, and consequences.
+
+---
+
 ## 🛠️ Tech Stack
 
 | Component | Technology | Purpose | Emoji |
