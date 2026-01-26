@@ -32,7 +32,7 @@ sequenceDiagram
         API->>DB: Create record (pending)
 
         API->>OCR: OCR if scanned
-        Note over OCR: LightOnOCR GPU<br/>or Docling fallback
+        Note over OCR: LightOnOCR GPU or Docling fallback
         OCR-->>API: Document text
 
         API->>DB: Update status (processing)
