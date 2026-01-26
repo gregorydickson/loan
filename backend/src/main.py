@@ -55,10 +55,17 @@ allowed_origins = [
     "http://127.0.0.1:5173",
 ]
 
-# Add production frontend URL if provided
+# Add production frontend URLs if provided
+# Cloud Run provides two URL formats for the same service:
+# 1. Hash-based: service-randomhash-region.run.app
+# 2. Project-based: service-projectnumber.region.run.app
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     allowed_origins.append(frontend_url)
+
+frontend_url_alt = os.getenv("FRONTEND_URL_ALT")
+if frontend_url_alt:
+    allowed_origins.append(frontend_url_alt)
 
 app.add_middleware(
     CORSMiddleware,
