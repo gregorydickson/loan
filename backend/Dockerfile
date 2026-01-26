@@ -23,9 +23,18 @@ FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
-# Install runtime dependencies only (libpq5 for asyncpg runtime)
+# Install runtime dependencies:
+# - libpq5: PostgreSQL client library for asyncpg
+# - tesseract-ocr: OCR engine required by Docling for PDF processing
+# - tesseract-ocr-eng: English language data for Tesseract
+# - libgl1: OpenGL library required by OpenCV (Docling dependency)
+# - libglib2.0-0: GLib required by various imaging libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --shell /bin/bash app
 
