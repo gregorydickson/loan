@@ -12,65 +12,52 @@ import {
 const pipelineSequenceChart = `
 sequenceDiagram
     participant User
-    participant Frontend as Next.js Frontend
-    participant API as FastAPI Backend
-    participant GCS as Cloud Storage
-    participant OCR as OCR Router
-    participant GPU as LightOnOCR GPU
-    participant Docling as Docling Processor
-    participant LLM as Gemini LLM
-    participant DB as PostgreSQL
+    participant Frontend
+    participant API
+    participant OCR
+    participant LLM
+    participant DB
 
     User->>Frontend: Upload document
-    Frontend->>API: POST /api/documents (multipart)
+    Frontend->>API: POST /api/documents
 
-    API->>API: Compute SHA-256 hash
-    API->>DB: Check for duplicate hash
+    Note over API: SHA-256 hash check
+    API->>DB: Check duplicate
 
     alt Document exists
-        DB-->>API: Existing document found
         API-->>Frontend: 409 Conflict
     else New document
-        API->>GCS: Store original file
-        GCS-->>API: Storage URI
-        API->>DB: Create document record (status: pending)
+        Note over API,OCR: Store & Process
+        API->>API: Store in Cloud Storage
+        API->>DB: Create record (pending)
 
-        API->>OCR: Detect if scanned
-        alt Scanned document
-            OCR->>GPU: Request OCR
-            GPU-->>OCR: OCR text (or error)
-            alt GPU success
-                OCR-->>API: OCR text
-            else GPU failure
-                OCR->>Docling: Fallback OCR
-                Docling-->>API: OCR text
-            end
-        else Native text
-            API->>Docling: Extract text directly
-            Docling-->>API: Document text
-        end
+        API->>OCR: OCR if scanned
+        Note over OCR: LightOnOCR GPU<br/>or Docling fallback
+        OCR-->>API: Document text
 
-        API->>DB: Update status: processing
+        API->>DB: Update status (processing)
 
+        Note over API,LLM: Extraction Phase
         API->>LLM: Assess complexity
-        LLM-->>API: ComplexityAssessment
+        LLM-->>API: Flash or Pro model
 
-        loop For each chunk
-            API->>LLM: Extract borrowers (Flash or Pro)
-            LLM-->>API: ExtractedBorrowers
+        loop Each chunk
+            API->>LLM: Extract borrowers
+            LLM-->>API: Structured data
         end
 
-        API->>API: Deduplicate borrowers
-        API->>API: Validate fields (SSN, phone, ZIP)
-        API->>API: Calculate confidence scores
+        Note over API: Post-processing
+        API->>API: Deduplicate
+        API->>API: Validate fields
+        API->>API: Score confidence
 
-        API->>DB: Store borrowers with sources
-        API->>DB: Update status: completed
+        API->>DB: Save borrowers + sources
+        API->>DB: Update status (completed)
 
         API-->>Frontend: Document response
     end
 
-    Frontend-->>User: Show status/results
+    Frontend-->>User: Show results
 `;
 
 export default function PipelinePage() {
