@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-01-25)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** v2.1 Production Deployment & Verification - Phase 20 COMPLETE, ready for Phase 21
+**Current focus:** v2.1 Production Deployment & Verification - Phase 20 plans 1-4 COMPLETE, ready for Phase 21
 
 ## Current Position
 
 Milestone: v2.1 Production Deployment & Verification
-Phase: 20 of 21 (Core Extraction Verification) - COMPLETE
-Plan: 3 of 3 complete (Phase 20 COMPLETE)
+Phase: 20 of 21 (Core Extraction Verification) - Plan 4 COMPLETE
+Plan: 4 of 4 complete (Phase 20 COMPLETE)
 Status: In progress - ready for Phase 21
-Last activity: 2026-01-26 - Completed 20-03-PLAN.md (Extraction Results Verification)
+Last activity: 2026-01-26 - Completed 20-04-PLAN.md (GPU OCR Integration Wiring)
 
 Progress: [####################] 100% (v1.0 + v2.0) | v2.1: [##################--] 90% (Phases 19-20 complete, Phase 21 remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 71 (v1.0: 36, v2.0: 28, v2.1: 7)
+- Total plans completed: 72 (v1.0: 36, v2.0: 28, v2.1: 8)
 - Average duration: 4.5 min
 - Total execution time: ~8 hours
 
@@ -30,7 +30,7 @@ Progress: [####################] 100% (v1.0 + v2.0) | v2.1: [##################-
 |-----------|--------|-------|------------|---------|
 | v1.0 MVP | 1-9 | 36 | ~4 hours | 2026-01-24 |
 | v2.0 LangExtract | 10-18 | 28 | ~2 hours | 2026-01-25 |
-| v2.1 Deployment | 19-21 | 7/10 | ~2 hours | In Progress |
+| v2.1 Deployment | 19-21 | 8/10 | ~2 hours | In Progress |
 
 ## Accumulated Context
 
@@ -51,22 +51,24 @@ Recent decisions affecting v2.1 work:
 - [20-01]: Used postgres user with password auth for database connectivity
 - [20-02]: Pre-download Docling models during Docker build (not at runtime) for Cloud Run reliability
 - [20-02]: Increased Cloud Run memory to 4Gi for Docling processing requirements
-- [20-03]: TEST-05 marked PARTIAL PASS - GPU infrastructure deployed, backend integration deferred to Phase 15
+- [20-03]: TEST-05 marked PARTIAL PASS - GPU infrastructure deployed, backend integration completed in 20-04
 - [20-03]: All core extraction functionality (Docling + LangExtract) verified working in production
+- [20-04]: GPU OCR integration wired - scanned pages now processed via LightOnOCR GPU service
 
 ### Pending Todos
 
 - Execute Phase 21 (Final Verification)
+- Redeploy backend to include GPU OCR integration changes (commits ed59d8cf, fc132cb2)
 
 ### Blockers/Concerns
 
-- GPU OCR integration incomplete (infrastructure deployed, backend integration deferred to Phase 15)
-- This is non-blocking for v2.1 milestone completion
+- GPU OCR integration now complete in code - requires backend redeployment to activate in production
+- Phase 21 will verify end-to-end GPU OCR with production deployment
 
 ## Session Continuity
 
-Last session: 2026-01-26T07:15:00Z
-Stopped at: Completed 20-03-PLAN.md (Extraction Results Verification)
+Last session: 2026-01-26T16:31:00Z
+Stopped at: Completed 20-04-PLAN.md (GPU OCR Integration Wiring)
 Resume file: None
 Next action: Execute Phase 21 (Final Verification)
 
@@ -100,9 +102,9 @@ All Phase 20 verification tests completed:
 | TEST-02 | Upload works | PASS | Verified in 20-02 |
 | TEST-03 | Docling extraction | PASS | Structured borrower data extracted |
 | TEST-04 | LangExtract + offsets | PASS | char_start/char_end present |
-| TEST-05 | GPU OCR | PARTIAL | Infrastructure ready, integration deferred |
+| TEST-05 | GPU OCR | CODE COMPLETE | Backend integration wired in 20-04, deployment pending |
 
-**Phase 20 Overall:** 4/5 PASS, 1/5 PARTIAL PASS
+**Phase 20 Overall:** 4/5 PASS, 1/5 CODE COMPLETE (deployment pending)
 
 **Production fixes applied during Phase 20:**
 - dc6925d0: DocumentStatus enum mapping
@@ -111,5 +113,7 @@ All Phase 20 verification tests completed:
 - 088b1d24: Error logging + memory increase
 - d5f5a2f4: Partial borrower persistence
 - 404cc975: Pre-download Docling models
+- ed59d8cf: GPU OCR integration wiring
+- fc132cb2: GPU OCR integration tests
 
 Ready for final verification in Phase 21.
