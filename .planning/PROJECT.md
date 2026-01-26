@@ -2,35 +2,39 @@
 
 ## What This Is
 
-A production-grade AI-powered system that extracts structured borrower information from unstructured loan documents. Processes PDF, DOCX, and image files using Docling for document understanding and Gemini 3.0 for intelligent data extraction. Stores structured data in PostgreSQL, serves via FastAPI REST API, and presents through a modern Next.js frontend. Fully deployed on Google Cloud Platform with Infrastructure as Code.
+A production-deployed AI-powered system that extracts structured borrower information from unstructured loan documents. Processes PDF, DOCX, and image files using dual extraction pipelines: Docling (page-level attribution) and LangExtract (character-level precision with Gemini 3.0). LightOnOCR GPU service handles scanned documents with scale-to-zero cost optimization. Stores structured data in PostgreSQL, serves via FastAPI REST API, and presents through a modern Next.js frontend. Fully deployed on Google Cloud Platform with CloudBuild CI/CD automation.
 
-Built as a portfolio project to demonstrate full-stack engineering capabilities, test-driven development practices, parallel execution optimization, and cloud-native architecture.
+Built as a portfolio project to demonstrate full-stack engineering capabilities, test-driven development practices, cloud-native architecture, and production deployment proficiency.
 
 ## Core Value
 
 **Accurate extraction of borrower data with complete traceability.** Every extracted field (PII, income history, account/loan numbers) must include source attribution showing which document and page it came from, with confidence scoring to flag data needing manual review.
 
-## Current State (v2.0 Shipped)
+## Current State (v2.1 Shipped)
 
-**Latest Version:** v2.0 LangExtract & CloudBuild (shipped 2026-01-25)
+**Latest Version:** v2.1 Production Deployment & Verification (shipped 2026-01-26)
 
 **System Capabilities:**
 - Dual extraction pipelines: Docling (fast, page-level attribution) and LangExtract (precise, character-level attribution)
 - LightOnOCR GPU service for high-quality OCR of scanned documents (scale-to-zero enabled)
 - API-based extraction method selection with backward-compatible defaults
 - CloudBuild CI/CD with GitHub triggers replacing Terraform for application deployments
+- Production deployment on GCP with all services running and verified
 - 86.98% test coverage, mypy strict compliance, 490 passing tests
 
-## Current Milestone: v2.1 Production Deployment & Verification
+**Production URLs:**
+- Backend: https://loan-backend-prod-fjz2snvxjq-uc.a.run.app
+- Frontend: https://loan-frontend-prod-fjz2snvxjq-uc.a.run.app
+- GPU OCR: https://lightonocr-gpu-fjz2snvxjq-uc.a.run.app
 
-**Goal:** Deploy all services to GCP production and verify functionality through comprehensive Chrome-based testing.
+## Next Milestone Goals
 
-**Target features:**
-- Production deployment of all services (backend, frontend, GPU OCR) to GCP
-- Chrome-based end-to-end verification of upload and extraction flows
-- Testing of both extraction methods (Docling and LangExtract) in production
-- Verification of GPU OCR service with scanned documents
-- Validation of source attribution UI features
+**Potential areas for improvement:**
+- Custom domain and SSL certificates for production URLs
+- Advanced monitoring and alerting (beyond Cloud Logging)
+- Load testing and performance optimization
+- Multi-region deployment for higher availability
+- Additional extraction features or data quality improvements
 
 ## Requirements
 
@@ -59,12 +63,15 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 
 **Total v2.0:** 72/72 requirements (100%)
 
+#### v2.1 Requirements (Shipped 2026-01-26)
+- ✓ Production Deployment (6 requirements: DEPLOY-01 through DEPLOY-06) — v2.1
+- ✓ Chrome-Based Verification (9 requirements: TEST-01 through TEST-09) — v2.1
+
+**Total v2.1:** 15/15 requirements (100%)
+
 ### Active
 
-#### v2.1 Requirements (In Progress)
-- Production deployment to GCP
-- Chrome-based verification testing
-- End-to-end flow validation
+(No active requirements - ready for next milestone)
 
 ### Out of Scope
 
@@ -79,6 +86,16 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 - **Webhook notifications** — Polling-based status checks sufficient
 
 ## Context
+
+**v2.1 Shipped (2026-01-26):**
+- Production deployment to GCP (memorygraph-prod project) with all services running
+- Complete infrastructure: VPC, service account, Artifact Registry, Cloud SQL, secrets
+- Database configured: loan_extraction database with schema migrations
+- GPU OCR integration wired: scanned pages processed via LightOnOCR service
+- Character-level source attribution UI: char_start/char_end fields exposed with badge indicator
+- All 15 v2.1 requirements satisfied (100%: 6 deployment + 9 verification)
+- 3 phases (11 plans) executed in 1.5 days (2026-01-25 → 2026-01-26)
+- ~50 commits including production fixes and feature additions
 
 **v2.0 Shipped (2026-01-25):**
 - Dual extraction pipelines (Docling + LangExtract) with API method selection
@@ -142,6 +159,11 @@ Built as a portfolio project to demonstrate full-stack engineering capabilities,
 | LangExtract for character-level attribution (v2.0) | Provides precise source grounding with char_start/char_end offsets vs page-level attribution. | ✓ Good — Few-shot examples enable schema customization; offset translation handles Docling markdown alignment; fallback to Docling on errors |
 | LightOnOCR as dedicated GPU service (v2.0) | Cloud Run with L4 GPU, scale-to-zero, circuit breaker fallback to Docling OCR. | ✓ Good — $0 baseline cost vs $485/month always-on; vLLM batching improves throughput; 120s timeout handles cold starts |
 | CloudBuild replaces Terraform (v2.0) | Application deployments via CloudBuild + GitHub triggers, infrastructure via gcloud CLI scripts. | ✓ Good — Separation of concerns (infra vs apps); GitHub integration for CI/CD; idempotent gcloud scripts; Terraform state archived for recovery |
+| Production deployment to memorygraph-prod (v2.1) | Used existing GCP project with loan-specific infrastructure (loan-repo, loan-backend-prod, loan-frontend-prod). | ✓ Good — Leveraged existing project infrastructure; isolated resources with loan-specific naming; complete VPC and service account setup |
+| New loan_extraction database (v2.1) | Created dedicated database instead of reusing memorygraph_auth database. | ✓ Good — Clean schema separation; isolated from other applications; clear ownership and migration path |
+| Pre-download Docling models in Docker build (v2.1) | Download models during build phase, not at Cloud Run startup. | ✓ Good — Eliminates runtime download failures; faster container startup; more reliable production deployments |
+| GPU OCR integration wiring (v2.1) | Wired LightOnOCR client in ocr_router.py with _merge_gpu_ocr_results() for hybrid document support. | ✓ Good — Closed verification gap; scanned pages now processed via GPU service; proper text merging with native pages |
+| Semantic badge color variants (v2.1) | Added success/warning badge variants instead of using monochrome theme colors. | ✓ Good — Visual differentiation of confidence scores; green/yellow/red semantic meaning; improved UX clarity |
 
 ---
-*Last updated: 2026-01-25 after v2.1 milestone initialization*
+*Last updated: 2026-01-26 after v2.1 milestone completion*

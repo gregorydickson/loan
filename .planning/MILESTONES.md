@@ -1,5 +1,33 @@
 # Project Milestones: Loan Document Data Extraction System
 
+## v2.1 Production Deployment & Verification (Shipped: 2026-01-26)
+
+**Delivered:** All services deployed to GCP production with comprehensive Chrome-based verification of extraction flows and UI features
+
+**Phases completed:** 19-21 (11 plans total)
+
+**Key accomplishments:**
+
+- Production Deployment - Backend, frontend, and GPU OCR services deployed to Cloud Run with complete infrastructure (VPC, service account, Artifact Registry, Cloud SQL connection)
+- Database & Secrets Configuration - Created loan_extraction database with schema migrations, configured production secrets (database-url, gemini-api-key)
+- End-to-End Extraction Verification - Verified both Docling (page-level) and LangExtract (character-level) extraction methods working correctly in production
+- GPU OCR Integration Wired - Scanned documents now processed via LightOnOCR GPU service with proper text merging and scale-to-zero cost optimization
+- Character-Level Source Attribution - Exposed char_start/char_end offsets in API responses and added "Exact Match" badge UI indicator for LangExtract results
+- Semantic UI Improvements - Implemented success/warning/destructive badge color variants for visual confidence score differentiation
+
+**Stats:**
+
+- 11 plans across 3 phases
+- 15 requirements satisfied (100% coverage: 6 deployment + 9 verification)
+- ~50 commits with production fixes and feature additions
+- 1.5 days from Phase 19 start to Phase 21 complete (2026-01-25 → 2026-01-26)
+
+**Git range:** `docs(19)` → `docs(21)`
+
+**What's next:** Plan next milestone features or improvements based on production feedback
+
+---
+
 ## v2.0 LangExtract & CloudBuild (Shipped: 2026-01-25)
 
 **Delivered:** LangExtract character-level source grounding, LightOnOCR GPU service with scale-to-zero, and complete CloudBuild CI/CD migration
