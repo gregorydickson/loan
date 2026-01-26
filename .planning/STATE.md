@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-25)
 
 **Core value:** Accurate extraction of borrower data with complete traceability - every extracted field must include source attribution showing which document and page it came from.
-**Current focus:** v2.1 Production Deployment & Verification - Phase 20 plans 1-4 COMPLETE, ready for Phase 21
+**Current focus:** v2.1 Production Deployment & Verification - Phase 21 Plan 01 COMPLETE
 
 ## Current Position
 
 Milestone: v2.1 Production Deployment & Verification
-Phase: 20 of 21 (Core Extraction Verification) - Plan 4 COMPLETE
-Plan: 4 of 4 complete (Phase 20 COMPLETE)
-Status: In progress - ready for Phase 21
-Last activity: 2026-01-26 - Completed 20-04-PLAN.md (GPU OCR Integration Wiring)
+Phase: 21 of 21 (UI Feature Verification)
+Plan: 1 of 2 complete
+Status: In progress - ready for Plan 21-02
+Last activity: 2026-01-26 - Completed 21-01-PLAN.md (API and Frontend Offset Fields)
 
-Progress: [####################] 100% (v1.0 + v2.0) | v2.1: [##################--] 90% (Phases 19-20 complete, Phase 21 remaining)
+Progress: [####################] 100% (v1.0 + v2.0) | v2.1: [###################-] 95% (Plan 21-02 remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 72 (v1.0: 36, v2.0: 28, v2.1: 8)
+- Total plans completed: 73 (v1.0: 36, v2.0: 28, v2.1: 9)
 - Average duration: 4.5 min
-- Total execution time: ~8 hours
+- Total execution time: ~8.5 hours
 
 **By Milestone:**
 
@@ -30,7 +30,7 @@ Progress: [####################] 100% (v1.0 + v2.0) | v2.1: [##################-
 |-----------|--------|-------|------------|---------|
 | v1.0 MVP | 1-9 | 36 | ~4 hours | 2026-01-24 |
 | v2.0 LangExtract | 10-18 | 28 | ~2 hours | 2026-01-25 |
-| v2.1 Deployment | 19-21 | 8/10 | ~2 hours | In Progress |
+| v2.1 Deployment | 19-21 | 9/10 | ~2.5 hours | In Progress |
 
 ## Accumulated Context
 
@@ -54,22 +54,22 @@ Recent decisions affecting v2.1 work:
 - [20-03]: TEST-05 marked PARTIAL PASS - GPU infrastructure deployed, backend integration completed in 20-04
 - [20-03]: All core extraction functionality (Docling + LangExtract) verified working in production
 - [20-04]: GPU OCR integration wired - scanned pages now processed via LightOnOCR GPU service
+- [21-01]: Badge indicator vs text highlighting - chose badge for simplicity (char offsets are document-level, not snippet-level)
 
 ### Pending Todos
 
-- Execute Phase 21 (Final Verification)
-- Redeploy backend to include GPU OCR integration changes (commits ed59d8cf, fc132cb2) - can be done in Phase 21
+- Execute Plan 21-02 (UI Feature Verification - manual browser testing)
 
 ### Blockers/Concerns
 
-None - Phase 20 complete with all 5 requirements verified in code
+None - Phase 21 Plan 01 complete, API and frontend deployed with char offset support
 
 ## Session Continuity
 
-Last session: 2026-01-26T16:31:00Z
-Stopped at: Completed 20-04-PLAN.md (GPU OCR Integration Wiring)
+Last session: 2026-01-26T17:55:36Z
+Stopped at: Completed 21-01-PLAN.md (API and Frontend Offset Fields)
 Resume file: None
-Next action: Execute Phase 21 (Final Verification)
+Next action: Execute Plan 21-02 (UI Feature Verification)
 
 ## Production Service URLs
 
@@ -90,6 +90,21 @@ Scaling: min=0 (scale-to-zero), max=3
 Model: LightOnOCR-2-1B via vLLM
 Health: /health returns 200
 ```
+
+## Phase 21 Progress
+
+| Plan | Name | Status | Notes |
+|------|------|--------|-------|
+| 21-01 | API and Frontend Offset Fields | COMPLETE | char_start/char_end exposed in API, badge indicator in UI |
+| 21-02 | UI Feature Verification | PENDING | Manual browser testing for TEST-06 through TEST-09 |
+
+**Plan 21-01 Commits:**
+- 0c9fbc30: feat(21-01): expose char_start/char_end in API response
+- 3fd06d4d: feat(21-01): add char_start/char_end to frontend and display badge
+
+**Deployments (21-01):**
+- Backend: Build 793308eb (SUCCESS, 29 min)
+- Frontend: Build 18427397 (SUCCESS, 5 min)
 
 ## Phase 20 Completion Summary
 
@@ -115,4 +130,4 @@ All Phase 20 verification tests completed:
 - ed59d8cf: GPU OCR integration wiring
 - fc132cb2: GPU OCR integration tests
 
-Ready for final verification in Phase 21.
+Ready for final UI verification in Plan 21-02.
