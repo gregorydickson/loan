@@ -145,6 +145,37 @@ class FieldValidator:
             check_ssn_format,
         )
 
+    @staticmethod
+    def normalize_ssn(ssn: str | None) -> str | None:
+        """Normalize SSN to XXX-XX-XXXX format.
+
+        Adds dashes if they're missing. This ensures compatibility with
+        the BorrowerRecord Pydantic model which requires dashes.
+
+        Args:
+            ssn: SSN string with or without dashes, or None
+
+        Returns:
+            SSN with dashes in XXX-XX-XXXX format, or None if input was None
+
+        Examples:
+            "123456789" -> "123-45-6789"
+            "123-45-6789" -> "123-45-6789" (unchanged)
+            None -> None
+        """
+        if ssn is None:
+            return None
+
+        # Remove all dashes
+        digits_only = ssn.replace("-", "")
+
+        # Add dashes in the correct positions
+        if len(digits_only) == 9:
+            return f"{digits_only[:3]}-{digits_only[3:5]}-{digits_only[5:]}"
+
+        # If not 9 digits, return as-is (validation will catch this)
+        return ssn
+
     def validate_phone(self, phone: str | None) -> ValidationResult:
         """Validate US phone number format.
 

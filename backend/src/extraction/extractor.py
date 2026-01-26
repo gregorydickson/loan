@@ -337,10 +337,14 @@ class BorrowerExtractor:
             for income in extracted.income_history
         ]
 
+        # Normalize SSN to include dashes (XXX-XX-XXXX format)
+        # This ensures compatibility with BorrowerRecord Pydantic model
+        normalized_ssn = self.validator.normalize_ssn(extracted.ssn)
+
         return BorrowerRecord(
             id=uuid4(),
             name=extracted.name,
-            ssn=extracted.ssn,
+            ssn=normalized_ssn,
             phone=extracted.phone,
             email=extracted.email,
             address=address,

@@ -21,6 +21,7 @@ from src.api.dependencies import (
     GCSClientDep,
     OCRRouterDep,
 )
+from src.ingestion.docling_processor import DocumentProcessingError
 from src.storage.models import DocumentStatus
 
 logger = logging.getLogger(__name__)
@@ -145,8 +146,6 @@ async def process_document(
         # Extract path from gs:// URI
         gcs_path = document.gcs_uri.replace(f"gs://{gcs_client.bucket_name}/", "")
         content = gcs_client.download(gcs_path)
-
-        from src.ingestion.docling_processor import DocumentProcessingError
 
         # Step 1: OCR routing based on payload.ocr mode (DUAL-04)
         ocr_processed = False
