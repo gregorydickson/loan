@@ -136,7 +136,7 @@ class TestOCRRouter:
     async def test_auto_mode_scanned_pdf_with_healthy_gpu(
         self, router, mock_detector, mock_gpu_client
     ):
-        """mode='auto' uses OCR for scanned PDFs when GPU is healthy."""
+        """mode='auto' uses GPU OCR for scanned PDFs when GPU is healthy."""
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0, 1],
@@ -144,16 +144,14 @@ class TestOCRRouter:
             scanned_ratio=1.0,
         )
         mock_gpu_client.health_check.return_value = True
+        mock_gpu_client.extract_text.return_value = "GPU OCR text"
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="OCR text")
-            MockProcessor.return_value = mock_instance
-
+        with patch.object(router, '_page_to_png', return_value=b'fake png'):
             result = await router.process(b"fake pdf", "scanned.pdf", mode="auto")
 
-            assert result.ocr_method == "docling"  # Using Docling's OCR for now
-            assert result.pages_ocrd == [0, 1]
+        assert result.ocr_method == "gpu"  # GPU OCR is now wired
+        assert result.pages_ocrd == [0, 1]
+        assert mock_gpu_client.extract_text.call_count == 2
 
     @pytest.mark.asyncio
     async def test_auto_mode_fallback_on_gpu_unhealthy(
@@ -183,24 +181,22 @@ class TestOCRRouter:
 
     @pytest.mark.asyncio
     async def test_force_mode_always_ocr(self, router, mock_gpu_client):
-        """mode='force' always runs OCR."""
+        """mode='force' always runs OCR via GPU when healthy."""
         mock_gpu_client.health_check.return_value = True
+        mock_gpu_client.extract_text.return_value = "Force GPU OCR text"
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Force OCR text")
-            MockProcessor.return_value = mock_instance
+        with patch("src.ocr.ocr_router.pdfium.PdfDocument") as MockPdf:
+            mock_pdf = MagicMock()
+            mock_pdf.__len__ = MagicMock(return_value=2)
+            MockPdf.return_value = mock_pdf
 
-            with patch("src.ocr.ocr_router.pdfium.PdfDocument") as MockPdf:
-                mock_pdf = MagicMock()
-                mock_pdf.__len__ = MagicMock(return_value=2)
-                MockPdf.return_value = mock_pdf
-
+            with patch.object(router, '_page_to_png', return_value=b'fake png'):
                 result = await router.process(b"fake pdf", "force.pdf", mode="force")
 
-            # Should have OCR'd both pages
-            assert result.ocr_method == "docling"
-            assert len(result.pages_ocrd) == 2
+        # Should have OCR'd both pages via GPU
+        assert result.ocr_method == "gpu"
+        assert len(result.pages_ocrd) == 2
+        assert mock_gpu_client.extract_text.call_count == 2
 
     @pytest.mark.asyncio
     async def test_fallback_on_light_onocr_error(
@@ -248,6 +244,71 @@ class TestOCRRouter:
             result = await router.process(b"fake pdf", "breaker.pdf", mode="auto")
 
             assert result.ocr_method == "docling"
+
+    @pytest.mark.asyncio
+    async def test_scanned_pdf_uses_gpu_ocr(
+        self, router, mock_detector, mock_gpu_client, mock_docling
+    ):
+        """Test that scanned PDF pages are sent to GPU OCR service.
+
+        This test verifies GPU OCR is actually invoked (not just health checked)
+        when processing scanned documents. Uses a mock setup with 2 scanned pages.
+        """
+        # Arrange
+        mock_detector.detect.return_value = DetectionResult(
+            needs_ocr=True,
+            scanned_pages=[0, 1],  # 2 scanned pages for this test
+            total_pages=2,
+            scanned_ratio=1.0,
+        )
+        mock_gpu_client.health_check.return_value = True
+        mock_gpu_client.extract_text.return_value = "OCR extracted text from GPU"
+
+        # Mock _page_to_png to avoid actual PDF processing
+        with patch.object(router, '_page_to_png', return_value=b'fake png bytes'):
+            result = await router.process(b"fake pdf", "scanned.pdf", mode="auto")
+
+        # Assert
+        assert result.ocr_method == "gpu"
+        assert result.pages_ocrd == [0, 1]
+        # Verify GPU extract_text was actually called (not just health_check)
+        assert mock_gpu_client.extract_text.called
+        # Call count matches number of scanned pages in this test setup
+        assert mock_gpu_client.extract_text.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_gpu_unavailable_falls_back_to_docling(
+        self, router, mock_detector, mock_gpu_client
+    ):
+        """Test fallback to Docling when GPU service is unhealthy.
+
+        This explicitly tests the fallback path when GPU health check fails,
+        ensuring Docling OCR is used as a backup.
+        """
+        mock_detector.detect.return_value = DetectionResult(
+            needs_ocr=True,
+            scanned_pages=[0],
+            total_pages=1,
+            scanned_ratio=1.0,
+        )
+        # GPU is unhealthy
+        mock_gpu_client.health_check.return_value = False
+
+        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
+            mock_instance = MagicMock()
+            mock_instance.process_bytes.return_value = MagicMock(text="Docling fallback text")
+            MockProcessor.return_value = mock_instance
+
+            result = await router.process(b"fake pdf", "scanned.pdf", mode="auto")
+
+            # Should fall back to Docling
+            assert result.ocr_method == "docling"
+            # GPU extract_text should NOT have been called
+            assert not mock_gpu_client.extract_text.called
+            # Docling OCR should have been invoked
+            MockProcessor.assert_called()
+            call_kwargs = MockProcessor.call_args[1]
+            assert call_kwargs["enable_ocr"] is True
 
     def test_circuit_breaker_state(self, router):
         """get_circuit_breaker_state returns current state."""
