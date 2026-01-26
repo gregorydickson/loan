@@ -47,14 +47,21 @@ app = FastAPI(
 )
 
 # CORS middleware - MUST be added first, before exception handlers and routers
+allowed_origins = [
+    "http://localhost:3000",  # Next.js dev
+    "http://localhost:5173",  # Vite dev
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+
+# Add production frontend URL if provided
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Next.js dev
-        "http://localhost:5173",  # Vite dev
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],

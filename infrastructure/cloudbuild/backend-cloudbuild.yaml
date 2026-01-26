@@ -62,9 +62,12 @@ steps:
       - '10'
       - '--set-secrets'
       - 'DATABASE_URL=database-url:latest,GEMINI_API_KEY=gemini-api-key:latest'
+      - '--set-env-vars'
+      - 'FRONTEND_URL=${_FRONTEND_URL}'
 
 substitutions:
   _REGION: us-central1
+  _FRONTEND_URL: ''  # Set via trigger or at build time
 
 images:
   - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
