@@ -10,10 +10,10 @@ This module defines the database models for:
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import Enum as PyEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -24,7 +24,7 @@ class Base(DeclarativeBase):
     pass
 
 
-class DocumentStatus(str, Enum):
+class DocumentStatus(str, PyEnum):
     """Document processing status."""
 
     PENDING = "pending"
@@ -49,7 +49,14 @@ class Document(Base):
     file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     gcs_uri: Mapped[str | None] = mapped_column(String(500), nullable=True)
     status: Mapped[DocumentStatus] = mapped_column(
-        default=DocumentStatus.PENDING, nullable=False
+        SAEnum(
+            DocumentStatus,
+            name="documentstatus",
+            create_type=False,  # Already created by migration
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        default=DocumentStatus.PENDING,
+        nullable=False,
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
