@@ -1,6 +1,8 @@
 # Backend CloudBuild Configuration
 # Builds and deploys the FastAPI backend service to Cloud Run
 #
+# Uses Kaniko for layer caching to speed up builds (cache TTL: 168h/7 days)
+#
 # Usage:
 #   Manual: gcloud builds submit --config=infrastructure/cloudbuild/backend-cloudbuild.yaml .
 #   Trigger: Set up GitHub trigger pointing to this file
@@ -12,24 +14,17 @@
 #   - VPC and subnet configured for Cloud SQL access
 
 steps:
-  # Build the backend Docker image
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'build-backend'
+  # Build and push backend Docker image with Kaniko (with layer caching)
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    id: 'build-push-backend'
     args:
-      - 'build'
-      - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
-      - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:latest'
-      - './backend'
-
-  # Push to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-backend'
-    args:
-      - 'push'
-      - '--all-tags'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend'
+      - --dockerfile=backend/Dockerfile
+      - --context=dir:///workspace
+      - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}
+      - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:latest
+      - --cache=true
+      - --cache-ttl=168h
+      - --compressed-caching=false
 
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
