@@ -42,15 +42,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class DuplicateDocumentError(Exception):
-    """Raised when a duplicate document is detected via file hash."""
-
-    def __init__(self, existing_id: UUID, file_hash: str):
-        self.existing_id = existing_id
-        self.file_hash = file_hash
-        super().__init__(f"Duplicate document exists with ID: {existing_id}")
-
-
 class DocumentUploadError(Exception):
     """Raised when document upload fails."""
 

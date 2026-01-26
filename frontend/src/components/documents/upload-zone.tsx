@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, CheckCircle, XCircle, Info, AlertCircle } from "lucide-react";
+import { Upload, CheckCircle, XCircle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadDocument } from "@/hooks/use-documents";
 import {
@@ -12,13 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type {
-  ExtractionMethod,
-  OCRMode,
-  DuplicateDocumentError,
-} from "@/lib/api/types";
-import { ApiError } from "@/lib/api/client";
-import Link from "next/link";
+import type { ExtractionMethod, OCRMode } from "@/lib/api/types";
 
 /**
  * Drag-and-drop file upload component with extraction method and OCR selection.
@@ -30,8 +24,6 @@ export function UploadZone() {
   const { mutate, isPending, isSuccess, error, data, reset } =
     useUploadDocument();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [duplicateError, setDuplicateError] =
-    useState<DuplicateDocumentError | null>(null);
   const [method, setMethod] = useState<ExtractionMethod>("docling");
   const [ocr, setOcr] = useState<OCRMode>("auto");
 
@@ -39,7 +31,6 @@ export function UploadZone() {
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         setSuccessMessage(null);
-        setDuplicateError(null);
         mutate(
           { file: acceptedFiles[0], method, ocr },
           {
@@ -47,13 +38,6 @@ export function UploadZone() {
               setSuccessMessage(
                 `Uploaded: ${response.filename} (ID: ${response.id.slice(0, 8)}...)`
               );
-            },
-            onError: (error) => {
-              // Check if this is a duplicate error (409)
-              if (error instanceof ApiError && error.statusCode === 409) {
-                const detail = error.detail as DuplicateDocumentError;
-                setDuplicateError(detail);
-              }
             },
           }
         );
@@ -78,7 +62,6 @@ export function UploadZone() {
   const handleReset = () => {
     reset();
     setSuccessMessage(null);
-    setDuplicateError(null);
   };
 
   return (
@@ -188,33 +171,8 @@ export function UploadZone() {
         </div>
       )}
 
-      {/* Duplicate file warning */}
-      {duplicateError && (
-        <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 rounded-md p-3">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <div className="flex-1">
-            <p className="font-medium">This file already exists</p>
-            <p className="text-xs mt-0.5">
-              A document with the same content has already been uploaded.{" "}
-              <Link
-                href={`/documents/${duplicateError.existing_id}`}
-                className="underline hover:text-amber-700 dark:hover:text-amber-300"
-              >
-                View existing document
-              </Link>
-            </p>
-          </div>
-          <button
-            onClick={handleReset}
-            className="text-muted-foreground hover:text-foreground underline text-xs shrink-0"
-          >
-            Upload another
-          </button>
-        </div>
-      )}
-
       {/* Error message */}
-      {error && !duplicateError && (
+      {error && (
         <div className="flex items-center gap-2 text-sm text-destructive">
           <XCircle className="h-4 w-4" />
           <span>{error.message}</span>

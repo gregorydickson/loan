@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel, Field
 
 from src.api.dependencies import DocumentRepoDep, DocumentServiceDep
-from src.ingestion.document_service import DocumentUploadError, DuplicateDocumentError
+from src.ingestion.document_service import DocumentUploadError
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
