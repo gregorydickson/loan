@@ -66,9 +66,7 @@ substitutions:
   _LIGHTONOCR_SERVICE_URL: ''  # LightOnOCR GPU service URL (https://lightonocr-gpu-xxx.run.app)
   _GCS_BUCKET: 'stackpoint-loan-documents'  # GCS bucket for document storage
 
-images:
-  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:${SHORT_SHA}'
-  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/loan-repo/backend:latest'
+# Note: images section removed - Kaniko handles pushing directly via --destination flags
 
 options:
   logging: CLOUD_LOGGING_ONLY
