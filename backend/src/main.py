@@ -4,6 +4,7 @@ Provides the main application instance with lifespan management
 for database connections and other resources.
 """
 
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
