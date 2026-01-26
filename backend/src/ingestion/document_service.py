@@ -430,10 +430,20 @@ class DocumentService:
             if refreshed is not None:
                 document = refreshed
         except DocumentProcessingError as e:
+            # Include both message and details for debugging
+            error_msg = f"Document processing failed: {e.message}"
+            if e.details:
+                error_msg += f" ({e.details})"
+            logger.error(
+                "Document processing failed for %s: %s (details: %s)",
+                document_id,
+                e.message,
+                e.details,
+            )
             await self.update_processing_result(
                 document_id,
                 success=False,
-                error_message=f"Document processing failed: {e.message}",
+                error_message=error_msg,
             )
             # Refresh document to get updated status
             refreshed = await self.repository.get_by_id(document_id)
