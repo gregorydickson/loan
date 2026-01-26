@@ -9,12 +9,12 @@ Requirements for production deployment and Chrome-based verification testing.
 
 ### Deployment
 
-- [ ] **DEPLOY-01**: Check for existing Cloud Run deployments in production project
-- [ ] **DEPLOY-02**: Deploy backend API to Cloud Run in production (if not already deployed)
-- [ ] **DEPLOY-03**: Deploy frontend to Cloud Run in production (if not already deployed)
-- [ ] **DEPLOY-04**: Deploy GPU OCR service to Cloud Run in production (if not already deployed)
-- [ ] **DEPLOY-05**: Configure production environment variables and secrets
-- [ ] **DEPLOY-06**: Verify all services are accessible and return healthy status
+- [x] **DEPLOY-01**: Check for existing Cloud Run deployments in production project
+- [x] **DEPLOY-02**: Deploy backend API to Cloud Run in production (if not already deployed)
+- [x] **DEPLOY-03**: Deploy frontend to Cloud Run in production (if not already deployed)
+- [x] **DEPLOY-04**: Deploy GPU OCR service to Cloud Run in production (if not already deployed)
+- [x] **DEPLOY-05**: Configure production environment variables and secrets
+- [x] **DEPLOY-06**: Verify all services are accessible and return healthy status
 
 ### Chrome-Based Verification
 
@@ -70,12 +70,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEPLOY-01 | Phase 19 | Pending |
-| DEPLOY-02 | Phase 19 | Pending |
-| DEPLOY-03 | Phase 19 | Pending |
-| DEPLOY-04 | Phase 19 | Pending |
-| DEPLOY-05 | Phase 19 | Pending |
-| DEPLOY-06 | Phase 19 | Pending |
+| DEPLOY-01 | Phase 19 | Complete |
+| DEPLOY-02 | Phase 19 | Complete |
+| DEPLOY-03 | Phase 19 | Complete |
+| DEPLOY-04 | Phase 19 | Complete |
+| DEPLOY-05 | Phase 19 | Complete |
+| DEPLOY-06 | Phase 19 | Complete |
 | TEST-01 | Phase 20 | Pending |
 | TEST-02 | Phase 20 | Pending |
 | TEST-03 | Phase 20 | Pending |
