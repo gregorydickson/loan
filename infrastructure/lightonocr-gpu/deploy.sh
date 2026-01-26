@@ -81,7 +81,7 @@ gcloud run deploy "$SERVICE_NAME" \
 # Step 3: Grant invoker role to backend service account
 echo ""
 echo "Granting backend service account permission to invoke GPU service..."
-BACKEND_SA="backend-service@${PROJECT_ID}.iam.gserviceaccount.com"
+BACKEND_SA="loan-cloud-run@${PROJECT_ID}.iam.gserviceaccount.com"
 gcloud run services add-iam-policy-binding "$SERVICE_NAME" \
     --member "serviceAccount:${BACKEND_SA}" \
     --role roles/run.invoker \
