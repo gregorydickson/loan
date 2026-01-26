@@ -74,8 +74,11 @@ def get_docling_processor() -> DoclingProcessor:
     global _docling_processor
 
     if _docling_processor is None:
+        # OCR disabled: RapidOCR model downloads fail in Cloud Run
+        # For scanned documents, configure LIGHTONOCR_SERVICE_URL to use GPU OCR
+        # Text-based PDFs (W2s, paystubs) work fine without OCR
         _docling_processor = DoclingProcessor(
-            enable_ocr=True,
+            enable_ocr=False,
             enable_tables=True,
             max_pages=100,
         )
