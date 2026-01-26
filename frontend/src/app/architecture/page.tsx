@@ -28,39 +28,45 @@ const subPages = [
 ];
 
 const systemArchitectureChart = `
-graph TB
-    subgraph Frontend["Frontend (Next.js)"]
-        UI[Dashboard UI]
-        Upload[Document Upload]
-        Browse[Borrower Browser]
+flowchart LR
+    subgraph Upload["📤 Upload"]
+        A[Document Upload]
     end
 
-    subgraph Backend["Backend (FastAPI)"]
-        API[REST API]
-        Service[Document Service]
-        Extraction[Extraction Engine]
+    subgraph OCR["🖼️ OCR Layer"]
+        B{Scanned?}
+        C[LightOnOCR GPU]
+        D[Docling OCR]
     end
 
-    subgraph Processing["Document Processing"]
-        Docling[Docling Parser]
-        Gemini[Gemini LLM]
-        Validator[Data Validator]
+    subgraph Extract["🤖 Extraction"]
+        E{Method}
+        F[Docling + Gemini]
+        G[LangExtract + Gemini]
     end
 
-    subgraph Storage["Data Storage"]
-        PostgreSQL[(PostgreSQL)]
-        GCS[Cloud Storage]
+    subgraph Store["💾 Storage"]
+        H[Validation]
+        I[(PostgreSQL)]
     end
 
-    UI --> API
-    Upload --> API
-    Browse --> API
-    API --> Service
-    Service --> Docling
-    Service --> GCS
-    Extraction --> Gemini
-    Extraction --> Validator
-    API --> PostgreSQL
+    subgraph Serve["🌐 API"]
+        J[FastAPI REST]
+        K[Next.js Dashboard]
+    end
+
+    A --> B
+    B -->|Yes| C
+    B -->|No| E
+    C --> E
+    D -.->|Fallback| E
+    E -->|docling| F
+    E -->|langextract| G
+    F --> H
+    G --> H
+    H --> I
+    I --> J
+    J --> K
 `;
 
 export default function ArchitecturePage() {
@@ -109,9 +115,11 @@ export default function ArchitecturePage() {
       <div className="rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-xl font-semibold">System Overview</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          The system consists of a Next.js frontend, FastAPI backend, document
-          processing pipeline with Docling and Gemini LLM, and PostgreSQL for
-          data storage with Cloud Storage for document files.
+          The system features a dual extraction pipeline with intelligent OCR
+          routing. Documents flow through upload, OCR detection (LightOnOCR GPU
+          with Docling fallback), extraction (Docling or LangExtract with
+          Gemini), validation, and storage in PostgreSQL. The Next.js dashboard
+          communicates via FastAPI REST endpoints.
         </p>
         <MermaidDiagram
           chart={systemArchitectureChart}
@@ -124,28 +132,29 @@ export default function ArchitecturePage() {
         <div className="rounded-lg border p-4">
           <h3 className="font-semibold">Frontend</h3>
           <p className="text-sm text-muted-foreground">
-            Next.js 16 with React 19, TanStack Query for data fetching, and
+            Next.js 14 with App Router, TanStack Query for data fetching, and
             shadcn/ui components
           </p>
         </div>
         <div className="rounded-lg border p-4">
           <h3 className="font-semibold">Backend</h3>
           <p className="text-sm text-muted-foreground">
-            FastAPI with async support, SQLAlchemy ORM, and Pydantic validation
+            FastAPI with async support, SQLAlchemy ORM, and Pydantic validation.
+            Dual extraction pipelines with auto-selection
           </p>
         </div>
         <div className="rounded-lg border p-4">
-          <h3 className="font-semibold">Processing</h3>
+          <h3 className="font-semibold">OCR &amp; Processing</h3>
           <p className="text-sm text-muted-foreground">
-            Docling for PDF/DOCX parsing, Gemini 3.0 for intelligent data
-            extraction
+            LightOnOCR GPU service with Docling fallback. Docling or LangExtract
+            extraction with Gemini 3.0 Flash/Pro
           </p>
         </div>
         <div className="rounded-lg border p-4">
           <h3 className="font-semibold">Storage</h3>
           <p className="text-sm text-muted-foreground">
-            PostgreSQL for relational data, Google Cloud Storage for document
-            files
+            PostgreSQL 16 for relational data with character-level source
+            attribution. Cloud Storage for documents
           </p>
         </div>
       </div>
