@@ -183,7 +183,8 @@ class LightOnOCRClient:
         """
         try:
             token = self._get_id_token()
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            # 30s timeout to allow GPU service to respond during warmup
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
                     f"{self.service_url}/v1/models",
                     headers={"Authorization": f"Bearer {token}"},
