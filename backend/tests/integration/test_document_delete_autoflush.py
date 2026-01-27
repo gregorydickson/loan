@@ -50,7 +50,8 @@ async def test_reupload_duplicate_with_borrowers_no_autoflush_error(
     # Verify borrowers were created with account numbers
     borrowers_response = await client_with_extraction.get("/api/borrowers/")
     assert borrowers_response.status_code == 200
-    borrowers = borrowers_response.json()
+    borrowers_data = borrowers_response.json()
+    borrowers = borrowers_data.get("borrowers", [])
     assert len(borrowers) >= 1, "Expected at least one borrower from extraction"
 
     # Verify account numbers exist
@@ -91,7 +92,8 @@ async def test_reupload_duplicate_with_borrowers_no_autoflush_error(
     # Borrowers should still exist (re-created from new document)
     borrowers_after = await client_with_extraction.get("/api/borrowers/")
     assert borrowers_after.status_code == 200
-    assert len(borrowers_after.json()) >= 1, "Borrowers should be re-created"
+    borrowers_after_data = borrowers_after.json()
+    assert len(borrowers_after_data.get("borrowers", [])) >= 1, "Borrowers should be re-created"
 
 
 @pytest.mark.asyncio
@@ -121,7 +123,8 @@ async def test_delete_document_with_multiple_borrowers_and_accounts(
     # Verify multiple borrowers were created
     borrowers_response = await client_with_three_borrowers.get("/api/borrowers/")
     assert borrowers_response.status_code == 200
-    borrowers = borrowers_response.json()
+    borrowers_data = borrowers_response.json()
+    borrowers = borrowers_data.get("borrowers", [])
     assert len(borrowers) == 3, "Expected 3 borrowers"
 
     # Each borrower should have account numbers
@@ -141,7 +144,8 @@ async def test_delete_document_with_multiple_borrowers_and_accounts(
     # All borrowers should be deleted
     borrowers_after = await client_with_three_borrowers.get("/api/borrowers/")
     assert borrowers_after.status_code == 200
-    assert len(borrowers_after.json()) == 0, "All borrowers should be deleted"
+    borrowers_after_data = borrowers_after.json()
+    assert len(borrowers_after_data.get("borrowers", [])) == 0, "All borrowers should be deleted"
 
 
 @pytest.mark.asyncio
@@ -202,7 +206,8 @@ async def test_direct_delete_with_borrowers_no_autoflush(
 
     # Verify borrowers exist
     borrowers_before = await client_with_extraction.get("/api/borrowers/")
-    assert len(borrowers_before.json()) >= 1
+    borrowers_before_data = borrowers_before.json()
+    assert len(borrowers_before_data.get("borrowers", [])) >= 1
 
     # Delete document directly
     delete_response = await client_with_extraction.delete(f"/api/documents/{doc_id}")
@@ -215,7 +220,8 @@ async def test_direct_delete_with_borrowers_no_autoflush(
 
     # Borrowers should be deleted (cascade)
     borrowers_after = await client_with_extraction.get("/api/borrowers/")
-    assert len(borrowers_after.json()) == 0
+    borrowers_after_data = borrowers_after.json()
+    assert len(borrowers_after_data.get("borrowers", [])) == 0
 
 
 @pytest.mark.asyncio

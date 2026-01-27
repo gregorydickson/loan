@@ -688,3 +688,19 @@ async def client_with_langextract(
         yield test_client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def mock_extraction_router(mock_borrower_extractor_with_data):
+    """Create mock ExtractionRouter."""
+    router = MagicMock(spec=ExtractionRouter)
+
+    def mock_extract(document, document_id, document_name, method="auto", **kwargs):
+        """Route to docling extractor."""
+        # For simplicity, always use the docling extractor
+        return mock_borrower_extractor_with_data.extract(
+            document, document_id, document_name
+        )
+
+    router.extract = MagicMock(side_effect=mock_extract)
+    return router
