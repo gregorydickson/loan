@@ -149,11 +149,11 @@ class FieldValidator:
     def normalize_ssn(ssn: str | None) -> str | None:
         """Normalize SSN to XXX-XX-XXXX format.
 
-        Adds dashes if they're missing. This ensures compatibility with
-        the BorrowerRecord Pydantic model which requires dashes.
+        Adds dashes if they're missing and strips whitespace. This ensures
+        compatibility with the BorrowerRecord Pydantic model which requires dashes.
 
         Args:
-            ssn: SSN string with or without dashes, or None
+            ssn: SSN string with or without dashes/spaces, or None
 
         Returns:
             SSN with dashes in XXX-XX-XXXX format, or None if input was None
@@ -161,13 +161,14 @@ class FieldValidator:
         Examples:
             "123456789" -> "123-45-6789"
             "123-45-6789" -> "123-45-6789" (unchanged)
+            "123-45- 6789" -> "123-45-6789" (whitespace removed)
             None -> None
         """
         if ssn is None:
             return None
 
-        # Remove all dashes
-        digits_only = ssn.replace("-", "")
+        # Remove all dashes and whitespace
+        digits_only = ssn.replace("-", "").replace(" ", "")
 
         # Add dashes in the correct positions
         if len(digits_only) == 9:
