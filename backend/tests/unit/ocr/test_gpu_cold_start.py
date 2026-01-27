@@ -170,7 +170,12 @@ class TestGPUHealthCheckTimeout:
                 mock_client = AsyncMock()
                 mock_client.__aenter__.return_value = mock_client
                 mock_client.__aexit__.return_value = None
-                mock_client.get.return_value = MagicMock(status_code=200)
+                # Make get() return a proper awaitable response with JSON
+                response = MagicMock(status_code=200)
+                response.json.return_value = {
+                    "data": [{"id": "lightonai/LightOnOCR-2-1B"}]  # MODEL_ID from LightOnOCRClient
+                }
+                mock_client.get = AsyncMock(return_value=response)
                 mock_client_class.return_value = mock_client
 
                 result = await client.health_check()
@@ -209,6 +214,7 @@ class TestCircuitBreakerColdStartIntegration:
         client = MagicMock()
         client.extract_text = AsyncMock(return_value="OCR'd text")
         client.health_check = AsyncMock(return_value=True)
+        client.health_check_with_retry = AsyncMock(return_value=True)
         return client
 
     @pytest.fixture
@@ -247,7 +253,12 @@ class TestCircuitBreakerColdStartIntegration:
     async def test_cold_gpu_triggers_docling_fallback(
         self, router, mock_gpu_client, mock_detector
     ):
-        """When GPU health check fails (cold start), fallback to Docling."""
+        """When GPU health check fails (cold start), raises DocumentProcessingError.
+
+        NOTE: Fallback behavior was removed to keep container size small.
+        """
+        from src.ingestion.docling_processor import DocumentProcessingError
+
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0],
@@ -255,27 +266,24 @@ class TestCircuitBreakerColdStartIntegration:
             scanned_ratio=1.0,
         )
         # Simulate cold GPU not responding to health check
-        mock_gpu_client.health_check.return_value = False
+        mock_gpu_client.health_check_with_retry.return_value = False
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Docling fallback")
-            MockProcessor.return_value = mock_instance
+        # Should raise DocumentProcessingError instead of falling back
+        with pytest.raises(DocumentProcessingError) as exc_info:
+            await router.process(b"fake pdf", "scanned.pdf", mode="auto")
 
-            result = await router.process(b"fake pdf", "scanned.pdf", mode="auto")
-
-            # Should fall back to Docling
-            assert result.ocr_method == "docling"
-            # Docling OCR should be enabled
-            MockProcessor.assert_called()
-            call_kwargs = MockProcessor.call_args[1]
-            assert call_kwargs["enable_ocr"] is True
+        assert "gpu service unavailable" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
     async def test_gpu_timeout_triggers_docling_fallback(
         self, router, mock_gpu_client, mock_detector
     ):
-        """When GPU times out during cold start, fallback to Docling."""
+        """When GPU times out during cold start, raises DocumentProcessingError.
+
+        NOTE: Fallback behavior was removed to keep container size small.
+        """
+        from src.ingestion.docling_processor import DocumentProcessingError
+
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0],
@@ -283,19 +291,15 @@ class TestCircuitBreakerColdStartIntegration:
             scanned_ratio=1.0,
         )
         # Simulate timeout during health check
-        mock_gpu_client.health_check.side_effect = LightOnOCRError(
+        mock_gpu_client.health_check_with_retry.side_effect = LightOnOCRError(
             "Request timed out after 120s"
         )
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Docling fallback")
-            MockProcessor.return_value = mock_instance
+        # Should raise DocumentProcessingError instead of falling back
+        with pytest.raises(DocumentProcessingError) as exc_info:
+            await router.process(b"fake pdf", "timeout.pdf", mode="auto")
 
-            result = await router.process(b"fake pdf", "timeout.pdf", mode="auto")
-
-            # Should fall back to Docling
-            assert result.ocr_method == "docling"
+        assert "gpu service unavailable" in str(exc_info.value).lower()
 
     def test_circuit_breaker_configuration_for_cold_starts(self):
         """Verify breaker config tolerates cold starts (fail_max=3, timeout=60s)."""
@@ -308,7 +312,12 @@ class TestCircuitBreakerColdStartIntegration:
     async def test_circuit_breaker_open_triggers_immediate_fallback(
         self, router, mock_gpu_client, mock_detector
     ):
-        """When circuit breaker is open, immediately fallback without health check."""
+        """When circuit breaker is open, raises DocumentProcessingError.
+
+        NOTE: Fallback behavior was removed to keep container size small.
+        """
+        from src.ingestion.docling_processor import DocumentProcessingError
+
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0],
@@ -317,19 +326,15 @@ class TestCircuitBreakerColdStartIntegration:
         )
         # Circuit breaker is open
         reopen_time = datetime.now(timezone.utc)
-        mock_gpu_client.health_check.side_effect = CircuitBreakerError(
+        mock_gpu_client.health_check_with_retry.side_effect = CircuitBreakerError(
             "Circuit breaker is open", reopen_time
         )
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Docling fallback")
-            MockProcessor.return_value = mock_instance
+        # Should raise DocumentProcessingError instead of falling back
+        with pytest.raises(DocumentProcessingError) as exc_info:
+            await router.process(b"fake pdf", "breaker.pdf", mode="auto")
 
-            result = await router.process(b"fake pdf", "breaker.pdf", mode="auto")
-
-            # Should immediately fall back to Docling
-            assert result.ocr_method == "docling"
+        assert "gpu service unavailable" in str(exc_info.value).lower()
 
     def test_circuit_breaker_state_accessible(self, router):
         """Circuit breaker state is accessible for monitoring."""

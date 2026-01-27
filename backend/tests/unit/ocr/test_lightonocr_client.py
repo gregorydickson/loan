@@ -204,7 +204,12 @@ class TestLightOnOCRClient:
             mock_client = AsyncMock()
             mock_client.__aenter__.return_value = mock_client
             mock_client.__aexit__.return_value = None
-            mock_client.get.return_value = MagicMock(status_code=200)
+            # Make get() return a proper awaitable response with JSON
+            response = MagicMock(status_code=200)
+            response.json.return_value = {
+                "data": [{"id": "lightonai/LightOnOCR-2-1B"}]  # MODEL_ID from LightOnOCRClient
+            }
+            mock_client.get = AsyncMock(return_value=response)
             mock_client_class.return_value = mock_client
 
             result = await client.health_check()

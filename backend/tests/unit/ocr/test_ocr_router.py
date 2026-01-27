@@ -61,6 +61,7 @@ class TestOCRRouter:
         client = MagicMock()
         client.extract_text = AsyncMock(return_value="OCR'd text")
         client.health_check = AsyncMock(return_value=True)
+        client.health_check_with_retry = AsyncMock(return_value=True)
         return client
 
     @pytest.fixture
@@ -157,27 +158,28 @@ class TestOCRRouter:
     async def test_auto_mode_fallback_on_gpu_unhealthy(
         self, router, mock_detector, mock_gpu_client
     ):
-        """mode='auto' falls back to Docling when GPU unhealthy."""
+        """mode='auto' raises DocumentProcessingError when GPU unhealthy.
+
+        NOTE: Fallback behavior was removed to keep container size small
+        (no RapidOCR models). GPU service must be healthy for scanned PDFs.
+        """
+        from src.ingestion.docling_processor import DocumentProcessingError
+
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0],
             total_pages=1,
             scanned_ratio=1.0,
         )
-        mock_gpu_client.health_check.return_value = False
+        mock_gpu_client.health_check_with_retry.return_value = False
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Fallback text")
-            MockProcessor.return_value = mock_instance
+        # Should raise DocumentProcessingError instead of falling back
+        with pytest.raises(DocumentProcessingError) as exc_info:
+            await router.process(b"fake pdf", "scanned.pdf", mode="auto")
 
-            result = await router.process(b"fake pdf", "scanned.pdf", mode="auto")
-
-            assert result.ocr_method == "docling"
-            # Verify Docling OCR was used
-            MockProcessor.assert_called()
-            call_kwargs = MockProcessor.call_args[1]
-            assert call_kwargs["enable_ocr"] is True
+        assert "gpu service unavailable" in str(exc_info.value).lower()
+        # GPU extract_text should NOT have been called
+        assert not mock_gpu_client.extract_text.called
 
     @pytest.mark.asyncio
     async def test_force_mode_always_ocr(self, router, mock_gpu_client):
@@ -202,29 +204,36 @@ class TestOCRRouter:
     async def test_fallback_on_light_onocr_error(
         self, router, mock_detector, mock_gpu_client
     ):
-        """Falls back to Docling on LightOnOCRError."""
+        """Raises DocumentProcessingError on LightOnOCRError.
+
+        NOTE: Fallback behavior was removed to keep container size small.
+        """
+        from src.ingestion.docling_processor import DocumentProcessingError
+
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0],
             total_pages=1,
             scanned_ratio=1.0,
         )
-        mock_gpu_client.health_check.side_effect = LightOnOCRError("Connection failed")
+        mock_gpu_client.health_check_with_retry.side_effect = LightOnOCRError("Connection failed")
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Fallback text")
-            MockProcessor.return_value = mock_instance
+        # Should raise DocumentProcessingError instead of falling back
+        with pytest.raises(DocumentProcessingError) as exc_info:
+            await router.process(b"fake pdf", "error.pdf", mode="auto")
 
-            result = await router.process(b"fake pdf", "error.pdf", mode="auto")
-
-            assert result.ocr_method == "docling"
+        assert "gpu service unavailable" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
     async def test_fallback_on_circuit_breaker_open(
         self, router, mock_detector, mock_gpu_client
     ):
-        """Falls back to Docling when circuit breaker is open."""
+        """Raises DocumentProcessingError when circuit breaker is open.
+
+        NOTE: Fallback behavior was removed to keep container size small.
+        """
+        from src.ingestion.docling_processor import DocumentProcessingError
+
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0],
@@ -232,18 +241,15 @@ class TestOCRRouter:
             scanned_ratio=1.0,
         )
         reopen_time = datetime.now(timezone.utc)
-        mock_gpu_client.health_check.side_effect = CircuitBreakerError(
+        mock_gpu_client.health_check_with_retry.side_effect = CircuitBreakerError(
             "Circuit breaker is open", reopen_time
         )
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Fallback text")
-            MockProcessor.return_value = mock_instance
+        # Should raise DocumentProcessingError instead of falling back
+        with pytest.raises(DocumentProcessingError) as exc_info:
+            await router.process(b"fake pdf", "breaker.pdf", mode="auto")
 
-            result = await router.process(b"fake pdf", "breaker.pdf", mode="auto")
-
-            assert result.ocr_method == "docling"
+        assert "gpu service unavailable" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
     async def test_scanned_pdf_uses_gpu_ocr(
@@ -280,11 +286,14 @@ class TestOCRRouter:
     async def test_gpu_unavailable_falls_back_to_docling(
         self, router, mock_detector, mock_gpu_client
     ):
-        """Test fallback to Docling when GPU service is unhealthy.
+        """Test that GPU unavailability raises DocumentProcessingError.
 
-        This explicitly tests the fallback path when GPU health check fails,
-        ensuring Docling OCR is used as a backup.
+        NOTE: Fallback behavior was removed to keep container size small.
+        When GPU is unhealthy, document processing fails instead of falling
+        back to Docling OCR (which would require RapidOCR models).
         """
+        from src.ingestion.docling_processor import DocumentProcessingError
+
         mock_detector.detect.return_value = DetectionResult(
             needs_ocr=True,
             scanned_pages=[0],
@@ -292,23 +301,15 @@ class TestOCRRouter:
             scanned_ratio=1.0,
         )
         # GPU is unhealthy
-        mock_gpu_client.health_check.return_value = False
+        mock_gpu_client.health_check_with_retry.return_value = False
 
-        with patch("src.ocr.ocr_router.DoclingProcessor") as MockProcessor:
-            mock_instance = MagicMock()
-            mock_instance.process_bytes.return_value = MagicMock(text="Docling fallback text")
-            MockProcessor.return_value = mock_instance
+        # Should raise DocumentProcessingError instead of falling back
+        with pytest.raises(DocumentProcessingError) as exc_info:
+            await router.process(b"fake pdf", "scanned.pdf", mode="auto")
 
-            result = await router.process(b"fake pdf", "scanned.pdf", mode="auto")
-
-            # Should fall back to Docling
-            assert result.ocr_method == "docling"
-            # GPU extract_text should NOT have been called
-            assert not mock_gpu_client.extract_text.called
-            # Docling OCR should have been invoked
-            MockProcessor.assert_called()
-            call_kwargs = MockProcessor.call_args[1]
-            assert call_kwargs["enable_ocr"] is True
+        assert "gpu service unavailable" in str(exc_info.value).lower()
+        # GPU extract_text should NOT have been called
+        assert not mock_gpu_client.extract_text.called
 
     def test_circuit_breaker_state(self, router):
         """get_circuit_breaker_state returns current state."""
