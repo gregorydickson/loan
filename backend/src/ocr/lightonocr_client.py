@@ -193,10 +193,24 @@ class LightOnOCRClient:
                     data = response.json()
                     # Verify our model is in the list
                     models = data.get("data", [])
-                    return any(m.get("id") == self.MODEL_ID for m in models)
+                    model_ids = [m.get("id") for m in models]
+                    has_model = any(model_id == self.MODEL_ID for model_id in model_ids)
+                    if not has_model:
+                        logger.warning(
+                            "GPU service responded 200 but model not found. Expected '%s', got: %s",
+                            self.MODEL_ID,
+                            model_ids,
+                        )
+                    return has_model
+                else:
+                    logger.warning(
+                        "GPU service health check failed with status %d: %s",
+                        response.status_code,
+                        response.text[:200],
+                    )
                 return False
         except Exception as e:
-            logger.warning("Health check failed: %s", str(e))
+            logger.warning("Health check exception: %s - %s", type(e).__name__, str(e) or repr(e))
             return False
 
     async def health_check_with_retry(
