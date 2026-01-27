@@ -63,11 +63,33 @@ class IncomeRecord(BaseModel):
     @field_validator("period")
     @classmethod
     def validate_period(cls, v: str) -> str:
-        """Validate and normalize income period to lowercase."""
+        """Validate and normalize income period to lowercase.
+
+        Handles common OCR variations:
+        - "YTD", "Year to Date", "yearly", "yr" -> "annual"
+        - Normalizes to lowercase and validates against allowed set
+        """
+        # Normalize common variations
+        normalized = v.lower().strip()
+
+        # Map common variations to standard values
+        period_map = {
+            "ytd": "annual",
+            "year to date": "annual",
+            "yearly": "annual",
+            "yr": "annual",
+            "bi-weekly": "biweekly",
+            "bi weekly": "biweekly",
+        }
+
+        # Apply mapping if it exists
+        normalized = period_map.get(normalized, normalized)
+
+        # Validate against allowed set
         allowed = {"annual", "monthly", "weekly", "biweekly"}
-        if v.lower() not in allowed:
+        if normalized not in allowed:
             raise ValueError(f"period must be one of {allowed}, got '{v}'")
-        return v.lower()
+        return normalized
 
 
 class BorrowerRecord(BaseModel):
