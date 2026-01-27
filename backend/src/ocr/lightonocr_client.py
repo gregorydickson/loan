@@ -33,7 +33,7 @@ class LightOnOCRClient:
 
     MODEL_ID = "lightonai/LightOnOCR-2-1B"
     DEFAULT_TIMEOUT = 120.0  # 2 minutes for cold start + processing
-    DEFAULT_MAX_TOKENS = 4096
+    DEFAULT_MAX_TOKENS = 3072  # Model context is 4096 total; leave ~1024 for input
 
     def __init__(
         self,
