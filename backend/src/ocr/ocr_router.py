@@ -339,8 +339,8 @@ class OCRRouter:
         )
 
         try:
-            # Try GPU health check with retry (handles cold starts ~30s)
-            is_healthy = await self.gpu_client.health_check_with_retry(max_wait_seconds=60)
+            # Try GPU health check with retry (handles cold starts which can take 3+ minutes)
+            is_healthy = await self.gpu_client.health_check_with_retry(max_wait_seconds=180)
             if not is_healthy:
                 raise LightOnOCRError("GPU service unhealthy")
 
