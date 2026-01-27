@@ -339,8 +339,8 @@ class OCRRouter:
         )
 
         try:
-            # Try GPU health check first
-            is_healthy = await self.gpu_client.health_check()
+            # Try GPU health check with retry (handles cold starts ~30s)
+            is_healthy = await self.gpu_client.health_check_with_retry(max_wait_seconds=60)
             if not is_healthy:
                 raise LightOnOCRError("GPU service unhealthy")
 
@@ -357,18 +357,21 @@ class OCRRouter:
             )
 
         except (LightOnOCRError, CircuitBreakerError) as e:
-            # GPU OCR failed or circuit breaker open - fall back to Docling OCR
-            logger.warning(
-                "GPU OCR unavailable for %s: %s. Falling back to Docling OCR.",
+            # GPU OCR failed or circuit breaker open
+            # Note: Docling fallback OCR requires RapidOCR models not included in container
+            # to keep image size small. GPU service must be healthy for scanned PDFs.
+            error_msg = f"GPU OCR service unavailable and fallback OCR not configured: {str(e)}"
+            logger.error(
+                "GPU OCR unavailable for %s: %s. No fallback available.",
                 filename,
                 str(e),
             )
-            content = self._docling_with_ocr(pdf_bytes, filename)
-            return OCRResult(
-                content=content,
-                ocr_method="docling",
-                pages_ocrd=detection.scanned_pages,
-            )
+            # Re-raise as DocumentProcessingError to fail the document processing
+            from src.ingestion.docling_processor import DocumentProcessingError
+            raise DocumentProcessingError(
+                message="OCR processing failed: GPU service unavailable",
+                details=error_msg,
+            ) from e
 
     def get_circuit_breaker_state(self) -> str:
         """Get current circuit breaker state.

@@ -176,6 +176,8 @@ class LightOnOCRClient:
     async def health_check(self) -> bool:
         """Check if GPU service is healthy.
 
+        Uses vLLM's /v1/models endpoint to verify service availability.
+
         Returns:
             True if service is healthy, False otherwise
         """
@@ -183,10 +185,74 @@ class LightOnOCRClient:
             token = self._get_id_token()
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
-                    f"{self.service_url}/health",
+                    f"{self.service_url}/v1/models",
                     headers={"Authorization": f"Bearer {token}"},
                 )
-                return response.status_code == 200
+                # Check if response is 200 and contains models
+                if response.status_code == 200:
+                    data = response.json()
+                    # Verify our model is in the list
+                    models = data.get("data", [])
+                    return any(m.get("id") == self.MODEL_ID for m in models)
+                return False
         except Exception as e:
             logger.warning("Health check failed: %s", str(e))
             return False
+
+    async def health_check_with_retry(
+        self, max_wait_seconds: int = 60, initial_delay: float = 1.0
+    ) -> bool:
+        """Check GPU service health with exponential backoff retry.
+
+        Handles cold starts where GPU service takes ~30 seconds to initialize.
+        Uses exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s up to max_wait_seconds.
+
+        Args:
+            max_wait_seconds: Maximum total time to wait for service (default 60s)
+            initial_delay: Initial retry delay in seconds (default 1s)
+
+        Returns:
+            True if service becomes healthy within timeout, False otherwise
+        """
+        import asyncio
+
+        delay = initial_delay
+        total_waited = 0.0
+        attempt = 0
+
+        while total_waited < max_wait_seconds:
+            attempt += 1
+            is_healthy = await self.health_check()
+
+            if is_healthy:
+                if attempt > 1:
+                    logger.info(
+                        "GPU service became healthy after %d attempts (%.1fs)",
+                        attempt,
+                        total_waited,
+                    )
+                return True
+
+            # Calculate next delay with exponential backoff
+            wait_time = min(delay, max_wait_seconds - total_waited)
+            if wait_time <= 0:
+                break
+
+            logger.info(
+                "GPU service not ready (attempt %d), retrying in %.1fs (total waited: %.1fs/%.0fs)",
+                attempt,
+                wait_time,
+                total_waited,
+                max_wait_seconds,
+            )
+
+            await asyncio.sleep(wait_time)
+            total_waited += wait_time
+            delay *= 2  # Exponential backoff
+
+        logger.warning(
+            "GPU service did not become healthy after %.1fs (%d attempts)",
+            total_waited,
+            attempt,
+        )
+        return False
