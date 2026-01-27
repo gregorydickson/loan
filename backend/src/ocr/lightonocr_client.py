@@ -191,17 +191,23 @@ class LightOnOCRClient:
                 # Check if response is 200 and contains models
                 if response.status_code == 200:
                     data = response.json()
-                    # Verify our model is in the list
+                    # Verify at least one model exists
+                    # vLLM may return full cache paths instead of short names:
+                    # "/model-cache/hub/models--lightonai--LightOnOCR-2-1B/snapshots/..."
+                    # instead of "lightonai/LightOnOCR-2-1B"
                     models = data.get("data", [])
-                    model_ids = [m.get("id") for m in models]
-                    has_model = any(model_id == self.MODEL_ID for model_id in model_ids)
-                    if not has_model:
+                    if not models:
+                        logger.warning("GPU service responded 200 but no models found in response")
+                        return False
+                    # Check if any model contains "LightOnOCR" (flexible matching)
+                    model_ids = [m.get("id", "") for m in models]
+                    has_ocr_model = any("LightOnOCR" in str(model_id) for model_id in model_ids)
+                    if not has_ocr_model:
                         logger.warning(
-                            "GPU service responded 200 but model not found. Expected '%s', got: %s",
-                            self.MODEL_ID,
+                            "GPU service has models but none match LightOnOCR. Got: %s",
                             model_ids,
                         )
-                    return has_model
+                    return has_ocr_model
                 else:
                     logger.warning(
                         "GPU service health check failed with status %d: %s",
