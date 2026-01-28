@@ -67,10 +67,26 @@ class IncomeRecord(BaseModel):
 
         Handles common OCR variations:
         - "YTD", "Year to Date", "yearly", "yr" -> "annual"
+        - Dates (e.g., "4/1/2025", "2025-01-01") -> "annual" (OCR error)
         - Normalizes to lowercase and validates against allowed set
         """
+        import re
+
         # Normalize common variations
         normalized = v.lower().strip()
+
+        # Detect date patterns (common OCR extraction errors)
+        # Matches: M/D/YYYY, MM/DD/YYYY, YYYY-MM-DD, etc.
+        date_patterns = [
+            r"\d{1,2}/\d{1,2}/\d{4}",  # 4/1/2025, 12/31/2024
+            r"\d{4}-\d{1,2}-\d{1,2}",  # 2025-04-01
+            r"\d{1,2}-\d{1,2}-\d{4}",  # 04-01-2025
+        ]
+
+        for pattern in date_patterns:
+            if re.match(pattern, normalized):
+                # Date extracted instead of period - default to annual
+                return "annual"
 
         # Map common variations to standard values
         period_map = {

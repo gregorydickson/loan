@@ -7,10 +7,11 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from google.cloud import tasks_v2
-from google.protobuf import duration_pb2
+from google.protobuf import duration_pb2, timestamp_pb2
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,11 @@ class CloudTasksClient:
         # Construct target URL
         target_url = f"{self.service_url}/api/tasks/process-document"
 
+        # Schedule task to run immediately (with 1 second delay to ensure queue picks it up)
+        schedule_time = datetime.now(UTC) + timedelta(seconds=1)
+        schedule_timestamp = timestamp_pb2.Timestamp()
+        schedule_timestamp.FromDatetime(schedule_time)
+
         # Task with OIDC authentication for Cloud Run
         task = tasks_v2.Task(
             http_request=tasks_v2.HttpRequest(
@@ -90,6 +96,8 @@ class CloudTasksClient:
                     audience=self.service_url,
                 ),
             ),
+            # Schedule for immediate execution
+            schedule_time=schedule_timestamp,
             # 10-minute timeout per attempt
             dispatch_deadline=duration_pb2.Duration(seconds=600),
         )
@@ -102,9 +110,11 @@ class CloudTasksClient:
         )
 
         logger.info(
-            "Created task for document %s: %s",
+            "Created task for document %s: name=%s, schedule_time=%s, target=%s",
             document_id,
             created_task.name,
+            created_task.schedule_time,
+            target_url,
         )
 
         return created_task
