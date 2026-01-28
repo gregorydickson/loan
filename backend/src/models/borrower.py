@@ -129,6 +129,33 @@ class BorrowerRecord(BaseModel):
         pattern=r"^\d{3}-\d{2}-\d{4}$",
         description="Social Security Number in XXX-XX-XXXX format (SENSITIVE)",
     )
+
+    @field_validator("ssn", mode="before")
+    @classmethod
+    def normalize_ssn(cls, v: str | None) -> str | None:
+        """Normalize SSN to XXX-XX-XXXX format.
+
+        Handles SSNs with or without dashes. Strips whitespace and ensures
+        the SSN is in the correct format before validation.
+
+        Examples:
+            "987654321" -> "987-65-4321"
+            "987-65-4321" -> "987-65-4321"
+            "987 65 4321" -> "987-65-4321"
+        """
+        if v is None:
+            return None
+
+        # Strip whitespace and remove any existing dashes or spaces
+        cleaned = v.strip().replace("-", "").replace(" ", "")
+
+        # Validate it's 9 digits
+        if not cleaned.isdigit() or len(cleaned) != 9:
+            raise ValueError(f"SSN must be 9 digits, got '{v}'")
+
+        # Format as XXX-XX-XXXX
+        return f"{cleaned[0:3]}-{cleaned[3:5]}-{cleaned[5:9]}"
+
     phone: str | None = Field(
         default=None, description="Contact phone number"
     )
