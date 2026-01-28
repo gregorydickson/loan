@@ -11,6 +11,7 @@ from typing import Literal
 from uuid import UUID
 
 from tenacity import (
+    RetryError,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
@@ -163,7 +164,7 @@ class ExtractionRouter:
             )
             logger.info("LangExtract succeeded for %s (auto mode)", document_id)
             return result
-        except (LangExtractTransientError, LangExtractFatalError) as e:
+        except (LangExtractTransientError, LangExtractFatalError, RetryError) as e:
             logger.warning(
                 "LangExtract failed for %s after retries: %s. Falling back to Docling.",
                 document_id,

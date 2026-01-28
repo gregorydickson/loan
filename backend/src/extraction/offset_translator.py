@@ -42,6 +42,12 @@ class OffsetTranslator:
         if not self.raw:
             return
 
+        # Fast path for identical or very similar texts
+        if self.markdown == self.raw:
+            # Perfect match - single block covering entire text
+            self._matches = [(0, 0, len(self.markdown))]
+            return
+
         matcher = SequenceMatcher(None, self.markdown, self.raw, autojunk=False)
         # get_matching_blocks() returns list[Match] which is NamedTuple with a, b, size
         # Convert to our tuple format for type safety

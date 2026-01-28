@@ -46,9 +46,9 @@ class TestRetryBehavior:
         doc_id = uuid4()
 
         # After exhausting retries, tenacity raises RetryError
-        # Current implementation may not catch this properly
+        # Use method="langextract" to avoid fallback and observe RetryError
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Verify 3 attempts were made
         assert router.langextract.extract.call_count == 3
@@ -60,7 +60,7 @@ class TestRetryBehavior:
 
         start_time = time.time()
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
         elapsed = time.time() - start_time
 
         # With multiplier=2, min=4, max=60:
@@ -112,7 +112,7 @@ class TestRetryBehavior:
 
         # All 3 transient errors exhaust retries
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # All 3 should be retried
         assert router.langextract.extract.call_count == 3
@@ -156,7 +156,7 @@ class TestErrorClassificationEdgeCases:
         doc_id = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Should retry (transient)
         assert router.langextract.extract.call_count == 3
@@ -169,7 +169,7 @@ class TestErrorClassificationEdgeCases:
         doc_id = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Should retry (transient due to 503)
         assert router.langextract.extract.call_count == 3
@@ -181,7 +181,7 @@ class TestErrorClassificationEdgeCases:
         doc_id = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Should retry (contains "timeout")
         assert router.langextract.extract.call_count == 3
@@ -206,7 +206,7 @@ class TestErrorClassificationEdgeCases:
         doc_id = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Should retry (contains "overloaded")
         assert router.langextract.extract.call_count == 3
@@ -237,7 +237,7 @@ class TestLoggingBehavior:
         doc_id = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Should log warning for transient error
         warning_calls = [call for call in mock_logger.warning.call_args_list]
@@ -310,7 +310,9 @@ class TestConcurrentRequests:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                return MagicMock(borrowers=[MagicMock(name="John")])
+                borrower_mock = MagicMock()
+                borrower_mock.name = "John"
+                return MagicMock(borrowers=[borrower_mock])
             else:
                 raise Exception("503 Service Unavailable")
 
@@ -337,7 +339,7 @@ class TestConcurrentRequests:
         doc_id_1 = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id_1, "doc1.pdf", method="auto")
+            router.extract(mock_document, doc_id_1, "doc1.pdf", method="langextract")
 
         first_call_count = router.langextract.extract.call_count
         assert first_call_count == 3
@@ -348,7 +350,7 @@ class TestConcurrentRequests:
         doc_id_2 = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id_2, "doc2.pdf", method="auto")
+            router.extract(mock_document, doc_id_2, "doc2.pdf", method="langextract")
 
         second_call_count = router.langextract.extract.call_count
         assert second_call_count == 3, "Should get fresh retry attempts"
@@ -399,7 +401,7 @@ class TestEdgeCaseRecovery:
         doc_id = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Should retry (contains "503")
         assert router.langextract.extract.call_count == 3
@@ -411,7 +413,7 @@ class TestEdgeCaseRecovery:
         doc_id = uuid4()
 
         with pytest.raises(RetryError):
-            router.extract(mock_document, doc_id, "test.pdf", method="auto")
+            router.extract(mock_document, doc_id, "test.pdf", method="langextract")
 
         # Should retry (contains "timeout")
         assert router.langextract.extract.call_count == 3

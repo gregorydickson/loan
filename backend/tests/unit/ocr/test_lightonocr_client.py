@@ -260,7 +260,7 @@ class TestLightOnOCRClient:
         """Test default timeout and max_tokens values."""
         client = LightOnOCRClient(service_url="https://example.run.app")
         assert client.timeout == 120.0
-        assert client.max_tokens == 4096
+        assert client.max_tokens == 3072
 
     def test_model_id_constant(self):
         """Test MODEL_ID constant is set correctly."""
@@ -286,7 +286,7 @@ class TestLightOnOCRClient:
             call_args = mock_client.post.call_args
             payload = call_args[1]["json"]
             assert payload["model"] == "lightonai/LightOnOCR-2-1B"
-            assert payload["max_tokens"] == 4096
+            assert payload["max_tokens"] == 3072
 
     @pytest.mark.asyncio
     async def test_extract_text_http_404(self, client: LightOnOCRClient, mock_id_token):

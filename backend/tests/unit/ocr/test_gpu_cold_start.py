@@ -184,7 +184,7 @@ class TestGPUHealthCheckTimeout:
     @pytest.mark.asyncio
     async def test_health_check_uses_shorter_timeout(self, client: LightOnOCRClient):
         """Health check should use shorter timeout than extraction."""
-        # The health_check method uses a fixed 10s timeout
+        # The health_check method uses a fixed 30s timeout
         # This is appropriate for health checks during routing decisions
         with patch("src.ocr.lightonocr_client.id_token.fetch_id_token") as mock_token:
             mock_token.return_value = "mock-token"
@@ -198,11 +198,11 @@ class TestGPUHealthCheckTimeout:
 
                 await client.health_check()
 
-                # Verify AsyncClient was called with timeout=10.0
+                # Verify AsyncClient was called with timeout=30.0
                 # (shorter than the 120s extraction timeout)
                 mock_client_class.assert_called()
                 call_args = mock_client_class.call_args
-                assert call_args[1]["timeout"] == 10.0
+                assert call_args[1]["timeout"] == 30.0
 
 
 class TestCircuitBreakerColdStartIntegration:

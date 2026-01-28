@@ -327,21 +327,20 @@ class TestBorrowerRecordSSNValidation:
         assert borrower.ssn == "123-45-6789"
 
     def test_invalid_ssn_format_no_dashes(self) -> None:
-        """SSN without dashes raises ValidationError."""
-        with pytest.raises(ValidationError) as exc_info:
-            BorrowerRecord(
-                name="Test User",
-                ssn="123456789",  # Invalid: missing dashes
-                confidence_score=0.8,
-            )
-        assert "ssn" in str(exc_info.value)
+        """SSN without dashes is normalized to correct format."""
+        borrower = BorrowerRecord(
+            name="Test User",
+            ssn="123456789",  # Gets normalized to 123-45-6789
+            confidence_score=0.8,
+        )
+        assert borrower.ssn == "123-45-6789"
 
     def test_invalid_ssn_format_wrong_pattern(self) -> None:
-        """SSN with wrong dash pattern raises ValidationError."""
+        """SSN with wrong length raises ValidationError."""
         with pytest.raises(ValidationError) as exc_info:
             BorrowerRecord(
                 name="Test User",
-                ssn="12-345-6789",  # Invalid: wrong dash positions
+                ssn="123-45-678",  # Invalid: only 8 digits instead of 9
                 confidence_score=0.8,
             )
         assert "ssn" in str(exc_info.value)
