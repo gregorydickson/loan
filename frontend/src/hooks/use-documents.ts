@@ -41,6 +41,9 @@ export function useUploadDocument() {
 /**
  * Hook for fetching the list of documents with pagination.
  *
+ * Automatically polls every 2 seconds when any document is pending or processing.
+ * Stops polling when all documents are completed or failed.
+ *
  * @param limit - Maximum documents to return (default 100)
  * @param offset - Number of documents to skip (default 0)
  */
@@ -48,6 +51,14 @@ export function useDocuments(limit = 100, offset = 0) {
   return useQuery<DocumentListResponse>({
     queryKey: ["documents", limit, offset],
     queryFn: () => listDocuments(limit, offset),
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      // Poll every 2 seconds if any documents are pending or processing
+      const hasProcessing = data?.documents.some(
+        (doc) => doc.status === "pending" || doc.status === "processing"
+      );
+      return hasProcessing ? 2000 : false;
+    },
   });
 }
 
