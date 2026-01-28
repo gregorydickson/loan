@@ -165,29 +165,33 @@ class DocumentRepository:
         Returns:
             True if document was deleted, False if not found
         """
-        document = await self.get_by_id(document_id)
-        if not document:
-            return False
+        # Disable autoflush for entire delete operation to prevent premature flush
+        # of pending objects (e.g., AccountNumber without borrower_id during re-upload)
+        with self.session.no_autoflush:
+            document = await self.get_by_id(document_id)
+            if not document:
+                return False
 
-        # Delete associated borrowers first (via their source references)
-        # Find borrowers that only reference this document
-        borrowers_result = await self.session.execute(
-            select(SourceReference.borrower_id)
-            .where(SourceReference.document_id == document_id)
-            .distinct()
-        )
-        borrower_ids = [row[0] for row in borrowers_result.fetchall()]
+            # Delete associated borrowers first (via their source references)
+            # Find borrowers that only reference this document
+            borrowers_result = await self.session.execute(
+                select(SourceReference.borrower_id)
+                .where(SourceReference.document_id == document_id)
+                .distinct()
+            )
+            borrower_ids = [row[0] for row in borrowers_result.fetchall()]
 
-        # Delete borrowers (cascade will handle income_records, account_numbers, source_references)
-        if borrower_ids:
-            for borrower_id in borrower_ids:
-                with self.session.no_autoflush:
+            # Delete borrowers (cascade will handle income_records, account_numbers, source_references)
+            if borrower_ids:
+                for borrower_id in borrower_ids:
                     borrower = await self.session.get(Borrower, borrower_id)
-                if borrower:
-                    await self.session.delete(borrower)
+                    if borrower:
+                        await self.session.delete(borrower)
 
-        # Delete the document
-        await self.session.delete(document)
+            # Delete the document
+            await self.session.delete(document)
+
+        # Flush deletions after no_autoflush block
         await self.session.flush()
         return True
 

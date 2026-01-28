@@ -4,7 +4,21 @@
       "mcp__memorygraph__recall_memories",
       "Bash(tree:*)",
       "mcp__plugin_context7_context7__resolve-library-id",
-      "mcp__plugin_context7_context7__query-docs"
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(pytest:*)",
+      "Bash(python3 -m pytest:*)",
+      "mcp__memorygraph__store_memory",
+      "Bash(git reset:*)",
+      "mcp__memorygraph__create_relationship",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(xargs:*)"
     ]
   }
 }
