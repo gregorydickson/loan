@@ -12,7 +12,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.storage.database import get_session
+from src.storage.database import get_db_session
 from src.storage.models import Borrower, Document, DocumentStatus, SourceReference
 from src.storage.repositories import BorrowerRepository, DocumentRepository
 from decimal import Decimal

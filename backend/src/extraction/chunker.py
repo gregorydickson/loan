@@ -113,7 +113,8 @@ class DocumentChunker:
             # Move start with overlap
             if end >= len(text):
                 break
-            start = end - self.overlap_chars
+            # Ensure forward progress even if overlap_chars > max_chars (config error)
+            start = max(start + 1, end - self.overlap_chars)
             chunk_index += 1
 
         # Update total_chunks on all chunks

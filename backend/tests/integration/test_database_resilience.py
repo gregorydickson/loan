@@ -13,10 +13,9 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from src.storage.database import get_session
+from src.storage.database import get_db_session
 from src.storage.models import (
     AccountNumber,
-    Address,
     Borrower,
     Document,
     DocumentStatus,
@@ -245,7 +244,7 @@ class TestConcurrentUpdates:
         # Simulate concurrent status updates
         async def update_status(status: DocumentStatus, delay_ms: int):
             # Get fresh session for each concurrent operation
-            async for session in get_session():
+            async for session in get_db_session():
                 repo = DocumentRepository(session)
                 await asyncio.sleep(delay_ms / 1000)
                 await repo.update_status(doc_id, status)
@@ -304,7 +303,7 @@ class TestConcurrentUpdates:
 
         # Concurrent reads
         async def read_borrower():
-            async for session in get_session():
+            async for session in get_db_session():
                 repo = BorrowerRepository(session)
                 result = await repo.get_by_id(borrower_id)
                 await session.close()
