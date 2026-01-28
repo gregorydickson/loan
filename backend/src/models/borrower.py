@@ -96,6 +96,8 @@ class IncomeRecord(BaseModel):
             "yr": "annual",
             "bi-weekly": "biweekly",
             "bi weekly": "biweekly",
+            "one-time": "annual",  # One-time deposits/transactions default to annual
+            "onetime": "annual",
         }
 
         # Apply mapping if it exists
